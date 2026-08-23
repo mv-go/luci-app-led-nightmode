@@ -6,7 +6,7 @@ Build a universal OpenWrt LED night-mode application. The first test device is a
 
 ## Current milestone
 
-The hardware CLI, package/UCI/procd, and optional non-sysfs provider milestones are complete and live-validated with release `0.1.0-r3` on the first test router. The base package remains universal; a separate Quectel QNWCFG provider controls the modem-managed LTE indicator. Scheduling, rpcd, and the LuCI view remain deferred.
+The hardware CLI, package/UCI/procd, optional non-sysfs provider, scheduling, rpcd/ACL, and native LuCI milestones are complete. Release `0.4.0-r1` is fixture-tested, browser-tested, and SDK-validated locally; release `0.1.0-r3` remains the latest version live-validated on the first test router. The base package remains universal; a separate Quectel QNWCFG provider controls the modem-managed LTE indicator. Installing and live-validating `0.4.0-r1` is the next hardware step and still requires explicit user authorization.
 
 The initial inventory and live round-trip result are stored in `docs/hardware/bpi-r3-mini-led-inventory.md`. The service/UCI boundary is documented in `docs/architecture/service-and-uci.md`.
 
@@ -17,7 +17,7 @@ The initial inventory and live round-trip result are stored in `docs/hardware/bp
 - Do not infer physical dimming from `max_brightness > 1`: some drivers treat every nonzero value as fully on. The safe default switches all LEDs off; a nonzero multi-level target requires explicit opt-in after hardware calibration. Binary LEDs may gain a sparse pulse mode later.
 - Preserve the original LED trigger and state before changing an LED. Restoration must be idempotent and tolerate missing LEDs.
 - Keep filesystem access behind a configurable sysfs root so tests can use fixtures instead of a live router.
-- Do not implement astronomical calculations. A later scheduling phase uses `sunwait`.
+- Do not implement astronomical calculations. Solar scheduling uses `sunwait`.
 - Keep package defaults write-safe: a fresh install must not change LEDs until the UCI service is explicitly enabled.
 - Keep device-specific non-sysfs commands in optional provider drivers. Providers require explicit endpoints, read-only capability probes, saved-state restoration, and fixture-backed lifecycle tests; the sysfs core must not scan serial ports or infer modem models.
 - Keep the installed CLI at `root/usr/sbin/led-nightmode`; `bin/led-nightmode` is only a local convenience wrapper.
