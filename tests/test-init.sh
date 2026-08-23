@@ -59,7 +59,7 @@ uci_validate_section() {
 			night_brightness=$MOCK_BRIGHTNESS
 			;;
 		schedule)
-			[ "$section" = main ] || fail 'init validates only the main schedule section'
+			[ "$section" = schedule ] || fail 'init validates only the named schedule section'
 			assert_contains "$*" 'mode:or("manual", "fixed", "sun"):manual' 'init restricts the schedule mode'
 			assert_contains "$*" 'night_start:string:23:00' 'init validates the night boundary'
 			assert_contains "$*" 'day_start:string:07:00' 'init validates the day boundary'
@@ -104,6 +104,9 @@ procd_add_reload_trigger() { record_call "reload $*"; }
 procd_add_validation() { record_call "validation $*"; }
 
 . "$INIT"
+
+duplicate_sections=$(awk '$1 == "config" && NF >= 3 { name=$3; gsub(/\047/, "", name); seen[name]++; if (seen[name] == 2) print name }' "$PROJECT_ROOT/root/etc/config/led-nightmode")
+[ -z "$duplicate_sections" ] || fail "default UCI config repeats named sections: $duplicate_sections"
 
 start_service
 [ -z "$CALLS" ] || fail 'disabled default must not register a procd instance'

@@ -6,7 +6,7 @@ The first test device is a Banana Pi BPI-R3 Mini. The project is designed for mu
 
 ## Current status
 
-The repository includes the hardware-validated CLI core, a UCI/procd service, fixed-time and sunrise/sunset scheduling, and an extensible provider interface for indicators outside the Linux LED class. Release `0.2.0-r1` builds as two `noarch` APKs with the official OpenWrt 25.12.4 `mediatek/filogic` SDK: the universal base package and an optional Quectel QNWCFG provider. The previous `0.1.0-r3` release was live-validated on the first BPI-R3 Mini: a `day → night → day → night` cycle switched off all nine sysfs LEDs and its RM520N-GL LTE indicator, restored both classes during the day, and kept LTE/5G and SSH available.
+The repository includes the hardware-validated CLI core, a UCI/procd service, fixed-time and sunrise/sunset scheduling, and an extensible provider interface for indicators outside the Linux LED class. Release `0.2.0-r2` builds as two `noarch` APKs with the official OpenWrt 25.12.4 `mediatek/filogic` SDK: the universal base package and an optional Quectel QNWCFG provider. The previous `0.1.0-r3` release was live-validated on the first BPI-R3 Mini: a `day → night → day → night` cycle switched off all nine sysfs LEDs and its RM520N-GL LTE indicator, restored both classes during the day, and kept LTE/5G and SSH available.
 
 ## CLI core
 
@@ -50,7 +50,7 @@ config core 'main'
 	option phase 'day'
 	option night_brightness '0'
 
-config schedule 'main'
+config schedule 'schedule'
 	option mode 'manual'
 	option night_start '23:00'
 	option day_start '07:00'

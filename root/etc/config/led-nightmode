@@ -3,7 +3,7 @@ config core 'main'
 	option phase 'day'
 	option night_brightness '0'
 
-config schedule 'main'
+config schedule 'schedule'
 	option mode 'manual'
 	option night_start '23:00'
 	option day_start '07:00'

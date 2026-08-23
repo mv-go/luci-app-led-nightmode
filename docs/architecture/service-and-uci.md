@@ -16,7 +16,7 @@ The package owns one `core` section named `main` in `/etc/config/led-nightmode`:
 
 Fixed-time and solar fields remain absent from the core profile schema; the scheduler has its own contract.
 
-The separate `schedule` section named `main` selects how the effective phase is resolved:
+The separate `schedule` section named `schedule` selects how the effective phase is resolved. Its name is intentionally distinct from the core section because UCI section identifiers are unique within a package:
 
 | Option | Type | Default | Meaning |
 | --- | --- | --- | --- |
