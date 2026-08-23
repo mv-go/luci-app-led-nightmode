@@ -6,7 +6,7 @@ The first test device is a Banana Pi BPI-R3 Mini. The project is designed for mu
 
 ## Current status
 
-The repository includes the hardware-validated CLI core, a minimal UCI schema, and a procd service scaffold. A live `night`/`day` round trip has completed successfully on a BPI-R3 Mini: SSH remained available and the final LED configuration matched the initial snapshot exactly. Package `0.1.0-r1` also builds successfully as a `noarch` APK with the official OpenWrt 25.12.4 `mediatek/filogic` SDK.
+The repository includes the hardware-validated CLI core, a minimal UCI schema, and a procd-managed service. Package `0.1.0-r2` builds as a `noarch` APK with the official OpenWrt 25.12.4 `mediatek/filogic` SDK and has completed live package lifecycle tests on a BPI-R3 Mini. Both `day → night → day` and `day → night → stop` kept SSH available, switched all nine LEDs off at night, and restored the original triggers and stable trigger parameters.
 
 ## CLI core
 

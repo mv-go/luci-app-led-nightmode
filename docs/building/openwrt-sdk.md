@@ -21,16 +21,18 @@ make defconfig
 make package/luci-app-led-nightmode/compile V=sc
 ```
 
-The output for OpenWrt 25.12 is `bin/packages/aarch64_cortex-a53/luci/luci-app-led-nightmode-0.1.0-r1.apk`. The SDK is an x86_64 Linux build; an ARM64 macOS host must run it in a Linux x86_64 container or virtual machine.
+The output for OpenWrt 25.12 is `bin/packages/aarch64_cortex-a53/luci/luci-app-led-nightmode-0.1.0-r2.apk`. The SDK is an x86_64 Linux build; an ARM64 macOS host must run it in a Linux x86_64 container or virtual machine.
 
 ## Validated artifact
 
 The package build was checked with the SDK's `apk-tools 3.0.5`:
 
 - `apk verify --allow-untrusted` reported `OK`;
-- metadata reported version `0.1.0-r1` and architecture `noarch`;
+- metadata reported version `0.1.0-r2` and architecture `noarch`;
 - `/etc/config/led-nightmode` is registered as a conffile with mode `0600`;
 - the init script, service runner, and CLI have mode `0755`;
 - all four installed files matched their repository sources byte for byte after extraction.
+
+The validated `0.1.0-r2` artifact has SHA-256 `ee9f51c4c64088fdcd716e346adbb0d28349d42ed00da66c711fb178db644858`.
 
 The locally exported artifact is kept under ignored `dist/` and is not committed to Git.

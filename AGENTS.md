@@ -6,7 +6,7 @@ Build a universal OpenWrt LED night-mode application. The first test device is a
 
 ## Current milestone
 
-The hardware-validated CLI milestone is complete. The current milestone adds the OpenWrt package layout, a minimal UCI schema, and a procd-managed service around the CLI core. It excludes scheduling, rpcd, and the LuCI view.
+The hardware CLI and OpenWrt package/UCI/procd milestones are complete and live-validated with package `0.1.0-r2` on the first test router. No later milestone has started. Scheduling, rpcd, and the LuCI view remain out of scope until the next milestone is selected.
 
 The initial inventory and live round-trip result are stored in `docs/hardware/bpi-r3-mini-led-inventory.md`. The service/UCI boundary is documented in `docs/architecture/service-and-uci.md`.
 

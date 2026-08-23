@@ -131,7 +131,10 @@ write_value() {
 		return $?
 	fi
 
-	printf '%s\n' "$new_value" > "$value_file"
+	# procd line-buffers stdout with libsetlbf when service logging is enabled.
+	# BusyBox ash's printf can then change a sysfs value but still return an
+	# error. Let cat own the sysfs descriptor so its status reflects the write.
+	printf '%s\n' "$new_value" | cat > "$value_file"
 }
 
 write_trigger() {

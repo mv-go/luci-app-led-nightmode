@@ -22,6 +22,8 @@ Fixed-time and solar schedule fields are intentionally absent. They require a se
 
 The runner applies the configured phase once and stays in the foreground. A night instance restores the saved day state when procd stops it, including during disable or reload. A day instance leaves the LEDs restored while remaining observable by procd. The existing CLI state directory remains the only recovery record; restoration failures retain that state for another attempt.
 
+procd line-buffers captured service stdout by preloading `libsetlbf`. BusyBox `ash` builtins must therefore not own sysfs output descriptors: on the first test platform, builtin `printf` could apply a trigger change and still return status 1 under that preload. The CLI sends scalar values through external `cat`, so the reported status belongs to the actual sysfs write.
+
 ## Deferred interfaces
 
 The following remain outside this milestone:

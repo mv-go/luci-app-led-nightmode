@@ -34,3 +34,9 @@ Every observed LED reports this trigger set:
 An explicitly approved live test applied `night` to all nine LEDs and then restored them with `day`. SSH remained available throughout. The seven binary LEDs used brightness 0, while the two mt76 LEDs used brightness 1. Visual observation showed that the mt76 LEDs remained fully lit: on this driver, 1 and 255 have the same physical result. The safe default is therefore 0 for every LED; a nonzero value for an unverified multi-level interface requires explicit calibration and opt-in.
 
 The Ethernet LED driver rejected rewriting `interval` when the value was already 50. Restoration now skips trigger attributes whose current value already matches the saved value. A retry restored the remaining link-speed, RX, and TX selectors, removed the saved state, and produced a final snapshot identical to the initial snapshot.
+
+## Installed package lifecycle validation
+
+Package `0.1.0-r2` completed two procd-managed live cycles: `day → night → day` and `day → night → stop`. In both cycles all nine LEDs reported brightness 0 with trigger `none` during the night phase. SSH remained available, the service reported no errors, and restoration removed the saved state. A stable snapshot containing active triggers and trigger-specific parameters had the same SHA-256 before the second night phase and after service stop.
+
+The preceding `0.1.0-r1` package exposed a BusyBox/procd interaction. Capturing service stdout makes procd preload `/lib/libsetlbf.so`; an `ash` builtin `printf` redirected to a sysfs trigger then changed the trigger but returned status 1. The CLI treated that status as a failed trigger selection and skipped the brightness write, leaving `green:status` on. The scalar writer now pipes through external `cat`, whose exit status represents the sysfs write correctly under the same preload.
