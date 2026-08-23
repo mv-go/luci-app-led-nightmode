@@ -3,13 +3,211 @@
 set -u
 
 PROGRAM=${0##*/}
-CLI=${LED_NIGHTMODE_BIN:-/usr/sbin/led-nightmode}
-PHASE=${1:-}
-NIGHT_BRIGHTNESS=${2:-}
-RESTORE_ON_EXIT=0
+SUNWAIT=${LED_SUNWAIT_BIN:-/usr/bin/sunwait}
 
 error() {
 	printf '%s: %s\n' "$PROGRAM" "$*" >&2
+}
+
+valid_phase() {
+	case $1 in
+		day|night) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+valid_time() {
+	case $1 in
+		[01][0-9]:[0-5][0-9]|2[0-3]:[0-5][0-9]) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+valid_coordinate() {
+	coordinate=$1
+	maximum=$2
+	awk -v coordinate="$coordinate" -v maximum="$maximum" 'BEGIN {
+		if (coordinate !~ /^-?[0-9]+([.][0-9]+)?$/)
+			exit 1
+		if ((coordinate + 0) < -maximum || (coordinate + 0) > maximum)
+			exit 1
+		exit 0
+	}'
+}
+
+format_coordinate() {
+	coordinate=$1
+	positive_suffix=$2
+	negative_suffix=$3
+	case $coordinate in
+		-*) printf '%s%s\n' "${coordinate#-}" "$negative_suffix" ;;
+		*) printf '%s%s\n' "$coordinate" "$positive_suffix" ;;
+	esac
+}
+
+validate_schedule() {
+	valid_phase "$MANUAL_PHASE" || {
+		error "manual phase must be 'day' or 'night'"
+		return 1
+	}
+
+	case $MODE in
+		manual)
+			return 0
+			;;
+		fixed)
+			valid_time "$NIGHT_START" || {
+				error 'night_start must use HH:MM in local time'
+				return 1
+			}
+			valid_time "$DAY_START" || {
+				error 'day_start must use HH:MM in local time'
+				return 1
+			}
+			[ "$NIGHT_START" != "$DAY_START" ] || {
+				error 'night_start and day_start must differ'
+				return 1
+			}
+			;;
+		sun)
+			valid_coordinate "$LATITUDE" 90 || {
+				error 'latitude must be a decimal number from -90 to 90'
+				return 1
+			}
+			valid_coordinate "$LONGITUDE" 180 || {
+				error 'longitude must be a decimal number from -180 to 180'
+				return 1
+			}
+			case $TWILIGHT in
+				daylight|civil|nautical|astronomical) ;;
+				*)
+					error 'twilight must be daylight, civil, nautical, or astronomical'
+					return 1
+					;;
+			esac
+			[ -x "$SUNWAIT" ] || {
+				error "sunwait is not executable: $SUNWAIT"
+				return 1
+			}
+			;;
+		*)
+			error 'mode must be manual, fixed, or sun'
+			return 1
+			;;
+	esac
+}
+
+resolve_fixed() {
+	now=${LED_NIGHTMODE_NOW:-$(date +%H:%M)}
+	valid_time "$now" || {
+		error "current local time is invalid: $now"
+		return 1
+	}
+
+	now_number=1$(printf '%s' "$now" | tr -d ':')
+	night_number=1$(printf '%s' "$NIGHT_START" | tr -d ':')
+	day_number=1$(printf '%s' "$DAY_START" | tr -d ':')
+
+	if [ "$night_number" -lt "$day_number" ]; then
+		if [ "$now_number" -ge "$night_number" ] && [ "$now_number" -lt "$day_number" ]; then
+			printf '%s\n' night
+		else
+			printf '%s\n' day
+		fi
+	elif [ "$now_number" -ge "$night_number" ] || [ "$now_number" -lt "$day_number" ]; then
+		printf '%s\n' night
+	else
+		printf '%s\n' day
+	fi
+}
+
+resolve_sun() {
+	formatted_latitude=$(format_coordinate "$LATITUDE" N S) || return 1
+	formatted_longitude=$(format_coordinate "$LONGITUDE" E W) || return 1
+	sunwait_status=0
+	"$SUNWAIT" poll "$TWILIGHT" "$formatted_latitude" "$formatted_longitude" \
+		>/dev/null 2>&1 || sunwait_status=$?
+	case $sunwait_status in
+		2) printf '%s\n' day ;;
+		3) printf '%s\n' night ;;
+		*)
+			error "sunwait poll failed with status $sunwait_status"
+			return 1
+			;;
+	esac
+}
+
+schedule_main() {
+	command=$1
+	MODE=${2:-}
+	MANUAL_PHASE=${3:-}
+	NIGHT_START=${4:-}
+	DAY_START=${5:-}
+	LATITUDE=${6:-}
+	LONGITUDE=${7:-}
+	TWILIGHT=${8:-}
+
+	validate_schedule || return 1
+	[ "$command" = resolve ] || return 0
+	case $MODE in
+		manual) printf '%s\n' "$MANUAL_PHASE" ;;
+		fixed) resolve_fixed ;;
+		sun) resolve_sun ;;
+	esac
+}
+
+case ${1:-} in
+	validate|resolve)
+		schedule_main "$@"
+		exit $?
+		;;
+esac
+
+CLI=${LED_NIGHTMODE_BIN:-/usr/sbin/led-nightmode}
+SCHEDULE=${LED_NIGHTMODE_SCHEDULE_BIN:-/usr/libexec/led-nightmode-schedule}
+MANUAL_PHASE=${1:-}
+NIGHT_BRIGHTNESS=${2:-}
+MODE=${3:-manual}
+NIGHT_START=${4:-23:00}
+DAY_START=${5:-07:00}
+LATITUDE=${6:-}
+LONGITUDE=${7:-}
+TWILIGHT=${8:-daylight}
+RUNTIME_DIR=${LED_NIGHTMODE_RUNTIME_DIR:-/var/run/led-nightmode}
+PHASE_FILE=$RUNTIME_DIR/phase
+RESTORE_ON_EXIT=0
+CURRENT_PHASE=
+
+umask 077
+
+write_runtime_phase() {
+	mkdir -p "$RUNTIME_DIR" || return 1
+	temporary_phase=$RUNTIME_DIR/.phase.tmp.$$
+	printf '%s\n' "$1" > "$temporary_phase" || return 1
+	mv "$temporary_phase" "$PHASE_FILE"
+}
+
+resolve_phase() {
+	"$SCHEDULE" resolve "$MODE" "$MANUAL_PHASE" "$NIGHT_START" "$DAY_START" \
+		"$LATITUDE" "$LONGITUDE" "$TWILIGHT"
+}
+
+apply_phase() {
+	target_phase=$1
+	[ "$target_phase" != "$CURRENT_PHASE" ] || return 0
+	case $target_phase in
+		night)
+			RESTORE_ON_EXIT=1
+			LED_NIGHT_BRIGHTNESS=$NIGHT_BRIGHTNESS "$CLI" night || return 1
+			;;
+		day)
+			"$CLI" day || return 1
+			RESTORE_ON_EXIT=0
+			;;
+		*) return 1 ;;
+	esac
+	CURRENT_PHASE=$target_phase
+	write_runtime_phase "$CURRENT_PHASE" || error 'could not publish the current runtime phase'
 }
 
 is_uint() {
@@ -28,6 +226,8 @@ cleanup() {
 			exit_status=1
 		fi
 	fi
+	rm -f "$PHASE_FILE" 2>/dev/null || true
+	rmdir "$RUNTIME_DIR" 2>/dev/null || true
 	exit "$exit_status"
 }
 
@@ -35,7 +235,7 @@ if [ ! -x "$CLI" ]; then
 	error "CLI is not executable: $CLI"
 	exit 1
 fi
-case $PHASE in
+case $MANUAL_PHASE in
 	day|night) ;;
 	*)
 		error "phase must be 'day' or 'night'"
@@ -46,25 +246,32 @@ if ! is_uint "$NIGHT_BRIGHTNESS"; then
 	error 'night brightness must be a non-negative integer'
 	exit 2
 fi
+[ -x "$SCHEDULE" ] || {
+	error "schedule resolver is not executable: $SCHEDULE"
+	exit 1
+}
+if ! "$SCHEDULE" validate "$MODE" "$MANUAL_PHASE" "$NIGHT_START" "$DAY_START" \
+	"$LATITUDE" "$LONGITUDE" "$TWILIGHT"; then
+	exit 2
+fi
 
 trap cleanup EXIT
 trap 'exit 0' HUP INT TERM
 
-case $PHASE in
-	night)
-		RESTORE_ON_EXIT=1
-		if ! LED_NIGHT_BRIGHTNESS=$NIGHT_BRIGHTNESS "$CLI" night; then
-			exit 1
-		fi
-		;;
-	day)
-		if ! "$CLI" day; then
-			exit 1
-		fi
-		;;
-esac
+initial_phase=$(resolve_phase) || exit 1
+apply_phase "$initial_phase" || exit 1
 
 while :; do
-	sleep 3600 &
+	case $MODE in
+		manual) interval=${LED_SCHEDULE_INTERVAL:-3600} ;;
+		fixed) interval=${LED_SCHEDULE_INTERVAL:-15} ;;
+		sun) interval=${LED_SCHEDULE_INTERVAL:-60} ;;
+	esac
+	sleep "$interval" &
 	wait $!
+	desired_phase=$(resolve_phase) || {
+		error 'could not resolve scheduled phase; keeping the current profile'
+		continue
+	}
+	apply_phase "$desired_phase" || error "could not apply scheduled $desired_phase profile"
 done

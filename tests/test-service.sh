@@ -6,9 +6,15 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
 CLI=$PROJECT_ROOT/root/usr/sbin/led-nightmode
 SERVICE=$PROJECT_ROOT/root/usr/libexec/led-nightmode-service
+SCHEDULE=$SERVICE
 TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/led-nightmode-service-test.XXXXXX")
 SYSFS_ROOT=$TEST_ROOT/sys/class/leds
 STATE_DIR=$TEST_ROOT/state
+RUNTIME_DIR=$TEST_ROOT/runtime
+FAKE_BIN=$TEST_ROOT/bin
+FAKE_TIME=$TEST_ROOT/local-time
+FAKE_SUNWAIT=$TEST_ROOT/sunwait
+SUNWAIT_ARGS=$TEST_ROOT/sunwait-args
 SERVICE_PID=
 
 cleanup() {
@@ -35,6 +41,18 @@ assert_eq() {
 	fi
 }
 
+assert_fails() {
+	message=$1
+	shift
+	if "$@" >/dev/null 2>&1; then
+		fail "$message"
+	fi
+}
+
+run_schedule() {
+	LED_SUNWAIT_BIN=$FAKE_SUNWAIT "$SCHEDULE" "$@"
+}
+
 wait_for_path() {
 	path=$1
 	attempt=0
@@ -45,6 +63,56 @@ wait_for_path() {
 	[ -e "$path" ]
 }
 
+wait_for_value() {
+	path=$1
+	wanted=$2
+	attempt=0
+	while [ "$attempt" -lt 100 ]; do
+		if [ -f "$path" ] && [ "$(cat "$path")" = "$wanted" ]; then
+			return 0
+		fi
+		sleep 0.05
+		attempt=$((attempt + 1))
+	done
+	return 1
+}
+
+printf '%s\n' '#!/bin/sh' > "$FAKE_SUNWAIT"
+printf '%s\n' 'printf "%s\n" "$*" > "$LED_TEST_SUNWAIT_ARGS"' >> "$FAKE_SUNWAIT"
+printf '%s\n' 'exit "${LED_TEST_SUNWAIT_STATUS:-2}"' >> "$FAKE_SUNWAIT"
+chmod +x "$FAKE_SUNWAIT"
+export LED_TEST_SUNWAIT_ARGS=$SUNWAIT_ARGS
+
+assert_eq day "$(run_schedule resolve manual day 23:00 07:00 '' '' daylight)" 'manual mode returns the configured day phase'
+assert_eq night "$(run_schedule resolve manual night 23:00 07:00 '' '' daylight)" 'manual mode returns the configured night phase'
+assert_eq day "$(LED_NIGHTMODE_NOW=12:00 run_schedule resolve fixed day 23:00 07:00 '' '' daylight)" 'fixed mode is day between morning and evening boundaries'
+assert_eq night "$(LED_NIGHTMODE_NOW=23:00 run_schedule resolve fixed day 23:00 07:00 '' '' daylight)" 'fixed mode switches to night at night_start'
+assert_eq night "$(LED_NIGHTMODE_NOW=06:59 run_schedule resolve fixed day 23:00 07:00 '' '' daylight)" 'fixed mode remains night before day_start'
+assert_eq day "$(LED_NIGHTMODE_NOW=07:00 run_schedule resolve fixed night 23:00 07:00 '' '' daylight)" 'fixed mode switches to day at day_start'
+assert_eq night "$(LED_NIGHTMODE_NOW=02:00 run_schedule resolve fixed day 01:00 07:00 '' '' daylight)" 'fixed mode supports a same-day night interval'
+assert_eq day "$(LED_NIGHTMODE_NOW=23:00 run_schedule resolve fixed night 01:00 07:00 '' '' daylight)" 'same-day interval is day outside its bounds'
+
+assert_fails 'fixed mode rejects equal boundaries' run_schedule validate fixed day 07:00 07:00 '' '' daylight
+assert_fails 'fixed mode rejects non-padded times' run_schedule validate fixed day 7:00 07:00 '' '' daylight
+assert_fails 'solar mode requires coordinates' run_schedule validate sun day 23:00 07:00 '' '' daylight
+assert_fails 'solar mode rejects latitude outside its range' run_schedule validate sun day 23:00 07:00 91 44 daylight
+assert_fails 'solar mode rejects longitude outside its range' run_schedule validate sun day 23:00 07:00 41 181 daylight
+assert_fails 'solar mode rejects an unknown twilight type' run_schedule validate sun day 23:00 07:00 41 44 blue
+
+LED_TEST_SUNWAIT_STATUS=2
+export LED_TEST_SUNWAIT_STATUS
+assert_eq day "$(run_schedule resolve sun day 23:00 07:00 41.7151 44.8271 civil)" 'sunwait day status maps to day phase'
+assert_eq 'poll civil 41.7151N 44.8271E' "$(cat "$SUNWAIT_ARGS")" 'solar mode passes positive coordinates with cardinal suffixes'
+
+LED_TEST_SUNWAIT_STATUS=3
+export LED_TEST_SUNWAIT_STATUS
+assert_eq night "$(run_schedule resolve sun day 23:00 07:00 -33.8688 -151.2093 daylight)" 'sunwait night status maps to night phase'
+assert_eq 'poll daylight 33.8688S 151.2093W' "$(cat "$SUNWAIT_ARGS")" 'solar mode converts negative coordinates to south and west'
+
+LED_TEST_SUNWAIT_STATUS=1
+export LED_TEST_SUNWAIT_STATUS
+assert_fails 'solar mode propagates sunwait errors' run_schedule resolve sun day 23:00 07:00 41 44 daylight
+
 mkdir -p "$SYSFS_ROOT/green:status" "$SYSFS_ROOT/mt76-phy0"
 printf '%s\n' 1 > "$SYSFS_ROOT/green:status/max_brightness"
 printf '%s\n' 1 > "$SYSFS_ROOT/green:status/brightness"
@@ -54,8 +122,10 @@ printf '%s\n' 0 > "$SYSFS_ROOT/mt76-phy0/brightness"
 printf '%s\n' 'none [phy0tpt]' > "$SYSFS_ROOT/mt76-phy0/trigger"
 
 LED_NIGHTMODE_BIN=$CLI \
+LED_NIGHTMODE_SCHEDULE_BIN=$SCHEDULE \
 LED_SYSFS_ROOT=$SYSFS_ROOT \
 LED_STATE_DIR=$STATE_DIR \
+LED_NIGHTMODE_RUNTIME_DIR=$RUNTIME_DIR \
 LED_SYSFS_EMULATE=1 \
 "$SERVICE" night 7 >/dev/null &
 SERVICE_PID=$!
@@ -63,6 +133,7 @@ SERVICE_PID=$!
 wait_for_path "$STATE_DIR/green:status" || fail 'service did not apply the night profile'
 assert_eq 0 "$(cat "$SYSFS_ROOT/green:status/brightness")" 'service switches off a binary LED'
 assert_eq 7 "$(cat "$SYSFS_ROOT/mt76-phy0/brightness")" 'service applies an explicitly configured multi-level target'
+assert_eq night "$(cat "$RUNTIME_DIR/phase")" 'service publishes its current phase'
 
 kill -TERM "$SERVICE_PID"
 wait "$SERVICE_PID"
@@ -71,11 +142,45 @@ SERVICE_PID=
 assert_eq 1 "$(cat "$SYSFS_ROOT/green:status/brightness")" 'service stop restores binary brightness'
 assert_eq 0 "$(cat "$SYSFS_ROOT/mt76-phy0/brightness")" 'service stop restores multi-level brightness'
 [ ! -d "$STATE_DIR" ] || fail 'service stop removes restored state'
+[ ! -e "$RUNTIME_DIR/phase" ] || fail 'service stop removes stale runtime phase'
 
-if LED_NIGHTMODE_BIN=$CLI "$SERVICE" invalid 1 >/dev/null 2>&1; then
+mkdir -p "$FAKE_BIN"
+printf '%s\n' '#!/bin/sh' > "$FAKE_BIN/date"
+printf '%s\n' 'cat "$LED_TEST_TIME_FILE"' >> "$FAKE_BIN/date"
+chmod +x "$FAKE_BIN/date"
+printf '%s\n' '12:00' > "$FAKE_TIME"
+
+PATH=$FAKE_BIN:$PATH \
+LED_TEST_TIME_FILE=$FAKE_TIME \
+LED_NIGHTMODE_BIN=$CLI \
+LED_NIGHTMODE_SCHEDULE_BIN=$SCHEDULE \
+LED_SCHEDULE_INTERVAL=0.05 \
+LED_SYSFS_ROOT=$SYSFS_ROOT \
+LED_STATE_DIR=$STATE_DIR \
+LED_NIGHTMODE_RUNTIME_DIR=$RUNTIME_DIR \
+LED_SYSFS_EMULATE=1 \
+"$SERVICE" day 7 fixed 23:00 07:00 '' '' daylight >/dev/null &
+SERVICE_PID=$!
+
+wait_for_value "$RUNTIME_DIR/phase" day || fail 'fixed schedule did not start in the calculated day phase'
+printf '%s\n' '23:00' > "$FAKE_TIME"
+wait_for_value "$RUNTIME_DIR/phase" night || fail 'fixed schedule did not switch to night at night_start'
+assert_eq 0 "$(cat "$SYSFS_ROOT/green:status/brightness")" 'scheduled night switches off a binary LED'
+assert_eq 7 "$(cat "$SYSFS_ROOT/mt76-phy0/brightness")" 'scheduled night applies the configured multi-level target'
+
+printf '%s\n' '07:00' > "$FAKE_TIME"
+wait_for_value "$RUNTIME_DIR/phase" day || fail 'fixed schedule did not switch back to day at day_start'
+assert_eq 1 "$(cat "$SYSFS_ROOT/green:status/brightness")" 'scheduled day restores binary brightness'
+assert_eq 0 "$(cat "$SYSFS_ROOT/mt76-phy0/brightness")" 'scheduled day restores multi-level brightness'
+
+kill -TERM "$SERVICE_PID"
+wait "$SERVICE_PID"
+SERVICE_PID=
+
+if LED_NIGHTMODE_BIN=$CLI LED_NIGHTMODE_SCHEDULE_BIN=$SCHEDULE "$SERVICE" invalid 1 >/dev/null 2>&1; then
 	fail 'service must reject an invalid phase'
 fi
-if LED_NIGHTMODE_BIN=$CLI "$SERVICE" night invalid >/dev/null 2>&1; then
+if LED_NIGHTMODE_BIN=$CLI LED_NIGHTMODE_SCHEDULE_BIN=$SCHEDULE "$SERVICE" night invalid >/dev/null 2>&1; then
 	fail 'service must reject invalid brightness'
 fi
 

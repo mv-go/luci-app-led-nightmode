@@ -6,7 +6,7 @@ The first test device is a Banana Pi BPI-R3 Mini. The project is designed for mu
 
 ## Current status
 
-The repository includes the hardware-validated CLI core, a minimal UCI schema, a procd-managed service, and an extensible provider interface for indicators outside the Linux LED class. Release `0.1.0-r3` builds as two `noarch` APKs with the official OpenWrt 25.12.4 `mediatek/filogic` SDK: the universal base package and an optional Quectel QNWCFG provider. A live `day → night → day → night` cycle on the first BPI-R3 Mini switched off all nine sysfs LEDs and its RM520N-GL LTE indicator, restored both classes during the day, and kept LTE/5G and SSH available.
+The repository includes the hardware-validated CLI core, a UCI/procd service, fixed-time and sunrise/sunset scheduling, and an extensible provider interface for indicators outside the Linux LED class. Release `0.2.0-r1` builds as two `noarch` APKs with the official OpenWrt 25.12.4 `mediatek/filogic` SDK: the universal base package and an optional Quectel QNWCFG provider. The previous `0.1.0-r3` release was live-validated on the first BPI-R3 Mini: a `day → night → day → night` cycle switched off all nine sysfs LEDs and its RM520N-GL LTE indicator, restored both classes during the day, and kept LTE/5G and SSH available.
 
 ## CLI core
 
@@ -50,13 +50,23 @@ config core 'main'
 	option phase 'day'
 	option night_brightness '0'
 
+config schedule 'main'
+	option mode 'manual'
+	option night_start '23:00'
+	option day_start '07:00'
+	option twilight 'daylight'
+	# option latitude '41.7151'
+	# option longitude '44.8271'
+
 config provider 'lte'
 	option enabled '0'
 	option driver 'quectel-qnwcfg-ledmode'
 	# option device '/dev/ttyUSB3'
 ```
 
-The service accepts only `day` or `night`. Scheduling, rpcd, and the LuCI view remain later milestones.
+`mode` selects `manual`, `fixed`, or `sun`. Manual mode maintains the core `phase`. Fixed mode uses one daily local-time interval from `night_start` to `day_start`, including intervals that cross midnight. Sun mode obtains the current phase from `sunwait` with explicit decimal coordinates and one of its standard twilight definitions. Both the sysfs core and enabled providers recalculate the phase while running and immediately calculate it again after a service or router restart.
+
+rpcd and the LuCI view remain later milestones.
 Until the LuCI view is implemented, the package does not use `luci.mk` or depend on `luci-base`; installing or building the CLI/service scaffold must not pull in an otherwise unused web interface. The first UI milestone will migrate the package definition to `luci.mk`.
 
 Indicators outside `/sys/class/leds` use optional provider packages. The base package does not scan serial ports or assume modem models. The first provider package supports the validated two-field Quectel `QNWCFG ledmode` interface and is enabled only after an explicit device is configured. The driver interface and contribution rules are documented in [`docs/architecture/providers.md`](docs/architecture/providers.md).
@@ -65,8 +75,8 @@ Indicators outside `/sys/class/leds` use optional provider packages. The base pa
 
 - `max_brightness > 1` is only an unverified multi-level interface, not proof of physical dimming. The safe default is off; a nonzero target is an explicit, hardware-calibrated opt-in.
 - Binary LEDs should support switching off and, in a later phase, a sparse pulse mode.
-- Night state must survive reboot by determining the current phase on startup.
-- Fixed-time and sunrise/sunset schedules come after the CLI prototype. The preferred source of solar events is `sunwait`.
+- Night state survives reboot by determining the current phase on startup.
+- Fixed-time scheduling follows the router's local time. Sunrise/sunset scheduling delegates astronomical calculations to `sunwait`.
 
 ## Development safety
 

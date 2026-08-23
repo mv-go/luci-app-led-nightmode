@@ -1,8 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-led-nightmode
-PKG_VERSION:=0.1.0
-PKG_RELEASE:=3
+PKG_VERSION:=0.2.0
+PKG_RELEASE:=1
 PKG_LICENSE:=Apache-2.0
 PKG_MAINTAINER:=mv-go <28507807+mv-go@users.noreply.github.com>
 
@@ -13,7 +13,7 @@ define Package/luci-app-led-nightmode
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
   TITLE:=LED night mode for OpenWrt
-  DEPENDS:=+procd +uci
+  DEPENDS:=+procd +sunwait +uci
   PKGARCH:=all
 endef
 
@@ -43,6 +43,7 @@ define Package/luci-app-led-nightmode/install
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./root/etc/init.d/led-nightmode $(1)/etc/init.d/led-nightmode
 	$(INSTALL_DIR) $(1)/usr/libexec
+	$(INSTALL_BIN) ./root/usr/libexec/led-nightmode-service $(1)/usr/libexec/led-nightmode-schedule
 	$(INSTALL_BIN) ./root/usr/libexec/led-nightmode-provider-service $(1)/usr/libexec/led-nightmode-provider-service
 	$(INSTALL_BIN) ./root/usr/libexec/led-nightmode-service $(1)/usr/libexec/led-nightmode-service
 	$(INSTALL_DIR) $(1)/usr/sbin

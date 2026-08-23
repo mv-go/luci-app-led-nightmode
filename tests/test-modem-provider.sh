@@ -7,9 +7,12 @@ PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
 PROVIDER_DIR=$PROJECT_ROOT/root/usr/libexec/led-nightmode/providers
 PROVIDER=$PROVIDER_DIR/quectel-qnwcfg-ledmode
 RUNNER=$PROJECT_ROOT/root/usr/libexec/led-nightmode-provider-service
+SCHEDULE=$PROJECT_ROOT/root/usr/libexec/led-nightmode-service
 TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/led-nightmode-provider-test.XXXXXX")
 EMULATE_FILE=$TEST_ROOT/modem-ledmode
 STATE_DIR=$TEST_ROOT/state
+FAKE_BIN=$TEST_ROOT/bin
+FAKE_TIME=$TEST_ROOT/local-time
 RUNNER_PID=
 
 cleanup() {
@@ -91,6 +94,7 @@ fi
 
 printf '%s\n' '0,0' > "$EMULATE_FILE"
 LED_PROVIDER_DIR=$PROVIDER_DIR \
+LED_NIGHTMODE_SCHEDULE_BIN=$SCHEDULE \
 LED_PROVIDER_STATE_DIR=$STATE_DIR \
 LED_QUECTEL_EMULATE_FILE=$EMULATE_FILE \
 "$RUNNER" quectel-qnwcfg-ledmode /dev/emulated lte night >/dev/null &
@@ -103,10 +107,35 @@ RUNNER_PID=
 assert_eq '0,0' "$(cat "$EMULATE_FILE")" 'provider runner stop restores day state'
 [ ! -e "$STATE_DIR" ] || fail 'provider runner stop removes restored state'
 
-if LED_PROVIDER_DIR=$PROVIDER_DIR "$RUNNER" '../bad' /dev/emulated lte night >/dev/null 2>&1; then
+mkdir -p "$FAKE_BIN"
+printf '%s\n' '#!/bin/sh' > "$FAKE_BIN/date"
+printf '%s\n' 'cat "$LED_TEST_TIME_FILE"' >> "$FAKE_BIN/date"
+chmod +x "$FAKE_BIN/date"
+printf '%s\n' '12:00' > "$FAKE_TIME"
+
+PATH=$FAKE_BIN:$PATH \
+LED_TEST_TIME_FILE=$FAKE_TIME \
+LED_PROVIDER_DIR=$PROVIDER_DIR \
+LED_NIGHTMODE_SCHEDULE_BIN=$SCHEDULE \
+LED_SCHEDULE_INTERVAL=0.05 \
+LED_PROVIDER_STATE_DIR=$STATE_DIR \
+LED_QUECTEL_EMULATE_FILE=$EMULATE_FILE \
+"$RUNNER" quectel-qnwcfg-ledmode /dev/emulated lte day fixed 23:00 07:00 '' '' daylight >/dev/null &
+RUNNER_PID=$!
+
+printf '%s\n' '23:00' > "$FAKE_TIME"
+wait_for_value "$EMULATE_FILE" '0,1' || fail 'provider runner did not follow the scheduled night transition'
+printf '%s\n' '07:00' > "$FAKE_TIME"
+wait_for_value "$EMULATE_FILE" '0,0' || fail 'provider runner did not follow the scheduled day transition'
+
+kill -TERM "$RUNNER_PID"
+wait "$RUNNER_PID"
+RUNNER_PID=
+
+if LED_PROVIDER_DIR=$PROVIDER_DIR LED_NIGHTMODE_SCHEDULE_BIN=$SCHEDULE "$RUNNER" '../bad' /dev/emulated lte night >/dev/null 2>&1; then
 	fail 'provider runner must reject path traversal in driver names'
 fi
-if LED_PROVIDER_DIR=$PROVIDER_DIR "$RUNNER" missing /dev/emulated lte night >/dev/null 2>&1; then
+if LED_PROVIDER_DIR=$PROVIDER_DIR LED_NIGHTMODE_SCHEDULE_BIN=$SCHEDULE "$RUNNER" missing /dev/emulated lte night >/dev/null 2>&1; then
 	fail 'provider runner must reject an unavailable driver'
 fi
 

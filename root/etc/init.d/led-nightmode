@@ -6,12 +6,23 @@ USE_PROCD=1
 
 PROG=/usr/libexec/led-nightmode-service
 PROVIDER_PROG=/usr/libexec/led-nightmode-provider-service
+SCHEDULE=${LED_NIGHTMODE_SCHEDULE_BIN:-/usr/libexec/led-nightmode-schedule}
 
 validate_core_section() {
 	uci_validate_section led-nightmode core "$1" \
 		'enabled:bool:0' \
 		'phase:or("day", "night"):day' \
 		'night_brightness:uinteger:0'
+}
+
+validate_schedule_section() {
+	uci_validate_section led-nightmode schedule "$1" \
+		'mode:or("manual", "fixed", "sun"):manual' \
+		'night_start:string:23:00' \
+		'day_start:string:07:00' \
+		'latitude:string' \
+		'longitude:string' \
+		'twilight:or("daylight", "civil", "nautical", "astronomical"):daylight'
 }
 
 validate_provider_section() {
@@ -47,17 +58,19 @@ validate_provider_entry() {
 
 start_provider_instance() {
 	local section=$1
-	local phase=$2
+	local phase=$2 mode=$3 night_start=$4 day_start=$5 latitude=$6 longitude=$7 twilight=$8
 	local enabled driver device
 
 	validate_provider_section "$section" || return 1
 	[ "$enabled" -eq 1 ] || return 0
 
 	procd_open_instance "provider-$section"
-	procd_set_param command "$PROVIDER_PROG" "$driver" "$device" "$section" "$phase"
+	procd_set_param command "$PROVIDER_PROG" "$driver" "$device" "$section" \
+		"$phase" "$mode" "$night_start" "$day_start" "$latitude" "$longitude" "$twilight"
 	procd_set_param file /etc/config/led-nightmode
 	procd_set_param stdout 1
 	procd_set_param stderr 1
+	procd_set_param respawn 3600 30 0
 	procd_close_instance
 }
 
@@ -65,6 +78,9 @@ start_service() {
 	local section=main
 	local enabled phase night_brightness
 	local core_enabled core_phase core_night_brightness
+	local mode night_start day_start latitude longitude twilight
+	local schedule_mode schedule_night_start schedule_day_start
+	local schedule_latitude schedule_longitude schedule_twilight
 
 	config_load led-nightmode
 
@@ -77,21 +93,44 @@ start_service() {
 	core_night_brightness=$night_brightness
 	[ "$core_enabled" -eq 1 ] || return 0
 
+	validate_schedule_section "$section" || {
+		echo "led-nightmode: invalid UCI schedule section '$section'" >&2
+		return 1
+	}
+	schedule_mode=$mode
+	schedule_night_start=$night_start
+	schedule_day_start=$day_start
+	schedule_latitude=$latitude
+	schedule_longitude=$longitude
+	schedule_twilight=$twilight
+	[ -x "$SCHEDULE" ] || {
+		echo "led-nightmode: schedule resolver is not executable: $SCHEDULE" >&2
+		return 1
+	}
+	"$SCHEDULE" validate "$schedule_mode" "$core_phase" \
+		"$schedule_night_start" "$schedule_day_start" \
+		"$schedule_latitude" "$schedule_longitude" "$schedule_twilight" || return 1
+
 	PROVIDER_CONFIG_VALID=1
 	config_foreach validate_provider_entry provider
 	[ "$PROVIDER_CONFIG_VALID" -eq 1 ] || return 1
 
 	procd_open_instance "$section"
-	procd_set_param command "$PROG" "$core_phase" "$core_night_brightness"
+	procd_set_param command "$PROG" "$core_phase" "$core_night_brightness" \
+		"$schedule_mode" "$schedule_night_start" "$schedule_day_start" \
+		"$schedule_latitude" "$schedule_longitude" "$schedule_twilight"
 	procd_set_param file /etc/config/led-nightmode
 	procd_set_param stdout 1
 	procd_set_param stderr 1
+	procd_set_param respawn 3600 30 0
 	procd_close_instance
 
-	config_foreach start_provider_instance provider "$core_phase"
+	config_foreach start_provider_instance provider "$core_phase" \
+		"$schedule_mode" "$schedule_night_start" "$schedule_day_start" \
+		"$schedule_latitude" "$schedule_longitude" "$schedule_twilight"
 }
 
 service_triggers() {
 	procd_add_reload_trigger led-nightmode
-	procd_add_validation validate_core_section validate_provider_section
+	procd_add_validation validate_core_section validate_schedule_section validate_provider_section
 }

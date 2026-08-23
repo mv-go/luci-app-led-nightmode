@@ -4,14 +4,44 @@ set -u
 
 PROGRAM=${0##*/}
 PROVIDER_DIR=${LED_PROVIDER_DIR:-/usr/libexec/led-nightmode/providers}
+SCHEDULE=${LED_NIGHTMODE_SCHEDULE_BIN:-/usr/libexec/led-nightmode-schedule}
 DRIVER=${1:-}
 DEVICE=${2:-}
 INSTANCE=${3:-}
-PHASE=${4:-}
+MANUAL_PHASE=${4:-}
+MODE=${5:-manual}
+NIGHT_START=${6:-23:00}
+DAY_START=${7:-07:00}
+LATITUDE=${8:-}
+LONGITUDE=${9:-}
+TWILIGHT=${10:-daylight}
 RESTORE_ON_EXIT=0
+CURRENT_PHASE=
 
 error() {
 	printf '%s: %s\n' "$PROGRAM" "$*" >&2
+}
+
+resolve_phase() {
+	"$SCHEDULE" resolve "$MODE" "$MANUAL_PHASE" "$NIGHT_START" "$DAY_START" \
+		"$LATITUDE" "$LONGITUDE" "$TWILIGHT"
+}
+
+apply_phase() {
+	target_phase=$1
+	[ "$target_phase" != "$CURRENT_PHASE" ] || return 0
+	case $target_phase in
+		night)
+			RESTORE_ON_EXIT=1
+			run_provider night || return 1
+			;;
+		day)
+			run_provider day || return 1
+			RESTORE_ON_EXIT=0
+			;;
+		*) return 1 ;;
+	esac
+	CURRENT_PHASE=$target_phase
 }
 
 valid_identifier() {
@@ -53,13 +83,21 @@ valid_identifier "$INSTANCE" || {
 	error "provider device is required for '$DRIVER'"
 	exit 2
 }
-case $PHASE in
+case $MANUAL_PHASE in
 	day|night) ;;
 	*)
 		error "phase must be 'day' or 'night'"
 		exit 2
 		;;
 esac
+[ -x "$SCHEDULE" ] || {
+	error "schedule resolver is not executable: $SCHEDULE"
+	exit 1
+}
+if ! "$SCHEDULE" validate "$MODE" "$MANUAL_PHASE" "$NIGHT_START" "$DAY_START" \
+	"$LATITUDE" "$LONGITUDE" "$TWILIGHT"; then
+	exit 2
+fi
 
 PROVIDER_BIN=$PROVIDER_DIR/$DRIVER
 [ -x "$PROVIDER_BIN" ] || {
@@ -70,21 +108,20 @@ PROVIDER_BIN=$PROVIDER_DIR/$DRIVER
 trap cleanup EXIT
 trap 'exit 0' HUP INT TERM
 
-case $PHASE in
-	night)
-		RESTORE_ON_EXIT=1
-		if ! run_provider night; then
-			exit 1
-		fi
-		;;
-	day)
-		if ! run_provider day; then
-			exit 1
-		fi
-		;;
-esac
+initial_phase=$(resolve_phase) || exit 1
+apply_phase "$initial_phase" || exit 1
 
 while :; do
-	sleep 3600 &
+	case $MODE in
+		manual) interval=${LED_SCHEDULE_INTERVAL:-3600} ;;
+		fixed) interval=${LED_SCHEDULE_INTERVAL:-15} ;;
+		sun) interval=${LED_SCHEDULE_INTERVAL:-60} ;;
+	esac
+	sleep "$interval" &
 	wait $!
+	desired_phase=$(resolve_phase) || {
+		error 'could not resolve scheduled phase; keeping the current provider state'
+		continue
+	}
+	apply_phase "$desired_phase" || error "could not apply scheduled $desired_phase profile"
 done
