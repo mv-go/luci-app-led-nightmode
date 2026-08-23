@@ -40,3 +40,14 @@ The Ethernet LED driver rejected rewriting `interval` when the value was already
 Package `0.1.0-r2` completed two procd-managed live cycles: `day → night → day` and `day → night → stop`. In both cycles all nine LEDs reported brightness 0 with trigger `none` during the night phase. SSH remained available, the service reported no errors, and restoration removed the saved state. A stable snapshot containing active triggers and trigger-specific parameters had the same SHA-256 before the second night phase and after service stop.
 
 The preceding `0.1.0-r1` package exposed a BusyBox/procd interaction. Capturing service stdout makes procd preload `/lib/libsetlbf.so`; an `ash` builtin `printf` redirected to a sysfs trigger then changed the trigger but returned status 1. The CLI treated that status as a failed trigger selection and skipped the brightness write, leaving `green:status` on. The scalar writer now pipes through external `cat`, whose exit status represents the sysfs write correctly under the same preload.
+
+## Front-panel LEDs outside sysfs
+
+Visual validation found two front-panel indicators that are not represented in `/sys/class/leds`:
+
+- `PWR` is hard-wired to the board's 3.3 V rail (`LED11` in the BPI-R3 Mini V1.0 schematic). It has no GPIO or software control path and therefore remains lit during the sysfs night profile.
+- `LTE` is driven by the M.2 modem's `LED_WWAN#`/network-status output (`LTE_NET_STU` in the board schematic). It is not a SoC LED and cannot be discovered through the Linux LED class.
+
+The first router contains a Quectel RM520N-GL with firmware `RM520NGLAAR03A04M4G_01.202.01.202`. A live query returned `AT+QNWCFG="ledmode"` as `0,0`. Setting it to `0,1` switched the modem's network-light output to the firmware's all-lights-off mode while ModemManager remained connected over LTE/5G and `wwan0` retained its address.
+
+This command is device- and firmware-specific. The generic CLI must not send it merely because an LTE interface exists. Supporting the front-panel LTE indicator requires a separately probed non-sysfs provider with saved-state restoration and explicit opt-in. Until that provider exists, the sysfs service manages nine LEDs and intentionally does not claim control of `PWR` or `LTE`.

@@ -32,4 +32,5 @@ The following remain outside this milestone:
 - boot-time phase calculation;
 - rpcd methods and ACLs;
 - LuCI JavaScript views;
-- per-LED overrides and binary pulse mode.
+- per-LED overrides and binary pulse mode;
+- explicitly enabled, capability-probed providers for indicators outside the Linux LED class, such as a modem-controlled `LED_WWAN#` output. Such providers must preserve and restore their own state and must not introduce model-specific assumptions into the sysfs core.
