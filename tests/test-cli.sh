@@ -4,7 +4,7 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
-CLI=$PROJECT_ROOT/bin/led-nightmode
+CLI=$PROJECT_ROOT/root/usr/sbin/led-nightmode
 TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/led-nightmode-test.XXXXXX")
 SYSFS_ROOT=$TEST_ROOT/sys/class/leds
 STATE_DIR=$TEST_ROOT/state

@@ -6,11 +6,9 @@ Build a universal OpenWrt LED night-mode application. The first test device is a
 
 ## Current milestone
 
-The first milestone is a CLI prototype only. It does not require LuCI, package metadata, an OpenWrt buildroot, UCI, rpcd, or solar scheduling.
+The hardware-validated CLI milestone is complete. The current milestone adds the OpenWrt package layout, a minimal UCI schema, and a procd-managed service around the CLI core. It excludes scheduling, rpcd, and the LuCI view.
 
-The initial read-only inventory is stored in `docs/hardware/bpi-r3-mini-led-inventory.md`.
-
-The milestone is complete only when `led-nightmode night` safely applies a night profile to discovered LEDs and `led-nightmode day` restores the original trigger and state without affecting networking.
+The initial inventory and live round-trip result are stored in `docs/hardware/bpi-r3-mini-led-inventory.md`. The service/UCI boundary is documented in `docs/architecture/service-and-uci.md`.
 
 ## Runtime and design rules
 
@@ -20,6 +18,8 @@ The milestone is complete only when `led-nightmode night` safely applies a night
 - Preserve the original LED trigger and state before changing an LED. Restoration must be idempotent and tolerate missing LEDs.
 - Keep filesystem access behind a configurable sysfs root so tests can use fixtures instead of a live router.
 - Do not implement astronomical calculations. A later scheduling phase uses `sunwait`.
+- Keep package defaults write-safe: a fresh install must not change LEDs until the UCI service is explicitly enabled.
+- Keep the installed CLI at `root/usr/sbin/led-nightmode`; `bin/led-nightmode` is only a local convenience wrapper.
 
 ## Safety and validation
 
@@ -30,8 +30,8 @@ The milestone is complete only when `led-nightmode night` safely applies a night
 
 ## Commands
 
-- `make check` validates POSIX shell syntax.
-- `make test` runs the fixture-backed CLI tests without touching a real router.
+- `make check` validates POSIX shell syntax for the CLI, init script, service runner, and tests.
+- `make test` runs fixture-backed CLI and service lifecycle tests without touching a real router.
 
 ## Project memory
 

@@ -6,9 +6,9 @@ The first test device is a Banana Pi BPI-R3 Mini. The project is designed for mu
 
 ## Current status
 
-The repository includes the first CLI prototype and fixture-backed tests. A live `night`/`day` round trip has completed successfully on a BPI-R3 Mini: SSH remained available and the final LED configuration matched the initial snapshot exactly.
+The repository includes the hardware-validated CLI core, a minimal UCI schema, and a procd service scaffold. A live `night`/`day` round trip has completed successfully on a BPI-R3 Mini: SSH remained available and the final LED configuration matched the initial snapshot exactly.
 
-## First milestone
+## CLI core
 
 Build a standalone CLI prototype with these commands:
 
@@ -17,7 +17,7 @@ Build a standalone CLI prototype with these commands:
 - `led-nightmode night`
 - `led-nightmode day`
 
-`night` must apply a safe night profile to discovered LEDs. `day` must restore each affected LED's original trigger and state. This milestone deliberately excludes LuCI, package build integration, UCI, rpcd, and time-based scheduling.
+`night` applies a safe night profile to discovered LEDs. `day` restores each affected LED's original trigger and state.
 
 ## Local usage
 
@@ -35,6 +35,21 @@ Run all local checks with:
 ```sh
 make test
 ```
+
+GNU Make uses `GNUmakefile` for local checks. The root `Makefile` is the OpenWrt/LuCI package definition and expects the package to be placed under `applications/luci-app-led-nightmode` in a LuCI source tree.
+
+## Service configuration
+
+The installed package provides `/etc/config/led-nightmode` with a safe disabled default:
+
+```text
+config core 'main'
+	option enabled '0'
+	option phase 'day'
+	option night_brightness '1'
+```
+
+The service accepts only `day` or `night`. Scheduling, rpcd, and the LuCI view remain later milestones.
 
 ## Design direction
 
