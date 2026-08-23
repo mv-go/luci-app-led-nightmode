@@ -1,0 +1,222 @@
+#!/bin/sh
+
+set -u
+
+PROGRAM=${0##*/}
+AT_PORT=${LED_PROVIDER_DEVICE:-}
+STATE_DIR=${LED_PROVIDER_STATE_DIR:-/etc/led-nightmode/state/providers/quectel-qnwcfg-ledmode}
+STATE_FILE=$STATE_DIR/ledmode
+PICOCOM=${LED_QUECTEL_PICOCOM:-picocom}
+EMULATE_FILE=${LED_QUECTEL_EMULATE_FILE:-}
+COMMAND=${1:-}
+
+umask 077
+
+error() {
+	printf '%s: %s\n' "$PROGRAM" "$*" >&2
+}
+
+valid_ledmode() {
+	case $1 in
+		[0-9]*,[01])
+			first=${1%,*}
+			case $first in
+				''|*[!0-9]*) return 1 ;;
+				*) return 0 ;;
+			esac
+			;;
+		*) return 1 ;;
+	esac
+}
+
+require_transport() {
+	if [ -n "$EMULATE_FILE" ]; then
+		[ -r "$EMULATE_FILE" ] && [ -w "$EMULATE_FILE" ] || {
+			error "emulated modem state is unavailable: $EMULATE_FILE"
+			return 1
+		}
+		return 0
+	fi
+
+	[ -n "$AT_PORT" ] || {
+		error 'LED_PROVIDER_DEVICE is required'
+		return 1
+	}
+	[ -c "$AT_PORT" ] && [ -r "$AT_PORT" ] && [ -w "$AT_PORT" ] || {
+		error "AT port is not an accessible character device: $AT_PORT"
+		return 1
+	}
+	command -v "$PICOCOM" >/dev/null 2>&1 || {
+		error "picocom is required for modem LED control"
+		return 1
+	}
+}
+
+emulate_at_command() {
+	at_command=$1
+	case $at_command in
+		'AT+QNWCFG="ledmode"')
+			emulated_mode=$(cat "$EMULATE_FILE") || return 1
+			valid_ledmode "$emulated_mode" || return 1
+			printf '\n+QNWCFG: "ledmode",%s\n\nOK\n' "$emulated_mode"
+			;;
+		AT+QNWCFG=\"ledmode\",*)
+			emulated_mode=${at_command#AT+QNWCFG=\"ledmode\",}
+			valid_ledmode "$emulated_mode" || return 1
+			printf '%s\n' "$emulated_mode" > "$EMULATE_FILE" || return 1
+			printf '\nOK\n'
+			;;
+		*) return 1 ;;
+	esac
+}
+
+serial_at_command() {
+	at_command=$1
+	response_file=$(mktemp "${TMPDIR:-/tmp}/led-nightmode-at.XXXXXX") || return 1
+	at_status=0
+
+	# picocom exits on stdin EOF. Keep stdin open long enough to receive the
+	# response, then close it through picocom's normal escape sequence.
+	{
+		sleep 1
+		printf '%s\r' "$at_command"
+		sleep 1
+		printf '\001\030'
+	} | "$PICOCOM" --quiet --baud 115200 --logfile "$response_file" "$AT_PORT" \
+		>/dev/null 2>&1 || at_status=$?
+
+	cat "$response_file"
+	rm -f "$response_file"
+	return "$at_status"
+}
+
+run_at_command() {
+	if [ -n "$EMULATE_FILE" ]; then
+		emulate_at_command "$1"
+	else
+		serial_at_command "$1"
+	fi
+}
+
+query_ledmode() {
+	response=$(run_at_command 'AT+QNWCFG="ledmode"') || {
+		error 'modem did not answer the LED mode query'
+		return 1
+	}
+	case $response in
+		*OK*) ;;
+		*)
+			error 'modem rejected the LED mode query'
+			return 1
+			;;
+	esac
+
+	LEDMODE=$(printf '%s\n' "$response" |
+		sed -n 's/.*+QNWCFG: "ledmode",\([0-9][0-9]*,[01]\).*/\1/p' |
+		tail -n 1)
+	valid_ledmode "$LEDMODE" || {
+		error 'modem returned an unsupported LED mode response'
+		return 1
+	}
+}
+
+set_ledmode() {
+	target_mode=$1
+	valid_ledmode "$target_mode" || return 1
+	response=$(run_at_command "AT+QNWCFG=\"ledmode\",$target_mode") || {
+		error "modem did not accept LED mode $target_mode"
+		return 1
+	}
+	case $response in
+		*OK*) ;;
+		*)
+			error "modem rejected LED mode $target_mode"
+			return 1
+			;;
+	esac
+
+	query_ledmode || return 1
+	[ "$LEDMODE" = "$target_mode" ] || {
+		error "LED mode verification failed: expected $target_mode, got $LEDMODE"
+		return 1
+	}
+}
+
+save_ledmode() {
+	saved_mode=$1
+	[ -e "$STATE_FILE" ] && return 0
+	mkdir -p "$STATE_DIR" || return 1
+	temporary_state=$STATE_DIR/.ledmode.tmp.$$
+	printf '%s\n' "$saved_mode" > "$temporary_state" || return 1
+	mv "$temporary_state" "$STATE_FILE"
+}
+
+load_ledmode() {
+	SAVED_LEDMODE=$(cat "$STATE_FILE") || return 1
+	valid_ledmode "$SAVED_LEDMODE"
+}
+
+command_probe() {
+	require_transport || return 1
+	query_ledmode || return 1
+	printf 'quectel-qnwcfg-ledmode\tsupported\t%s\n' "$LEDMODE"
+}
+
+command_status() {
+	require_transport || return 1
+	query_ledmode || return 1
+	if [ -f "$STATE_FILE" ]; then
+		managed=yes
+	else
+		managed=no
+	fi
+	printf 'quectel-qnwcfg-ledmode\t%s\t%s\n' "$LEDMODE" "$managed"
+}
+
+command_night() {
+	require_transport || return 1
+	if [ -f "$STATE_FILE" ]; then
+		load_ledmode || {
+			error 'saved modem LED state is invalid'
+			return 1
+		}
+	else
+		query_ledmode || return 1
+		SAVED_LEDMODE=$LEDMODE
+		save_ledmode "$SAVED_LEDMODE" || {
+			error 'could not save the original modem LED mode'
+			return 1
+		}
+	fi
+
+	night_mode=${SAVED_LEDMODE%,*},1
+	set_ledmode "$night_mode" || return 1
+	printf 'quectel-qnwcfg-ledmode: night profile applied (ledmode %s)\n' "$night_mode"
+}
+
+command_day() {
+	if [ ! -f "$STATE_FILE" ]; then
+		printf '%s\n' 'No saved modem LED state; nothing to restore.'
+		return 0
+	fi
+	require_transport || return 1
+	load_ledmode || {
+		error 'saved modem LED state is invalid'
+		return 1
+	}
+	set_ledmode "$SAVED_LEDMODE" || return 1
+	rm -f "$STATE_FILE" || return 1
+	rmdir "$STATE_DIR" 2>/dev/null || true
+	printf 'quectel-qnwcfg-ledmode: original LED mode restored (%s)\n' "$SAVED_LEDMODE"
+}
+
+case $COMMAND in
+	probe) command_probe ;;
+	status) command_status ;;
+	night) command_night ;;
+	day) command_day ;;
+	*)
+		error 'usage: quectel-qnwcfg-ledmode {probe|status|night|day}'
+		exit 2
+		;;
+esac

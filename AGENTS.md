@@ -6,7 +6,7 @@ Build a universal OpenWrt LED night-mode application. The first test device is a
 
 ## Current milestone
 
-The hardware CLI and OpenWrt package/UCI/procd milestones are complete and live-validated with package `0.1.0-r2` on the first test router. No later milestone has started. Scheduling, rpcd, and the LuCI view remain out of scope until the next milestone is selected.
+The hardware CLI, package/UCI/procd, and optional non-sysfs provider milestones are complete and live-validated with release `0.1.0-r3` on the first test router. The base package remains universal; a separate Quectel QNWCFG provider controls the modem-managed LTE indicator. Scheduling, rpcd, and the LuCI view remain deferred.
 
 The initial inventory and live round-trip result are stored in `docs/hardware/bpi-r3-mini-led-inventory.md`. The service/UCI boundary is documented in `docs/architecture/service-and-uci.md`.
 
@@ -19,6 +19,7 @@ The initial inventory and live round-trip result are stored in `docs/hardware/bp
 - Keep filesystem access behind a configurable sysfs root so tests can use fixtures instead of a live router.
 - Do not implement astronomical calculations. A later scheduling phase uses `sunwait`.
 - Keep package defaults write-safe: a fresh install must not change LEDs until the UCI service is explicitly enabled.
+- Keep device-specific non-sysfs commands in optional provider drivers. Providers require explicit endpoints, read-only capability probes, saved-state restoration, and fixture-backed lifecycle tests; the sysfs core must not scan serial ports or infer modem models.
 - Keep the installed CLI at `root/usr/sbin/led-nightmode`; `bin/led-nightmode` is only a local convenience wrapper.
 
 ## Safety and validation
@@ -30,8 +31,8 @@ The initial inventory and live round-trip result are stored in `docs/hardware/bp
 
 ## Commands
 
-- `make check` validates POSIX shell syntax for the CLI, init script, service runner, and tests.
-- `make test` runs fixture-backed CLI and service lifecycle tests without touching a real router.
+- `make check` validates POSIX shell syntax for the CLI, init script, core/provider runners, provider driver, and tests.
+- `make test` runs fixture-backed CLI, service, and provider lifecycle tests without touching a real router.
 
 ## Project memory
 

@@ -1,0 +1,90 @@
+#!/bin/sh
+
+set -u
+
+PROGRAM=${0##*/}
+PROVIDER_DIR=${LED_PROVIDER_DIR:-/usr/libexec/led-nightmode/providers}
+DRIVER=${1:-}
+DEVICE=${2:-}
+INSTANCE=${3:-}
+PHASE=${4:-}
+RESTORE_ON_EXIT=0
+
+error() {
+	printf '%s: %s\n' "$PROGRAM" "$*" >&2
+}
+
+valid_identifier() {
+	case $1 in
+		''|*[!a-zA-Z0-9_-]*) return 1 ;;
+		*) return 0 ;;
+	esac
+}
+
+run_provider() {
+	provider_command=$1
+	LED_PROVIDER_DEVICE=$DEVICE \
+	LED_PROVIDER_INSTANCE=$INSTANCE \
+	LED_PROVIDER_STATE_DIR=${LED_PROVIDER_STATE_DIR:-/etc/led-nightmode/state/providers/$INSTANCE} \
+		"$PROVIDER_BIN" "$provider_command"
+}
+
+cleanup() {
+	exit_status=$?
+	trap - EXIT HUP INT TERM
+	if [ "$RESTORE_ON_EXIT" -eq 1 ]; then
+		if ! run_provider day; then
+			error "could not restore provider '$DRIVER' while stopping"
+			exit_status=1
+		fi
+	fi
+	exit "$exit_status"
+}
+
+valid_identifier "$DRIVER" || {
+	error "invalid provider driver: $DRIVER"
+	exit 2
+}
+valid_identifier "$INSTANCE" || {
+	error "invalid provider instance: $INSTANCE"
+	exit 2
+}
+[ -n "$DEVICE" ] || {
+	error "provider device is required for '$DRIVER'"
+	exit 2
+}
+case $PHASE in
+	day|night) ;;
+	*)
+		error "phase must be 'day' or 'night'"
+		exit 2
+		;;
+esac
+
+PROVIDER_BIN=$PROVIDER_DIR/$DRIVER
+[ -x "$PROVIDER_BIN" ] || {
+	error "provider driver is not executable: $PROVIDER_BIN"
+	exit 1
+}
+
+trap cleanup EXIT
+trap 'exit 0' HUP INT TERM
+
+case $PHASE in
+	night)
+		RESTORE_ON_EXIT=1
+		if ! run_provider night; then
+			exit 1
+		fi
+		;;
+	day)
+		if ! run_provider day; then
+			exit 1
+		fi
+		;;
+esac
+
+while :; do
+	sleep 3600 &
+	wait $!
+done

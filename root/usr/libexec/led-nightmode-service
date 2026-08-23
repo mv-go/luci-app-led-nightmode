@@ -53,10 +53,14 @@ trap 'exit 0' HUP INT TERM
 case $PHASE in
 	night)
 		RESTORE_ON_EXIT=1
-		LED_NIGHT_BRIGHTNESS=$NIGHT_BRIGHTNESS "$CLI" night
+		if ! LED_NIGHT_BRIGHTNESS=$NIGHT_BRIGHTNESS "$CLI" night; then
+			exit 1
+		fi
 		;;
 	day)
-		"$CLI" day
+		if ! "$CLI" day; then
+			exit 1
+		fi
 		;;
 esac
 

@@ -9,10 +9,13 @@ else
 SHELL_SOURCES := \
 	bin/led-nightmode \
 	root/etc/init.d/led-nightmode \
+	root/usr/libexec/led-nightmode-provider-service \
 	root/usr/libexec/led-nightmode-service \
+	root/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode \
 	root/usr/sbin/led-nightmode \
 	tests/test-cli.sh \
 	tests/test-init.sh \
+	tests/test-modem-provider.sh \
 	tests/test-service.sh
 
 check:
@@ -21,6 +24,7 @@ check:
 test: check
 	./tests/test-cli.sh
 	./tests/test-init.sh
+	./tests/test-modem-provider.sh
 	./tests/test-service.sh
 
 endif

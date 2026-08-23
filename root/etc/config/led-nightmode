@@ -2,3 +2,8 @@ config core 'main'
 	option enabled '0'
 	option phase 'day'
 	option night_brightness '0'
+
+config provider 'lte'
+	option enabled '0'
+	option driver 'quectel-qnwcfg-ledmode'
+	# option device '/dev/ttyUSB3'

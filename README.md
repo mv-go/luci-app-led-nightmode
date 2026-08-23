@@ -6,7 +6,7 @@ The first test device is a Banana Pi BPI-R3 Mini. The project is designed for mu
 
 ## Current status
 
-The repository includes the hardware-validated CLI core, a minimal UCI schema, and a procd-managed service. Package `0.1.0-r2` builds as a `noarch` APK with the official OpenWrt 25.12.4 `mediatek/filogic` SDK and has completed live package lifecycle tests on a BPI-R3 Mini. Both `day → night → day` and `day → night → stop` kept SSH available, switched all nine LEDs off at night, and restored the original triggers and stable trigger parameters.
+The repository includes the hardware-validated CLI core, a minimal UCI schema, a procd-managed service, and an extensible provider interface for indicators outside the Linux LED class. Release `0.1.0-r3` builds as two `noarch` APKs with the official OpenWrt 25.12.4 `mediatek/filogic` SDK: the universal base package and an optional Quectel QNWCFG provider. A live `day → night → day → night` cycle on the first BPI-R3 Mini switched off all nine sysfs LEDs and its RM520N-GL LTE indicator, restored both classes during the day, and kept LTE/5G and SSH available.
 
 ## CLI core
 
@@ -49,10 +49,17 @@ config core 'main'
 	option enabled '0'
 	option phase 'day'
 	option night_brightness '0'
+
+config provider 'lte'
+	option enabled '0'
+	option driver 'quectel-qnwcfg-ledmode'
+	# option device '/dev/ttyUSB3'
 ```
 
 The service accepts only `day` or `night`. Scheduling, rpcd, and the LuCI view remain later milestones.
 Until the LuCI view is implemented, the package does not use `luci.mk` or depend on `luci-base`; installing or building the CLI/service scaffold must not pull in an otherwise unused web interface. The first UI milestone will migrate the package definition to `luci.mk`.
+
+Indicators outside `/sys/class/leds` use optional provider packages. The base package does not scan serial ports or assume modem models. The first provider package supports the validated two-field Quectel `QNWCFG ledmode` interface and is enabled only after an explicit device is configured. The driver interface and contribution rules are documented in [`docs/architecture/providers.md`](docs/architecture/providers.md).
 
 ## Design direction
 

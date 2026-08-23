@@ -10,6 +10,10 @@ MOCK_ENABLED=0
 MOCK_PHASE=day
 MOCK_BRIGHTNESS=0
 MOCK_VALID=1
+MOCK_PROVIDER_PRESENT=0
+MOCK_PROVIDER_ENABLED=0
+MOCK_PROVIDER_DRIVER=quectel-qnwcfg-ledmode
+MOCK_PROVIDER_DEVICE=/dev/ttyUSB3
 
 fail() {
 	printf 'FAIL: %s\n' "$*" >&2
@@ -33,17 +37,43 @@ record_call() {
 
 uci_validate_section() {
 	[ "$1" = led-nightmode ] || fail 'init validates the correct UCI package'
-	[ "$2" = core ] || fail 'init validates the core section type'
+	section_type=$2
 	section=$3
 	shift 3
-	[ "$section" = main ] || [ -z "$section" ] || fail 'init validates only the main section'
-	assert_contains "$*" 'enabled:bool:0' 'init validates enabled as boolean'
-	assert_contains "$*" 'phase:or("day", "night"):day' 'init restricts the phase'
-	assert_contains "$*" 'night_brightness:uinteger:0' 'init validates night brightness'
-	enabled=$MOCK_ENABLED
-	phase=$MOCK_PHASE
-	night_brightness=$MOCK_BRIGHTNESS
+	case $section_type in
+		core)
+			[ "$section" = main ] || [ -z "$section" ] || fail 'init validates only the main section'
+			assert_contains "$*" 'enabled:bool:0' 'init validates enabled as boolean'
+			assert_contains "$*" 'phase:or("day", "night"):day' 'init restricts the phase'
+			assert_contains "$*" 'night_brightness:uinteger:0' 'init validates night brightness'
+			enabled=$MOCK_ENABLED
+			phase=$MOCK_PHASE
+			night_brightness=$MOCK_BRIGHTNESS
+			;;
+		provider)
+			assert_contains "$*" 'enabled:bool:0' 'init validates provider enabled as boolean'
+			assert_contains "$*" 'driver:string' 'init validates provider driver as string'
+			assert_contains "$*" 'device:string' 'init validates provider device as string'
+			enabled=$MOCK_PROVIDER_ENABLED
+			driver=$MOCK_PROVIDER_DRIVER
+			device=$MOCK_PROVIDER_DEVICE
+			;;
+		*) fail 'init validates only known section types' ;;
+	esac
 	[ "$MOCK_VALID" -eq 1 ]
+}
+
+config_load() {
+	[ "$1" = led-nightmode ] || fail 'init loads the correct UCI package'
+}
+
+config_foreach() {
+	callback=$1
+	section_type=$2
+	shift 2
+	[ "$section_type" = provider ] || fail 'init iterates provider sections only'
+	[ "$MOCK_PROVIDER_PRESENT" -eq 1 ] || return 0
+	"$callback" lte "$@"
 }
 
 procd_open_instance() { record_call "open $*"; }
@@ -69,8 +99,16 @@ assert_contains "$CALLS" 'param stderr 1' 'init forwards stderr'
 assert_contains "$CALLS" 'close' 'init closes the procd instance'
 
 CALLS=
+MOCK_PROVIDER_PRESENT=1
+MOCK_PROVIDER_ENABLED=1
+start_service
+assert_contains "$CALLS" 'open main' 'provider config keeps the core instance'
+assert_contains "$CALLS" 'open provider-lte' 'enabled provider gets its own procd instance'
+assert_contains "$CALLS" 'param command /usr/libexec/led-nightmode-provider-service quectel-qnwcfg-ledmode /dev/ttyUSB3 lte night' 'init passes generic provider configuration to the provider runner'
+
+CALLS=
 service_triggers
 assert_contains "$CALLS" 'reload led-nightmode' 'UCI changes trigger reload'
-assert_contains "$CALLS" 'validation validate_core_section' 'init publishes its validation schema'
+assert_contains "$CALLS" 'validation validate_core_section validate_provider_section' 'init publishes core and provider validation schemas'
 
 printf '%s\n' 'All init tests passed.'
