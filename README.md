@@ -6,7 +6,7 @@ The first test device is a Banana Pi BPI-R3 Mini. The project is designed for mu
 
 ## Current status
 
-The repository includes the hardware-validated CLI core, a minimal UCI schema, and a procd service scaffold. A live `night`/`day` round trip has completed successfully on a BPI-R3 Mini: SSH remained available and the final LED configuration matched the initial snapshot exactly.
+The repository includes the hardware-validated CLI core, a minimal UCI schema, and a procd service scaffold. A live `night`/`day` round trip has completed successfully on a BPI-R3 Mini: SSH remained available and the final LED configuration matched the initial snapshot exactly. Package `0.1.0-r1` also builds successfully as a `noarch` APK with the official OpenWrt 25.12.4 `mediatek/filogic` SDK.
 
 ## CLI core
 
@@ -36,7 +36,9 @@ Run all local checks with:
 make test
 ```
 
-GNU Make uses `GNUmakefile` for local checks. The root `Makefile` is the OpenWrt/LuCI package definition and expects the package to be placed under `applications/luci-app-led-nightmode` in a LuCI source tree.
+GNU Make uses `GNUmakefile` for local checks. When OpenWrt invokes the package with `TOPDIR` set, `GNUmakefile` delegates to the root `Makefile`, which is the OpenWrt package definition. The current CLI/service milestone uses ordinary `package.mk` and can be added to an SDK as a package source.
+
+The exact SDK validation procedure and artifact checks are documented in [`docs/building/openwrt-sdk.md`](docs/building/openwrt-sdk.md).
 
 ## Service configuration
 
@@ -50,6 +52,7 @@ config core 'main'
 ```
 
 The service accepts only `day` or `night`. Scheduling, rpcd, and the LuCI view remain later milestones.
+Until the LuCI view is implemented, the package does not use `luci.mk` or depend on `luci-base`; installing or building the CLI/service scaffold must not pull in an otherwise unused web interface. The first UI milestone will migrate the package definition to `luci.mk`.
 
 ## Design direction
 

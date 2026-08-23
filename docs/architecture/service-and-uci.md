@@ -1,6 +1,8 @@
 # Service and UCI architecture
 
-The service layer wraps the hardware-validated CLI without adding scheduling, RPC, or LuCI behaviour. The repository layout matches a future `applications/luci-app-led-nightmode` directory in the upstream LuCI tree: OpenWrt package metadata lives in `Makefile`, installed files live under `root/`, and local developer targets live in `GNUmakefile`.
+The service layer wraps the hardware-validated CLI without adding scheduling, RPC, or LuCI behaviour. OpenWrt package metadata lives in `Makefile`, installed files live under `root/`, and local developer targets live in `GNUmakefile`.
+
+The package intentionally uses ordinary OpenWrt `package.mk` and has no `luci-base` dependency at this milestone because it installs no LuCI view. The first web-interface milestone should migrate the definition to `luci.mk` and add the runtime dependency together with its actual consumer.
 
 ## UCI schema
 

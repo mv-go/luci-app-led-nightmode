@@ -1,3 +1,9 @@
+ifneq ($(strip $(TOPDIR)),)
+
+include Makefile
+
+else
+
 .PHONY: check test
 
 SHELL_SOURCES := \
@@ -16,3 +22,5 @@ test: check
 	./tests/test-cli.sh
 	./tests/test-init.sh
 	./tests/test-service.sh
+
+endif
