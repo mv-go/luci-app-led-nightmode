@@ -6,7 +6,7 @@ The first test device is a Banana Pi BPI-R3 Mini. The project is designed for mu
 
 ## Current status
 
-The repository includes the first CLI prototype and fixture-backed tests. Hardware validation remains read-only until a separate, explicitly approved router-side test.
+The repository includes the first CLI prototype and fixture-backed tests. A live `night`/`day` round trip has completed successfully on a BPI-R3 Mini: SSH remained available and the final LED configuration matched the initial snapshot exactly.
 
 ## First milestone
 

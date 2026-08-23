@@ -65,6 +65,7 @@ printf '%s\n' 'phy0-ap0' > "$SYSFS_ROOT/blue:wlan-1/device_name"
 printf '%s\n' 1 > "$SYSFS_ROOT/blue:wlan-1/link"
 printf '%s\n' 1 > "$SYSFS_ROOT/blue:wlan-1/rx"
 printf '%s\n' 1 > "$SYSFS_ROOT/blue:wlan-1/tx"
+printf '%s\n' 50 > "$SYSFS_ROOT/blue:wlan-1/interval"
 printf '%s\n' 0 > "$SYSFS_ROOT/blue:wlan-1/offloaded"
 chmod 444 "$SYSFS_ROOT/blue:wlan-1/offloaded"
 
@@ -103,6 +104,7 @@ assert_eq 0 "$(sed -n '1p' "$SYSFS_ROOT/blue:wlan-1/brightness")" 'day dry-run p
 
 printf '%s\n' 'wrong-device' > "$SYSFS_ROOT/blue:wlan-1/device_name"
 printf '%s\n' 0 > "$SYSFS_ROOT/blue:wlan-1/link"
+chmod 444 "$SYSFS_ROOT/blue:wlan-1/interval"
 run_cli day >/dev/null
 assert_eq 1 "$(sed -n '1p' "$SYSFS_ROOT/blue:wlan-1/brightness")" 'day restores binary brightness'
 assert_eq 0 "$(sed -n '1p' "$SYSFS_ROOT/mt76-phy0/brightness")" 'day restores dimmable brightness'
@@ -110,7 +112,10 @@ assert_contains "$(sed -n '1p' "$SYSFS_ROOT/blue:wlan-1/trigger")" '[netdev]' 'd
 assert_contains "$(sed -n '1p' "$SYSFS_ROOT/mt76-phy0/trigger")" '[phy0tpt]' 'day restores throughput trigger'
 assert_eq phy0-ap0 "$(cat "$SYSFS_ROOT/blue:wlan-1/device_name")" 'day restores netdev device name'
 assert_eq 1 "$(cat "$SYSFS_ROOT/blue:wlan-1/link")" 'day restores netdev link setting'
+assert_eq 50 "$(cat "$SYSFS_ROOT/blue:wlan-1/interval")" 'day skips an already-matching read-only attribute'
 [ ! -d "$STATE_DIR" ] || fail 'day removes state after successful restore'
+
+chmod 644 "$SYSFS_ROOT/blue:wlan-1/interval"
 
 run_cli night >/dev/null
 mv "$SYSFS_ROOT/blue:wlan-1" "$TEST_ROOT/missing-led"

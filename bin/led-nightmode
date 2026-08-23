@@ -216,11 +216,19 @@ restore_trigger_attributes() {
 		[ -f "$saved_attribute" ] || continue
 		attribute_name=${saved_attribute##*/}
 		attribute_file=$led_dir/$attribute_name
-		if [ ! -e "$attribute_file" ] || ! mode_allows_write "$attribute_file"; then
+		if [ ! -e "$attribute_file" ] || [ ! -r "$attribute_file" ]; then
 			error "${led_dir##*/}: trigger attribute '$attribute_name' is unavailable"
 			return 1
 		fi
 		attribute_value=$(cat "$saved_attribute") || return 1
+		current_attribute_value=$(cat "$attribute_file") || return 1
+		if [ "$current_attribute_value" = "$attribute_value" ]; then
+			continue
+		fi
+		if ! mode_allows_write "$attribute_file"; then
+			error "${led_dir##*/}: trigger attribute '$attribute_name' is unavailable"
+			return 1
+		fi
 		if ! write_value "$attribute_file" "$attribute_value"; then
 			error "${led_dir##*/}: could not restore trigger attribute '$attribute_name'"
 			return 1
