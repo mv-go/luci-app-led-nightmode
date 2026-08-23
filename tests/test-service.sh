@@ -62,14 +62,14 @@ SERVICE_PID=$!
 
 wait_for_path "$STATE_DIR/green:status" || fail 'service did not apply the night profile'
 assert_eq 0 "$(cat "$SYSFS_ROOT/green:status/brightness")" 'service switches off a binary LED'
-assert_eq 7 "$(cat "$SYSFS_ROOT/mt76-phy0/brightness")" 'service applies configured dimmable brightness'
+assert_eq 7 "$(cat "$SYSFS_ROOT/mt76-phy0/brightness")" 'service applies an explicitly configured multi-level target'
 
 kill -TERM "$SERVICE_PID"
 wait "$SERVICE_PID"
 SERVICE_PID=
 
 assert_eq 1 "$(cat "$SYSFS_ROOT/green:status/brightness")" 'service stop restores binary brightness'
-assert_eq 0 "$(cat "$SYSFS_ROOT/mt76-phy0/brightness")" 'service stop restores dimmable brightness'
+assert_eq 0 "$(cat "$SYSFS_ROOT/mt76-phy0/brightness")" 'service stop restores multi-level brightness'
 [ ! -d "$STATE_DIR" ] || fail 'service stop removes restored state'
 
 if LED_NIGHTMODE_BIN=$CLI "$SERVICE" invalid 1 >/dev/null 2>&1; then

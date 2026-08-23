@@ -10,7 +10,7 @@ validate_core_section() {
 	uci_validate_section led-nightmode core "$1" \
 		'enabled:bool:0' \
 		'phase:or("day", "night"):day' \
-		'night_brightness:uinteger:1'
+		'night_brightness:uinteger:0'
 }
 
 start_service() {

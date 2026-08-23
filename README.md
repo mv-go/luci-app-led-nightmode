@@ -46,14 +46,14 @@ The installed package provides `/etc/config/led-nightmode` with a safe disabled 
 config core 'main'
 	option enabled '0'
 	option phase 'day'
-	option night_brightness '1'
+	option night_brightness '0'
 ```
 
 The service accepts only `day` or `night`. Scheduling, rpcd, and the LuCI view remain later milestones.
 
 ## Design direction
 
-- Dimmable LEDs (`max_brightness > 1`) should use real brightness reduction.
+- `max_brightness > 1` is only an unverified multi-level interface, not proof of physical dimming. The safe default is off; a nonzero target is an explicit, hardware-calibrated opt-in.
 - Binary LEDs should support switching off and, in a later phase, a sparse pulse mode.
 - Night state must survive reboot by determining the current phase on startup.
 - Fixed-time and sunrise/sunset schedules come after the CLI prototype. The preferred source of solar events is `sunwait`.

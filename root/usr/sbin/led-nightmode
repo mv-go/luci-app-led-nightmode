@@ -5,7 +5,7 @@ set -u
 PROGRAM=${0##*/}
 SYSFS_ROOT=${LED_SYSFS_ROOT:-/sys/class/leds}
 STATE_DIR=${LED_STATE_DIR:-/var/run/led-nightmode}
-NIGHT_BRIGHTNESS=${LED_NIGHT_BRIGHTNESS:-1}
+NIGHT_BRIGHTNESS=${LED_NIGHT_BRIGHTNESS:-0}
 SYSFS_EMULATE=${LED_SYSFS_EMULATE:-0}
 DRY_RUN=0
 COMMAND=
@@ -29,7 +29,7 @@ Options:
 Environment:
   LED_SYSFS_ROOT        LED sysfs root (default: /sys/class/leds)
   LED_STATE_DIR         Saved state directory (default: /var/run/led-nightmode)
-  LED_NIGHT_BRIGHTNESS  Brightness for dimmable LEDs (default: 1)
+  LED_NIGHT_BRIGHTNESS  Explicit target for unverified multi-level LEDs (default: 0)
 EOF
 }
 
@@ -289,7 +289,7 @@ has_saved_state() {
 
 command_list() {
 	require_sysfs_root || return 1
-	printf 'name\tmax_brightness\tbrightness\tactive_trigger\tdimmable\ttimer_parameters\n'
+	printf 'name\tmax_brightness\tbrightness\tactive_trigger\tbrightness_model\ttimer_parameters\n'
 	found_led=0
 	result=0
 
@@ -302,17 +302,17 @@ command_list() {
 		trigger=$(active_trigger "$led_dir/trigger") || trigger='?'
 
 		if is_uint "$max_brightness" && [ "$max_brightness" -gt 1 ]; then
-			dimmable=yes
+			brightness_model=unverified-multilevel
 		elif is_uint "$max_brightness"; then
-			dimmable=no
+			brightness_model=binary
 		else
-			dimmable='?'
+			brightness_model='?'
 			result=1
 		fi
 
 		timer=$(timer_capability "$led_dir")
 		printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
-			"$led_name" "$max_brightness" "$brightness" "$trigger" "$dimmable" "$timer"
+			"$led_name" "$max_brightness" "$brightness" "$trigger" "$brightness_model" "$timer"
 	done
 
 	if [ "$found_led" -eq 0 ]; then

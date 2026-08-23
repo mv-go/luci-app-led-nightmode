@@ -25,12 +25,12 @@ Every observed LED reports this trigger set:
 ## Implications for the CLI prototype
 
 - Seven LEDs are binary and need a state-preserving off profile.
-- `mt76-phy0` and `mt76-phy1` are dimmable, but their observed brightness is zero while their throughput triggers are active. The prototype must preserve the active trigger before applying a brightness profile.
+- `mt76-phy0` and `mt76-phy1` expose `max_brightness=255`, but this does not make them physically dimmable. The mt7915 driver maps zero to off and every nonzero value to on in [`mt7915_led_set_brightness()`](https://github.com/torvalds/linux/blob/master/drivers/net/wireless/mediatek/mt76/mt7915/init.c). The prototype must preserve their active throughput trigger before applying a brightness profile.
 - No timer parameter files are present in the observed state. Pulse support must therefore be capability-driven and not assumed from the presence of the `timer` trigger alone.
 - The six LEDs using `netdev` expose writable trigger-specific settings such as `device_name`, `interval`, `link`, `rx`, and `tx`. Ethernet LEDs also expose writable link-speed selectors. These values must be captured before switching to `none` and restored after re-selecting `netdev`.
 
 ## Live round-trip validation
 
-An explicitly approved live test applied `night` to all nine LEDs and then restored them with `day`. SSH remained available throughout. The seven binary LEDs used brightness 0, while the two dimmable LEDs used brightness 1.
+An explicitly approved live test applied `night` to all nine LEDs and then restored them with `day`. SSH remained available throughout. The seven binary LEDs used brightness 0, while the two mt76 LEDs used brightness 1. Visual observation showed that the mt76 LEDs remained fully lit: on this driver, 1 and 255 have the same physical result. The safe default is therefore 0 for every LED; a nonzero value for an unverified multi-level interface requires explicit calibration and opt-in.
 
 The Ethernet LED driver rejected rewriting `interval` when the value was already 50. Restoration now skips trigger attributes whose current value already matches the saved value. A retry restored the remaining link-speed, RX, and TX selectors, removed the saved state, and produced a final snapshot identical to the initial snapshot.

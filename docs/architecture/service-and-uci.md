@@ -10,7 +10,7 @@ The package owns one `core` section named `main` in `/etc/config/led-nightmode`:
 | --- | --- | --- | --- |
 | `enabled` | boolean | `0` | Whether procd should run an instance. The safe package default performs no LED writes. |
 | `phase` | `day` or `night` | `day` | Profile maintained by the service instance. |
-| `night_brightness` | non-negative integer | `1` | Brightness requested for LEDs whose `max_brightness` is greater than 1. Binary LEDs still use 0. |
+| `night_brightness` | non-negative integer | `0` | Target requested for LEDs whose `max_brightness` is greater than 1. Zero is the safe default; a nonzero value is an explicit opt-in after hardware calibration. Binary LEDs always use 0. |
 
 Fixed-time and solar schedule fields are intentionally absent. They require a separate scheduler contract and should not change the core profile schema.
 

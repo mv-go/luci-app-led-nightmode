@@ -1,4 +1,4 @@
 config core 'main'
 	option enabled '0'
 	option phase 'day'
-	option night_brightness '1'
+	option night_brightness '0'

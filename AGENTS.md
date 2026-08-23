@@ -14,7 +14,7 @@ The initial inventory and live round-trip result are stored in `docs/hardware/bp
 
 - Target BusyBox `ash` and standard OpenWrt utilities. Do not require Bash, Python, or GNU-only tools on the router.
 - Discover LEDs from sysfs at runtime. Do not hard-code LED names or BPI-R3 Mini behaviour.
-- Treat `max_brightness > 1` as dimmable; binary LEDs support off and, later, a sparse pulse mode.
+- Do not infer physical dimming from `max_brightness > 1`: some drivers treat every nonzero value as fully on. The safe default switches all LEDs off; a nonzero multi-level target requires explicit opt-in after hardware calibration. Binary LEDs may gain a sparse pulse mode later.
 - Preserve the original LED trigger and state before changing an LED. Restoration must be idempotent and tolerate missing LEDs.
 - Keep filesystem access behind a configurable sysfs root so tests can use fixtures instead of a live router.
 - Do not implement astronomical calculations. A later scheduling phase uses `sunwait`.

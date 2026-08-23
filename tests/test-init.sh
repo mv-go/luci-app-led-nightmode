@@ -8,7 +8,7 @@ INIT=$PROJECT_ROOT/root/etc/init.d/led-nightmode
 CALLS=
 MOCK_ENABLED=0
 MOCK_PHASE=day
-MOCK_BRIGHTNESS=1
+MOCK_BRIGHTNESS=0
 MOCK_VALID=1
 
 fail() {
@@ -39,7 +39,7 @@ uci_validate_section() {
 	[ "$section" = main ] || [ -z "$section" ] || fail 'init validates only the main section'
 	assert_contains "$*" 'enabled:bool:0' 'init validates enabled as boolean'
 	assert_contains "$*" 'phase:or("day", "night"):day' 'init restricts the phase'
-	assert_contains "$*" 'night_brightness:uinteger:1' 'init validates night brightness'
+	assert_contains "$*" 'night_brightness:uinteger:0' 'init validates night brightness'
 	enabled=$MOCK_ENABLED
 	phase=$MOCK_PHASE
 	night_brightness=$MOCK_BRIGHTNESS

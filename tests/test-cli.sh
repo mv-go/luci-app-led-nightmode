@@ -71,8 +71,9 @@ chmod 444 "$SYSFS_ROOT/blue:wlan-1/offloaded"
 
 list_output=$(run_cli list)
 assert_contains "$list_output" 'blue:wlan-1' 'list includes the binary LED'
-assert_contains "$list_output" 'mt76-phy0' 'list includes the dimmable LED'
+assert_contains "$list_output" 'mt76-phy0' 'list includes the multi-level LED'
 assert_contains "$list_output" 'netdev' 'list reports the active trigger'
+assert_contains "$list_output" 'unverified-multilevel' 'list does not infer physical dimming from max brightness'
 
 status_output=$(run_cli status)
 assert_contains "$status_output" 'night_mode	inactive' 'status starts inactive'
@@ -84,7 +85,7 @@ assert_eq 1 "$(sed -n '1p' "$SYSFS_ROOT/blue:wlan-1/brightness")" 'dry-run prese
 
 run_cli night >/dev/null
 assert_eq 0 "$(sed -n '1p' "$SYSFS_ROOT/blue:wlan-1/brightness")" 'night switches off a binary LED'
-assert_eq 1 "$(sed -n '1p' "$SYSFS_ROOT/mt76-phy0/brightness")" 'night dims a dimmable LED'
+assert_eq 0 "$(sed -n '1p' "$SYSFS_ROOT/mt76-phy0/brightness")" 'night safely switches off an unverified multi-level LED'
 assert_contains "$(sed -n '1p' "$SYSFS_ROOT/blue:wlan-1/trigger")" '[none]' 'night selects none trigger'
 assert_eq netdev "$(cat "$STATE_DIR/blue:wlan-1/trigger")" 'night saves the original trigger'
 assert_eq phy0tpt "$(cat "$STATE_DIR/mt76-phy0/trigger")" 'night saves a throughput trigger'
@@ -107,7 +108,7 @@ printf '%s\n' 0 > "$SYSFS_ROOT/blue:wlan-1/link"
 chmod 444 "$SYSFS_ROOT/blue:wlan-1/interval"
 run_cli day >/dev/null
 assert_eq 1 "$(sed -n '1p' "$SYSFS_ROOT/blue:wlan-1/brightness")" 'day restores binary brightness'
-assert_eq 0 "$(sed -n '1p' "$SYSFS_ROOT/mt76-phy0/brightness")" 'day restores dimmable brightness'
+assert_eq 0 "$(sed -n '1p' "$SYSFS_ROOT/mt76-phy0/brightness")" 'day restores multi-level brightness'
 assert_contains "$(sed -n '1p' "$SYSFS_ROOT/blue:wlan-1/trigger")" '[netdev]' 'day restores netdev trigger'
 assert_contains "$(sed -n '1p' "$SYSFS_ROOT/mt76-phy0/trigger")" '[phy0tpt]' 'day restores throughput trigger'
 assert_eq phy0-ap0 "$(cat "$SYSFS_ROOT/blue:wlan-1/device_name")" 'day restores netdev device name'
