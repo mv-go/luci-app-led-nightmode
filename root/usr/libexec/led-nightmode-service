@@ -320,11 +320,27 @@ rpc_probe() {
 	fi
 }
 
+rpc_drivers() {
+	json_init
+	json_add_array drivers
+	for provider_bin in "$RPC_PROVIDER_DIR"/*; do
+		[ -x "$provider_bin" ] || continue
+		provider_name=${provider_bin##*/}
+		rpc_valid_identifier "$provider_name" || continue
+		json_add_string '' "$provider_name"
+	done
+	json_close_array
+	json_dump
+	json_cleanup
+}
+
 rpc_list() {
 	json_init
 	json_add_object status
 	json_close_object
 	json_add_object resolve
+	json_close_object
+	json_add_object drivers
 	json_close_object
 	json_add_object probe
 	json_add_string driver driver
@@ -350,6 +366,7 @@ rpc_call() {
 	case $method in
 		status) rpc_status ;;
 		resolve) rpc_resolve ;;
+		drivers) rpc_drivers ;;
 		reload) rpc_reload ;;
 		set_manual)
 			requested_phase=

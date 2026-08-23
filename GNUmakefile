@@ -11,7 +11,7 @@ SHELL_SOURCES := \
 	root/etc/init.d/led-nightmode \
 	root/usr/libexec/led-nightmode-provider-service \
 	root/usr/libexec/led-nightmode-service \
-	root/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode \
+	providers/quectel-qnwcfg-ledmode/root/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode \
 	root/usr/sbin/led-nightmode \
 	tests/test-cli.sh \
 	tests/test-init.sh \

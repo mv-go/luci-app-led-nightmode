@@ -4,6 +4,7 @@
 		"read": {
 			"ubus": {
 				"luci.led-nightmode": [
+					"drivers",
 					"status",
 					"resolve"
 				]

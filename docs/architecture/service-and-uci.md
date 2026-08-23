@@ -57,6 +57,7 @@ The base package registers `luci.led-nightmode` as an rpcd exec object. Its meth
 | --- | --- | --- |
 | `status` | read | Reports whether the service is enabled and running, the configured mode, the applied runtime phase, and the currently resolved desired phase. |
 | `resolve` | read | Validates the stored schedule and returns the phase it selects now without changing hardware. |
+| `drivers` | read | Lists safe identifiers for installed executable provider drivers; it does not probe hardware or scan endpoints. |
 | `probe` | write | Runs one installed provider's read-only `probe` command with an explicit safe driver name and endpoint. It does not scan devices. |
 | `set_manual` | write | Atomically selects manual scheduling, stores a validated `day` or `night` phase, commits UCI, and reloads the service. |
 | `reload` | write | Reloads the validated service after ordinary UCI changes. |
@@ -69,5 +70,4 @@ procd line-buffers captured service stdout by preloading `libsetlbf`. BusyBox `a
 
 The following remain outside this milestone:
 
-- LuCI JavaScript views;
 - per-LED overrides and binary pulse mode.

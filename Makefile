@@ -1,21 +1,16 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-led-nightmode
-PKG_VERSION:=0.3.0
+PKG_VERSION:=0.4.0
 PKG_RELEASE:=1
 PKG_LICENSE:=Apache-2.0
-PKG_MAINTAINER:=mv-go <28507807+mv-go@users.noreply.github.com>
-
-include $(INCLUDE_DIR)/package.mk
-
-define Package/luci-app-led-nightmode
-  SECTION:=luci
-  CATEGORY:=LuCI
-  SUBMENU:=3. Applications
-  TITLE:=LED night mode for OpenWrt
-  DEPENDS:=+jshn +procd +rpcd +sunwait +uci
-  PKGARCH:=all
-endef
+PKG_LICENSE_FILES:=LICENSE
+LUCI_TITLE:=LED night mode for OpenWrt
+LUCI_DESCRIPTION:=Preserve and restore OpenWrt LED triggers while applying day and night profiles.
+LUCI_DEPENDS:=+luci-base +jshn +procd +rpcd +sunwait +uci
+LUCI_PKGARCH:=all
+LUCI_MAINTAINER:=mv-go <28507807+mv-go@users.noreply.github.com>
+LUCI_URL:=https://github.com/mv-go/luci-app-led-nightmode
 
 define Package/led-nightmode-provider-quectel-qnwcfg-ledmode
   SECTION:=utils
@@ -23,6 +18,8 @@ define Package/led-nightmode-provider-quectel-qnwcfg-ledmode
   TITLE:=Quectel QNWCFG LED provider for LED Night Mode
   DEPENDS:=+luci-app-led-nightmode +picocom
   PKGARCH:=all
+  MAINTAINER:=mv-go <28507807+mv-go@users.noreply.github.com>
+  URL:=https://github.com/mv-go/luci-app-led-nightmode
 endef
 
 define Package/led-nightmode-provider-quectel-qnwcfg-ledmode/description
@@ -30,33 +27,9 @@ define Package/led-nightmode-provider-quectel-qnwcfg-ledmode/description
   the QNWCFG ledmode AT command.
 endef
 
-define Package/luci-app-led-nightmode/description
-  Preserve and restore OpenWrt LED triggers while applying day and night profiles.
-endef
-
-define Build/Compile
-endef
-
-define Package/luci-app-led-nightmode/install
-	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_CONF) ./root/etc/config/led-nightmode $(1)/etc/config/led-nightmode
-	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./root/etc/init.d/led-nightmode $(1)/etc/init.d/led-nightmode
-	$(INSTALL_DIR) $(1)/usr/libexec
-	$(INSTALL_BIN) ./root/usr/libexec/led-nightmode-service $(1)/usr/libexec/led-nightmode-schedule
-	$(INSTALL_BIN) ./root/usr/libexec/led-nightmode-provider-service $(1)/usr/libexec/led-nightmode-provider-service
-	$(INSTALL_BIN) ./root/usr/libexec/led-nightmode-service $(1)/usr/libexec/led-nightmode-service
-	$(INSTALL_DIR) $(1)/usr/libexec/rpcd
-	$(INSTALL_BIN) ./root/usr/libexec/led-nightmode-service $(1)/usr/libexec/rpcd/luci.led-nightmode
-	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
-	$(INSTALL_DATA) ./root/usr/share/rpcd/acl.d/luci-app-led-nightmode.json $(1)/usr/share/rpcd/acl.d/luci-app-led-nightmode.json
-	$(INSTALL_DIR) $(1)/usr/sbin
-	$(INSTALL_BIN) ./root/usr/sbin/led-nightmode $(1)/usr/sbin/led-nightmode
-endef
-
 define Package/led-nightmode-provider-quectel-qnwcfg-ledmode/install
 	$(INSTALL_DIR) $(1)/usr/libexec/led-nightmode/providers
-	$(INSTALL_BIN) ./root/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode $(1)/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode
+	$(INSTALL_BIN) ./providers/quectel-qnwcfg-ledmode/root/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode $(1)/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode
 endef
 
 define Package/luci-app-led-nightmode/conffiles
@@ -65,8 +38,18 @@ endef
 
 define Package/luci-app-led-nightmode/postinst
 #!/bin/sh
-[ -n "$${IPKG_INSTROOT}" ] || /etc/init.d/rpcd reload
+[ -n "$${IPKG_INSTROOT}" ] || {
+	rm -f /tmp/luci-indexcache.*
+	rm -rf /tmp/luci-modulecache/
+	/etc/init.d/rpcd reload 2>/dev/null
+}
+exit 0
 endef
 
-$(eval $(call BuildPackage,luci-app-led-nightmode))
+define Build/Prepare/luci-app-led-nightmode
+	chmod 0600 $(PKG_BUILD_DIR)/root/etc/config/led-nightmode
+endef
+
+include $(TOPDIR)/feeds/luci/luci.mk
+
 $(eval $(call BuildPackage,led-nightmode-provider-quectel-qnwcfg-ledmode))

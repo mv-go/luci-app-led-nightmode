@@ -147,6 +147,8 @@ mkdir -p "$RPC_ROOT/usr/share/libubox" "$RPC_BIN" "$RPC_PROVIDER_DIR"
 printf '%s\n' 'json_init() { JSON_OUT=; }' > "$RPC_ROOT/usr/share/libubox/jshn.sh"
 printf '%s\n' 'json_add_object() { JSON_OUT="$JSON_OUT object:$1"; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
 printf '%s\n' 'json_close_object() { :; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
+printf '%s\n' 'json_add_array() { JSON_OUT="$JSON_OUT array:$1"; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
+printf '%s\n' 'json_close_array() { :; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
 printf '%s\n' 'json_add_string() { JSON_OUT="$JSON_OUT $1=$2"; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
 printf '%s\n' 'json_add_boolean() { JSON_OUT="$JSON_OUT $1=$2"; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
 printf '%s\n' 'json_dump() { printf "%s\n" "$JSON_OUT"; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
@@ -187,6 +189,7 @@ printf '%s\n' night > "$RPC_PHASE_FILE"
 rpc_list_output=$(run_rpc list)
 assert_contains "$rpc_list_output" 'object:status' 'rpcd lists the status method'
 assert_contains "$rpc_list_output" 'object:resolve' 'rpcd lists the resolve method'
+assert_contains "$rpc_list_output" 'object:drivers' 'rpcd lists the installed-driver method'
 assert_contains "$rpc_list_output" 'object:probe' 'rpcd lists the provider probe method'
 assert_contains "$rpc_list_output" 'object:set_manual' 'rpcd lists the manual phase method'
 assert_contains "$rpc_list_output" 'object:reload' 'rpcd lists the reload method'
@@ -201,6 +204,9 @@ assert_contains "$rpc_status_output" 'desired_phase=day' 'rpcd status resolves t
 rpc_resolve_output=$(run_rpc call resolve)
 assert_contains "$rpc_resolve_output" 'success=1' 'rpcd resolve succeeds for valid configuration'
 assert_contains "$rpc_resolve_output" 'phase=day' 'rpcd resolve returns the calculated phase'
+
+rpc_drivers_output=$(run_rpc call drivers)
+assert_contains "$rpc_drivers_output" 'test-driver' 'rpcd lists installed provider drivers'
 
 rpc_manual_output=$(printf '%s\n' '{"phase":"night"}' | run_rpc call set_manual)
 assert_contains "$rpc_manual_output" 'success=1' 'rpcd accepts a valid manual phase'

@@ -4,7 +4,7 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
-PROVIDER_DIR=$PROJECT_ROOT/root/usr/libexec/led-nightmode/providers
+PROVIDER_DIR=$PROJECT_ROOT/providers/quectel-qnwcfg-ledmode/root/usr/libexec/led-nightmode/providers
 PROVIDER=$PROVIDER_DIR/quectel-qnwcfg-ledmode
 RUNNER=$PROJECT_ROOT/root/usr/libexec/led-nightmode-provider-service
 SCHEDULE=$PROJECT_ROOT/root/usr/libexec/led-nightmode-service
