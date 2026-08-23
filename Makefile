@@ -1,8 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-led-nightmode
-PKG_VERSION:=0.2.0
-PKG_RELEASE:=2
+PKG_VERSION:=0.3.0
+PKG_RELEASE:=1
 PKG_LICENSE:=Apache-2.0
 PKG_MAINTAINER:=mv-go <28507807+mv-go@users.noreply.github.com>
 
@@ -13,7 +13,7 @@ define Package/luci-app-led-nightmode
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
   TITLE:=LED night mode for OpenWrt
-  DEPENDS:=+procd +sunwait +uci
+  DEPENDS:=+jshn +procd +rpcd +sunwait +uci
   PKGARCH:=all
 endef
 
@@ -46,6 +46,10 @@ define Package/luci-app-led-nightmode/install
 	$(INSTALL_BIN) ./root/usr/libexec/led-nightmode-service $(1)/usr/libexec/led-nightmode-schedule
 	$(INSTALL_BIN) ./root/usr/libexec/led-nightmode-provider-service $(1)/usr/libexec/led-nightmode-provider-service
 	$(INSTALL_BIN) ./root/usr/libexec/led-nightmode-service $(1)/usr/libexec/led-nightmode-service
+	$(INSTALL_DIR) $(1)/usr/libexec/rpcd
+	$(INSTALL_BIN) ./root/usr/libexec/led-nightmode-service $(1)/usr/libexec/rpcd/luci.led-nightmode
+	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
+	$(INSTALL_DATA) ./root/usr/share/rpcd/acl.d/luci-app-led-nightmode.json $(1)/usr/share/rpcd/acl.d/luci-app-led-nightmode.json
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) ./root/usr/sbin/led-nightmode $(1)/usr/sbin/led-nightmode
 endef
@@ -57,6 +61,11 @@ endef
 
 define Package/luci-app-led-nightmode/conffiles
 /etc/config/led-nightmode
+endef
+
+define Package/luci-app-led-nightmode/postinst
+#!/bin/sh
+[ -n "$${IPKG_INSTROOT}" ] || /etc/init.d/rpcd reload
 endef
 
 $(eval $(call BuildPackage,luci-app-led-nightmode))

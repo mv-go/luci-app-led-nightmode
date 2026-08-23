@@ -1,0 +1,28 @@
+{
+	"luci-app-led-nightmode": {
+		"description": "Grant status and configuration access for LED Night Mode",
+		"read": {
+			"ubus": {
+				"luci.led-nightmode": [
+					"status",
+					"resolve"
+				]
+			},
+			"uci": [
+				"led-nightmode"
+			]
+		},
+		"write": {
+			"ubus": {
+				"luci.led-nightmode": [
+					"probe",
+					"reload",
+					"set_manual"
+				]
+			},
+			"uci": [
+				"led-nightmode"
+			]
+		}
+	}
+}

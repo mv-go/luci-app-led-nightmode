@@ -15,6 +15,12 @@ FAKE_BIN=$TEST_ROOT/bin
 FAKE_TIME=$TEST_ROOT/local-time
 FAKE_SUNWAIT=$TEST_ROOT/sunwait
 SUNWAIT_ARGS=$TEST_ROOT/sunwait-args
+RPC_ROOT=$TEST_ROOT/rpc-root
+RPC_BIN=$TEST_ROOT/rpc-bin
+RPC_UCI_LOG=$TEST_ROOT/uci-log
+RPC_INIT_LOG=$TEST_ROOT/init-log
+RPC_PHASE_FILE=$TEST_ROOT/rpc-phase
+RPC_PROVIDER_DIR=$TEST_ROOT/providers
 SERVICE_PID=
 
 cleanup() {
@@ -41,6 +47,16 @@ assert_eq() {
 	fi
 }
 
+assert_contains() {
+	haystack=$1
+	needle=$2
+	message=$3
+	case $haystack in
+		*"$needle"*) ;;
+		*) fail "$message (missing '$needle')" ;;
+	esac
+}
+
 assert_fails() {
 	message=$1
 	shift
@@ -51,6 +67,20 @@ assert_fails() {
 
 run_schedule() {
 	LED_SUNWAIT_BIN=$FAKE_SUNWAIT "$SCHEDULE" "$@"
+}
+
+run_rpc() {
+	IPKG_INSTROOT=$RPC_ROOT \
+	LED_NIGHTMODE_NOW=12:00 \
+	LED_RPCD_UCI_BIN=$RPC_BIN/uci \
+	LED_RPCD_INIT_BIN=$RPC_BIN/init \
+	LED_RPCD_SCHEDULE_BIN=$SCHEDULE \
+	LED_RPCD_PHASE_FILE=$RPC_PHASE_FILE \
+	LED_RPCD_RUNTIME_DIR=$TEST_ROOT/rpc-runtime \
+	LED_RPCD_PROVIDER_DIR=$RPC_PROVIDER_DIR \
+	LED_TEST_UCI_LOG=$RPC_UCI_LOG \
+	LED_TEST_INIT_LOG=$RPC_INIT_LOG \
+		"$SERVICE" "$@"
 }
 
 wait_for_path() {
@@ -112,6 +142,82 @@ assert_eq 'poll daylight 33.8688S 151.2093W' "$(cat "$SUNWAIT_ARGS")" 'solar mod
 LED_TEST_SUNWAIT_STATUS=1
 export LED_TEST_SUNWAIT_STATUS
 assert_fails 'solar mode propagates sunwait errors' run_schedule resolve sun day 23:00 07:00 41 44 daylight
+
+mkdir -p "$RPC_ROOT/usr/share/libubox" "$RPC_BIN" "$RPC_PROVIDER_DIR"
+printf '%s\n' 'json_init() { JSON_OUT=; }' > "$RPC_ROOT/usr/share/libubox/jshn.sh"
+printf '%s\n' 'json_add_object() { JSON_OUT="$JSON_OUT object:$1"; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
+printf '%s\n' 'json_close_object() { :; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
+printf '%s\n' 'json_add_string() { JSON_OUT="$JSON_OUT $1=$2"; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
+printf '%s\n' 'json_add_boolean() { JSON_OUT="$JSON_OUT $1=$2"; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
+printf '%s\n' 'json_dump() { printf "%s\n" "$JSON_OUT"; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
+printf '%s\n' 'json_cleanup() { :; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
+printf '%s\n' 'json_load() { JSON_INPUT=$1; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
+printf '%s\n' 'json_get_var() { JSON_NAME=$1; JSON_KEY=$2; JSON_VALUE=$(printf "%s\n" "$JSON_INPUT" | sed -n "s/.*\\\"$JSON_KEY\\\"[ ]*:[ ]*\\\"\\([^\\\"]*\\)\\\".*/\\1/p"); eval "$JSON_NAME=\\$JSON_VALUE"; }' >> "$RPC_ROOT/usr/share/libubox/jshn.sh"
+
+printf '%s\n' '#!/bin/sh' > "$RPC_BIN/uci"
+printf '%s\n' 'if [ "$1" = -q ] && [ "$2" = get ]; then' >> "$RPC_BIN/uci"
+printf '%s\n' 'case $3 in' >> "$RPC_BIN/uci"
+printf '%s\n' 'led-nightmode.main.enabled) printf "%s\n" 1 ;;' >> "$RPC_BIN/uci"
+printf '%s\n' 'led-nightmode.main.phase) printf "%s\n" day ;;' >> "$RPC_BIN/uci"
+printf '%s\n' 'led-nightmode.schedule.mode) printf "%s\n" fixed ;;' >> "$RPC_BIN/uci"
+printf '%s\n' 'led-nightmode.schedule.night_start) printf "%s\n" 23:00 ;;' >> "$RPC_BIN/uci"
+printf '%s\n' 'led-nightmode.schedule.day_start) printf "%s\n" 07:00 ;;' >> "$RPC_BIN/uci"
+printf '%s\n' 'led-nightmode.schedule.twilight) printf "%s\n" daylight ;;' >> "$RPC_BIN/uci"
+printf '%s\n' '*) exit 1 ;;' >> "$RPC_BIN/uci"
+printf '%s\n' 'esac' >> "$RPC_BIN/uci"
+printf '%s\n' 'elif [ "$1" = -q ] && [ "$2" = batch ]; then' >> "$RPC_BIN/uci"
+printf '%s\n' 'cat > "$LED_TEST_UCI_LOG"' >> "$RPC_BIN/uci"
+printf '%s\n' 'else exit 1; fi' >> "$RPC_BIN/uci"
+chmod +x "$RPC_BIN/uci"
+
+printf '%s\n' '#!/bin/sh' > "$RPC_BIN/init"
+printf '%s\n' 'case $1 in' >> "$RPC_BIN/init"
+printf '%s\n' 'running) exit 0 ;;' >> "$RPC_BIN/init"
+printf '%s\n' 'reload) printf "%s\n" reload >> "$LED_TEST_INIT_LOG" ;;' >> "$RPC_BIN/init"
+printf '%s\n' '*) exit 1 ;;' >> "$RPC_BIN/init"
+printf '%s\n' 'esac' >> "$RPC_BIN/init"
+chmod +x "$RPC_BIN/init"
+
+printf '%s\n' '#!/bin/sh' > "$RPC_PROVIDER_DIR/test-driver"
+printf '%s\n' '[ "$1" = probe ] || exit 1' >> "$RPC_PROVIDER_DIR/test-driver"
+printf '%s\n' 'printf "test-driver\\tsupported\\t%s\\n" "$LED_PROVIDER_DEVICE"' >> "$RPC_PROVIDER_DIR/test-driver"
+chmod +x "$RPC_PROVIDER_DIR/test-driver"
+printf '%s\n' night > "$RPC_PHASE_FILE"
+
+rpc_list_output=$(run_rpc list)
+assert_contains "$rpc_list_output" 'object:status' 'rpcd lists the status method'
+assert_contains "$rpc_list_output" 'object:resolve' 'rpcd lists the resolve method'
+assert_contains "$rpc_list_output" 'object:probe' 'rpcd lists the provider probe method'
+assert_contains "$rpc_list_output" 'object:set_manual' 'rpcd lists the manual phase method'
+assert_contains "$rpc_list_output" 'object:reload' 'rpcd lists the reload method'
+
+rpc_status_output=$(run_rpc call status)
+assert_contains "$rpc_status_output" 'enabled=1' 'rpcd status reports enabled configuration'
+assert_contains "$rpc_status_output" 'running=1' 'rpcd status reports a running service'
+assert_contains "$rpc_status_output" 'mode=fixed' 'rpcd status reports the configured mode'
+assert_contains "$rpc_status_output" 'effective_phase=night' 'rpcd status reports the applied runtime phase'
+assert_contains "$rpc_status_output" 'desired_phase=day' 'rpcd status resolves the desired phase independently'
+
+rpc_resolve_output=$(run_rpc call resolve)
+assert_contains "$rpc_resolve_output" 'success=1' 'rpcd resolve succeeds for valid configuration'
+assert_contains "$rpc_resolve_output" 'phase=day' 'rpcd resolve returns the calculated phase'
+
+rpc_manual_output=$(printf '%s\n' '{"phase":"night"}' | run_rpc call set_manual)
+assert_contains "$rpc_manual_output" 'success=1' 'rpcd accepts a valid manual phase'
+assert_contains "$(cat "$RPC_UCI_LOG")" "set led-nightmode.schedule.mode='manual'" 'manual RPC switches the schedule to manual mode'
+assert_contains "$(cat "$RPC_UCI_LOG")" "set led-nightmode.main.phase='night'" 'manual RPC saves the selected phase'
+assert_contains "$(cat "$RPC_INIT_LOG")" reload 'manual RPC reloads the service after saving'
+
+if printf '%s\n' '{"phase":"invalid"}' | run_rpc call set_manual >/dev/null 2>&1; then
+	fail 'rpcd rejects an invalid manual phase'
+fi
+
+rpc_probe_output=$(printf '%s\n' '{"driver":"test-driver","device":"/dev/test","instance":"test"}' | run_rpc call probe)
+assert_contains "$rpc_probe_output" 'success=1' 'rpcd accepts a safe explicit provider probe'
+assert_contains "$rpc_probe_output" 'test-driver' 'rpcd returns provider probe output'
+if printf '%s\n' '{"driver":"../bad","device":"/dev/test"}' | run_rpc call probe >/dev/null 2>&1; then
+	fail 'rpcd rejects provider path traversal'
+fi
 
 mkdir -p "$SYSFS_ROOT/green:status" "$SYSFS_ROOT/mt76-phy0"
 printf '%s\n' 1 > "$SYSFS_ROOT/green:status/max_brightness"

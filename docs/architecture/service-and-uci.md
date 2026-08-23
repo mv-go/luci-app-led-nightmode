@@ -49,12 +49,25 @@ Each enabled provider gets an independent procd instance. The generic provider r
 
 `sunwait poll` returns distinct exit codes for day and night. The resolver converts signed decimal coordinates from UCI to the cardinal-suffix form expected by `sunwait`; it does not implement astronomical calculations itself.
 
+## rpcd and ACL boundary
+
+The base package registers `luci.led-nightmode` as an rpcd exec object. Its methods are deliberately narrower than shell or unrestricted UCI access:
+
+| Method | ACL | Behaviour |
+| --- | --- | --- |
+| `status` | read | Reports whether the service is enabled and running, the configured mode, the applied runtime phase, and the currently resolved desired phase. |
+| `resolve` | read | Validates the stored schedule and returns the phase it selects now without changing hardware. |
+| `probe` | write | Runs one installed provider's read-only `probe` command with an explicit safe driver name and endpoint. It does not scan devices. |
+| `set_manual` | write | Atomically selects manual scheduling, stores a validated `day` or `night` phase, commits UCI, and reloads the service. |
+| `reload` | write | Reloads the validated service after ordinary UCI changes. |
+
+The ACL grants read sessions only `status`, `resolve`, and read access to the `led-nightmode` UCI package. Provider probes and every state-changing method require the write grant. Driver names remain fixed-directory identifiers, device strings are passed only as environment values, and no RPC input is evaluated as a command.
+
 procd line-buffers captured service stdout by preloading `libsetlbf`. BusyBox `ash` builtins must therefore not own sysfs output descriptors: on the first test platform, builtin `printf` could apply a trigger change and still return status 1 under that preload. The CLI sends scalar values through external `cat`, so the reported status belongs to the actual sysfs write.
 
 ## Deferred interfaces
 
 The following remain outside this milestone:
 
-- rpcd methods and ACLs;
 - LuCI JavaScript views;
 - per-LED overrides and binary pulse mode.

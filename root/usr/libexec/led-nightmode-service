@@ -156,9 +156,255 @@ schedule_main() {
 	esac
 }
 
+rpc_load_json() {
+	json_library=${IPKG_INSTROOT:-}/usr/share/libubox/jshn.sh
+	[ -r "$json_library" ] || {
+		error "JSON helper is unavailable: $json_library"
+		return 1
+	}
+	. "$json_library"
+}
+
+rpc_uci_get() {
+	uci_key=$1
+	default_value=$2
+	uci_value=$("$RPC_UCI" -q get "$uci_key" 2>/dev/null) || uci_value=$default_value
+	printf '%s\n' "$uci_value"
+}
+
+rpc_read_config() {
+	RPC_ENABLED=$(rpc_uci_get led-nightmode.main.enabled 0)
+	RPC_MANUAL_PHASE=$(rpc_uci_get led-nightmode.main.phase day)
+	RPC_MODE=$(rpc_uci_get led-nightmode.schedule.mode manual)
+	RPC_NIGHT_START=$(rpc_uci_get led-nightmode.schedule.night_start 23:00)
+	RPC_DAY_START=$(rpc_uci_get led-nightmode.schedule.day_start 07:00)
+	RPC_LATITUDE=$(rpc_uci_get led-nightmode.schedule.latitude '')
+	RPC_LONGITUDE=$(rpc_uci_get led-nightmode.schedule.longitude '')
+	RPC_TWILIGHT=$(rpc_uci_get led-nightmode.schedule.twilight daylight)
+}
+
+rpc_resolve_phase() {
+	"$RPC_SCHEDULE" resolve "$RPC_MODE" "$RPC_MANUAL_PHASE" \
+		"$RPC_NIGHT_START" "$RPC_DAY_START" "$RPC_LATITUDE" \
+		"$RPC_LONGITUDE" "$RPC_TWILIGHT"
+}
+
+rpc_result() {
+	result_value=$1
+	result_message=${2:-}
+	json_init
+	json_add_boolean success "$result_value"
+	[ -z "$result_message" ] || json_add_string message "$result_message"
+	json_dump
+	json_cleanup
+}
+
+rpc_status() {
+	rpc_read_config
+	if "$RPC_INIT" running >/dev/null 2>&1; then
+		running=1
+	else
+		running=0
+	fi
+	case $RPC_ENABLED in
+		1|true|yes|on) enabled=1 ;;
+		*) enabled=0 ;;
+	esac
+	effective_phase=unknown
+	if [ -r "$RPC_PHASE_FILE" ]; then
+		phase_value=$(cat "$RPC_PHASE_FILE" 2>/dev/null) || phase_value=
+		valid_phase "$phase_value" && effective_phase=$phase_value
+	fi
+	desired_phase=unknown
+	schedule_valid=0
+	if resolved_phase=$(rpc_resolve_phase 2>/dev/null); then
+		if valid_phase "$resolved_phase"; then
+			desired_phase=$resolved_phase
+			schedule_valid=1
+		fi
+	fi
+
+	json_init
+	json_add_boolean enabled "$enabled"
+	json_add_boolean running "$running"
+	json_add_boolean schedule_valid "$schedule_valid"
+	json_add_string mode "$RPC_MODE"
+	json_add_string manual_phase "$RPC_MANUAL_PHASE"
+	json_add_string effective_phase "$effective_phase"
+	json_add_string desired_phase "$desired_phase"
+	json_dump
+	json_cleanup
+}
+
+rpc_resolve() {
+	rpc_read_config
+	if resolved_phase=$(rpc_resolve_phase 2>/dev/null) && valid_phase "$resolved_phase"; then
+		json_init
+		json_add_boolean success 1
+		json_add_string phase "$resolved_phase"
+		json_dump
+		json_cleanup
+	else
+		rpc_result 0 'schedule configuration is invalid or unavailable'
+		return 1
+	fi
+}
+
+rpc_reload() {
+	if "$RPC_INIT" reload >/dev/null 2>&1; then
+		rpc_result 1
+	else
+		rpc_result 0 'service reload failed'
+		return 1
+	fi
+}
+
+rpc_set_manual() {
+	manual_target=$1
+	valid_phase "$manual_target" || {
+		rpc_result 0 "phase must be 'day' or 'night'"
+		return 1
+	}
+	if ! "$RPC_UCI" -q batch >/dev/null <<-EOF
+		set led-nightmode.schedule.mode='manual'
+		set led-nightmode.main.phase='$manual_target'
+		commit led-nightmode
+	EOF
+	then
+		rpc_result 0 'could not save manual phase'
+		return 1
+	fi
+	rpc_reload
+}
+
+rpc_valid_identifier() {
+	case $1 in
+		''|*[!a-zA-Z0-9_-]*) return 1 ;;
+		*) return 0 ;;
+	esac
+}
+
+rpc_probe() {
+	probe_driver=$1
+	probe_device=$2
+	probe_instance=${3:-probe}
+	rpc_valid_identifier "$probe_driver" || {
+		rpc_result 0 'invalid provider driver'
+		return 1
+	}
+	rpc_valid_identifier "$probe_instance" || {
+		rpc_result 0 'invalid provider instance'
+		return 1
+	}
+	[ -n "$probe_device" ] || {
+		rpc_result 0 'provider device is required'
+		return 1
+	}
+	provider_bin=$RPC_PROVIDER_DIR/$probe_driver
+	[ -x "$provider_bin" ] || {
+		rpc_result 0 'provider driver is unavailable'
+		return 1
+	}
+	if probe_output=$(LED_PROVIDER_DEVICE="$probe_device" \
+		LED_PROVIDER_INSTANCE="$probe_instance" \
+		LED_PROVIDER_STATE_DIR="$RPC_RUNTIME_DIR/probe/$probe_instance" \
+		"$provider_bin" probe 2>&1); then
+		json_init
+		json_add_boolean success 1
+		json_add_string output "$probe_output"
+		json_dump
+		json_cleanup
+	else
+		rpc_result 0 "$probe_output"
+		return 1
+	fi
+}
+
+rpc_list() {
+	json_init
+	json_add_object status
+	json_close_object
+	json_add_object resolve
+	json_close_object
+	json_add_object probe
+	json_add_string driver driver
+	json_add_string device device
+	json_add_string instance instance
+	json_close_object
+	json_add_object set_manual
+	json_add_string phase phase
+	json_close_object
+	json_add_object reload
+	json_close_object
+	json_dump
+	json_cleanup
+}
+
+rpc_read_input() {
+	read -r rpc_input || rpc_input='{}'
+	json_load "$rpc_input"
+}
+
+rpc_call() {
+	method=${1:-}
+	case $method in
+		status) rpc_status ;;
+		resolve) rpc_resolve ;;
+		reload) rpc_reload ;;
+		set_manual)
+			requested_phase=
+			rpc_read_input || {
+				rpc_result 0 'invalid request'
+				return 1
+			}
+			json_get_var requested_phase phase
+			json_cleanup
+			rpc_set_manual "$requested_phase"
+			;;
+		probe)
+			requested_driver=
+			requested_device=
+			requested_instance=
+			rpc_read_input || {
+				rpc_result 0 'invalid request'
+				return 1
+			}
+			json_get_var requested_driver driver
+			json_get_var requested_device device
+			json_get_var requested_instance instance
+			json_cleanup
+			rpc_probe "$requested_driver" "$requested_device" "$requested_instance"
+			;;
+		*)
+			rpc_result 0 'unknown method'
+			return 1
+			;;
+	esac
+}
+
+rpc_main() {
+	set +u
+	RPC_UCI=${LED_RPCD_UCI_BIN:-/sbin/uci}
+	RPC_INIT=${LED_RPCD_INIT_BIN:-/etc/init.d/led-nightmode}
+	RPC_SCHEDULE=${LED_RPCD_SCHEDULE_BIN:-/usr/libexec/led-nightmode-schedule}
+	RPC_PHASE_FILE=${LED_RPCD_PHASE_FILE:-/var/run/led-nightmode/phase}
+	RPC_RUNTIME_DIR=${LED_RPCD_RUNTIME_DIR:-/var/run/led-nightmode}
+	RPC_PROVIDER_DIR=${LED_RPCD_PROVIDER_DIR:-/usr/libexec/led-nightmode/providers}
+	rpc_load_json || return 1
+	case $1 in
+		list) rpc_list ;;
+		call) rpc_call "${2:-}" ;;
+		*) return 1 ;;
+	esac
+}
+
 case ${1:-} in
 	validate|resolve)
 		schedule_main "$@"
+		exit $?
+		;;
+	list|call)
+		rpc_main "$@"
 		exit $?
 		;;
 esac
