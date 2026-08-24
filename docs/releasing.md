@@ -42,10 +42,13 @@ After every candidate item is complete:
 
 The intended destination is a new `applications/luci-app-led-nightmode` directory in `openwrt/luci`. Before opening a pull request:
 
+- stage the universal application with `make stage-upstream DEST=/path/to/luci/applications/luci-app-led-nightmode`;
 - rebase the application directory onto current LuCI `master` and build with the current snapshot SDK in addition to the stable SDK;
 - run LuCI's current JavaScript/JSON checks and regenerate `po/templates/led-nightmode.pot` with LuCI's `build/i18n-scan.pl`;
-- decide with maintainers whether the app-specific provider subpackage stays in the LuCI package Makefile or moves to a package feed;
+- keep the device-specific Quectel provider out of the initial LuCI application; it remains a downstream package until maintainers choose a suitable package-feed location;
 - prepare a focused feature branch rather than submitting from `main`;
 - rewrite/squash the upstream commit series with component-prefixed subjects and `Signed-off-by` lines using the contributor's real first and last name and a non-noreply email address.
+
+The manual **Upstream LuCI** workflow performs the current-tree lint, translation-template comparison, and an official snapshot SDK build against the staged application. The staging test ensures the universal runtime stays byte-for-byte aligned while the optional hardware-specific provider does not leak into the LuCI tree.
 
 The repository currently uses a GitHub noreply identity, so the final upstream commit series cannot be prepared correctly until the contributor identity is supplied. No identity should be guessed or copied into Git history.

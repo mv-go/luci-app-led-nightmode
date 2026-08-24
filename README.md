@@ -88,6 +88,8 @@ make release-check
 
 The root `Makefile` is the OpenWrt LuCI package definition. `GNUmakefile` supplies local checks and delegates to the package definition inside an OpenWrt build tree. See the [SDK build guide](docs/building/openwrt-sdk.md) for a reproducible package build.
 
+For upstream LuCI work, `make stage-upstream DEST=/path/to/luci/applications/luci-app-led-nightmode` creates the universal application tree without the optional hardware-specific provider package. The [upstream release gate](docs/releasing.md#upstream-luci-gate) explains the split and validation workflow.
+
 Contributions are welcome, especially careful compatibility reports and isolated providers for indicators outside Linux sysfs. Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 
 ## License

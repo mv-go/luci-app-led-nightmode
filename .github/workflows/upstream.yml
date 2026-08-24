@@ -1,0 +1,82 @@
+name: Upstream LuCI
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  current-luci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check out current LuCI master
+        uses: actions/checkout@v7
+        with:
+          repository: openwrt/luci
+          path: .upstream-luci
+      - name: Install LuCI lint dependencies
+        working-directory: .upstream-luci
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Stage the upstream application
+        run: >-
+          ./scripts/stage-upstream-luci.sh
+          "$GITHUB_WORKSPACE/.upstream-luci/applications/luci-app-led-nightmode"
+      - name: Run current LuCI JavaScript and JSON checks
+        working-directory: .upstream-luci
+        run: >-
+          npx eslint
+          applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js
+          applications/luci-app-led-nightmode/htdocs/luci-static/resources/led-nightmode/zone-coordinates.js
+          applications/luci-app-led-nightmode/root/usr/share/luci/menu.d/luci-app-led-nightmode.json
+          applications/luci-app-led-nightmode/root/usr/share/rpcd/acl.d/luci-app-led-nightmode.json
+      - name: Verify the current translation template
+        run: |
+          .upstream-luci/build/i18n-scan.pl \
+            .upstream-luci/applications/luci-app-led-nightmode \
+            | sed 's|^#: \.upstream-luci/applications/luci-app-led-nightmode/|#: |' \
+            > "$RUNNER_TEMP/led-nightmode.pot"
+          diff -u \
+            po/templates/led-nightmode.pot \
+            "$RUNNER_TEMP/led-nightmode.pot"
+
+  snapshot-sdk:
+    needs: current-luci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check out current LuCI master
+        uses: actions/checkout@v7
+        with:
+          repository: openwrt/luci
+          path: .upstream-luci
+          fetch-depth: 0
+      - name: Stage the upstream application
+        run: >-
+          ./scripts/stage-upstream-luci.sh
+          "$GITHUB_WORKSPACE/.upstream-luci/applications/luci-app-led-nightmode"
+      - name: Build the staged application with the snapshot SDK
+        uses: openwrt/gh-action-sdk@f5813d30eeef3534b58ac7e79c5d8842b6035434
+        env:
+          ARCH: aarch64_cortex-a53
+          ARTIFACTS_DIR: ${{ runner.temp }}/led-nightmode-snapshot
+          FEED_DIR: ${{ github.workspace }}/.upstream-luci
+          PACKAGES: luci-app-led-nightmode
+          V: sc
+      - name: Check the snapshot package output
+        run: |
+          find "$RUNNER_TEMP/led-nightmode-snapshot/bin/packages" \
+            -type f -name 'luci-app-led-nightmode-*.apk' -print -quit \
+            | grep -q . || {
+              echo 'Missing snapshot luci-app-led-nightmode APK' >&2
+              exit 1
+            }
+      - name: Upload the snapshot package and logs
+        uses: actions/upload-artifact@v7
+        with:
+          name: upstream-luci-snapshot-aarch64_cortex-a53
+          path: |
+            ${{ runner.temp }}/led-nightmode-snapshot/bin/packages/**/action/luci-app-led-nightmode-*.apk
+            ${{ runner.temp }}/led-nightmode-snapshot/logs/
+          if-no-files-found: error

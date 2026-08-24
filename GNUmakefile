@@ -4,7 +4,7 @@ include Makefile
 
 else
 
-.PHONY: check check-ash test release-check
+.PHONY: check check-ash test release-check stage-upstream
 
 SHELL_SOURCES := \
 	bin/led-nightmode \
@@ -14,12 +14,14 @@ SHELL_SOURCES := \
 	root/usr/libexec/led-nightmode-service \
 	providers/quectel-qnwcfg-ledmode/root/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode \
 	root/usr/sbin/led-nightmode \
+	scripts/stage-upstream-luci.sh \
 	tests/test-cli.sh \
 	tests/test-init.sh \
 	tests/test-luci-assets.sh \
 	tests/test-modem-provider.sh \
 	tests/test-release.sh \
 	tests/test-service.sh \
+	tests/test-upstream.sh \
 	tests/test-uci-defaults.sh
 
 check:
@@ -35,9 +37,14 @@ test: check
 	./tests/test-luci-assets.sh
 	./tests/test-modem-provider.sh
 	./tests/test-service.sh
+	./tests/test-upstream.sh
 	./tests/test-uci-defaults.sh
 
 release-check: test
 	./tests/test-release.sh
+
+stage-upstream:
+	@test -n "$(DEST)" || { echo 'Usage: make stage-upstream DEST=/path/to/luci/applications/luci-app-led-nightmode' >&2; exit 2; }
+	./scripts/stage-upstream-luci.sh "$(DEST)"
 
 endif
