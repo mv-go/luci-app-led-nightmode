@@ -14,7 +14,7 @@ jobs:
   fixture-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install BusyBox
         run: sudo apt-get update && sudo apt-get install --yes busybox
       - name: Check BusyBox ash syntax
@@ -25,9 +25,9 @@ jobs:
   luci-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Check out current LuCI lint configuration
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: openwrt/luci
           path: .upstream-luci
