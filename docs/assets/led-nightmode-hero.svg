@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">LuCI LED Night Mode</title>
+  <desc id="desc">A router settles into a quiet night while its indicator lights fade out beneath a crescent moon.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#17142d"/>
+      <stop offset="0.55" stop-color="#25214a"/>
+      <stop offset="1" stop-color="#102a3c"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#363454"/>
+      <stop offset="1" stop-color="#222139"/>
+    </linearGradient>
+    <linearGradient id="quiet" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#9f8cff"/>
+      <stop offset="1" stop-color="#62d9c7"/>
+    </linearGradient>
+    <radialGradient id="moon" cx="40%" cy="35%" r="65%">
+      <stop offset="0" stop-color="#fff8d9"/>
+      <stop offset="1" stop-color="#ffd884"/>
+    </radialGradient>
+    <filter id="glow" x="-200%" y="-200%" width="500%" height="500%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="420" rx="28" fill="url(#sky)"/>
+  <circle cx="1088" cy="82" r="41" fill="url(#moon)"/>
+  <circle cx="1106" cy="68" r="42" fill="#1a1934"/>
+
+  <g fill="#ffffff" opacity=".55">
+    <circle cx="717" cy="70" r="2"/>
+    <circle cx="778" cy="105" r="1.5"/>
+    <circle cx="865" cy="51" r="2"/>
+    <circle cx="955" cy="122" r="1.5"/>
+    <circle cx="1018" cy="39" r="1.5"/>
+    <circle cx="1142" cy="150" r="2"/>
+  </g>
+
+  <g font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    <text x="72" y="126" fill="#aaa0ff" font-size="20" font-weight="650" letter-spacing="2.8">OPENWRT · LUCI</text>
+    <text x="72" y="190" fill="#ffffff" font-size="54" font-weight="730">LED Night Mode</text>
+    <text x="72" y="239" fill="#c8c6dc" font-size="25" font-weight="420">Let the router sleep too.</text>
+    <rect x="72" y="276" width="255" height="5" rx="2.5" fill="url(#quiet)"/>
+    <text x="72" y="326" fill="#8e8ca7" font-size="17">quiet nights · exact restoration · safe defaults</text>
+  </g>
+
+  <g transform="translate(690 175)">
+    <path d="M120 26 C139 -5 174 -25 211 -25 C254 -25 293 2 310 42" fill="none" stroke="#777391" stroke-width="7" stroke-linecap="round"/>
+    <path d="M153 33 C166 14 187 3 211 3 C239 3 264 20 275 44" fill="none" stroke="#777391" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="212" cy="47" r="8" fill="#8b86a3"/>
+
+    <rect x="0" y="54" width="430" height="128" rx="27" fill="#151526" opacity=".5"/>
+    <rect x="0" y="45" width="430" height="128" rx="27" fill="url(#panel)" stroke="#55516f" stroke-width="2"/>
+    <rect x="26" y="67" width="378" height="83" rx="18" fill="#181827" opacity=".75"/>
+
+    <g transform="translate(64 108)">
+      <circle cx="0" cy="0" r="12" fill="#ef6575" opacity=".12" filter="url(#glow)"/>
+      <circle cx="0" cy="0" r="5" fill="#6a5361"/>
+      <circle cx="58" cy="0" r="12" fill="#60a5fa" opacity=".1" filter="url(#glow)"/>
+      <circle cx="58" cy="0" r="5" fill="#4d5b70"/>
+      <circle cx="116" cy="0" r="5" fill="#343447"/>
+      <circle cx="174" cy="0" r="5" fill="#343447"/>
+      <circle cx="232" cy="0" r="5" fill="#343447"/>
+      <circle cx="290" cy="0" r="5" fill="#343447"/>
+    </g>
+
+    <path d="M338 137 C355 137 369 123 369 106 C369 94 362 83 352 78 C354 83 355 88 355 93 C355 110 341 124 324 124 C319 124 314 123 310 121 C316 131 326 137 338 137Z" fill="#8f88bd" opacity=".7"/>
+  </g>
+</svg>

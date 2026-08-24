@@ -1,87 +1,95 @@
-# LuCI LED Night Mode
+<p align="center">
+  <img src="docs/assets/led-nightmode-hero.svg" alt="LuCI LED Night Mode: let the router sleep too" width="100%">
+</p>
 
-`luci-app-led-nightmode` is an OpenWrt application for reducing distracting device LEDs at night while preserving the router's normal behaviour.
+<p align="center">
+  <a href="https://github.com/mv-go/luci-app-led-nightmode/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/mv-go/luci-app-led-nightmode?style=flat-square&color=6e56cf"></a>
+  <a href="https://github.com/mv-go/luci-app-led-nightmode/actions/workflows/ci.yml"><img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/mv-go/luci-app-led-nightmode/ci.yml?branch=main&style=flat-square&label=tests"></a>
+  <a href="https://github.com/mv-go/luci-app-led-nightmode/actions/workflows/sdk.yml"><img alt="OpenWrt SDK build" src="https://img.shields.io/github/actions/workflow/status/mv-go/luci-app-led-nightmode/sdk.yml?style=flat-square&label=OpenWrt%20SDK"></a>
+  <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/github/license/mv-go/luci-app-led-nightmode?style=flat-square"></a>
+</p>
 
-The first test device is a Banana Pi BPI-R3 Mini. The project is designed for multiple OpenWrt devices and discovers LEDs dynamically through `/sys/class/leds`.
+<p align="center">
+  A simple LuCI app that quiets software-controlled router LEDs at night,<br>
+  then restores their original triggers and state in the morning.
+</p>
 
-## Current status
+## Why this exists
 
-The repository includes the hardware-validated CLI core, a UCI/procd service, fixed-time and sunrise/sunset scheduling, an rpcd/ACL interface, a native LuCI view, and an extensible provider interface for indicators outside the Linux LED class. Release `0.5.0-r7` keeps the normal LuCI workflow focused on enablement, current state, and scheduling while moving calibrated brightness, exact solar parameters, provider configuration and tests, LED capability inventory, and technical status under Advanced. It also removes the first device's provider and serial-port hints from fresh installations and treats an empty Linux LED class as a safe no-op. `r7` is fixture-tested, SDK-validated, installed, and live core/provider-validated on the first BPI-R3 Mini; the owner also confirmed its authenticated LuCI view. No multi-device validation is claimed yet.
+It started because my girlfriend could not sleep while little red, blue, and green lights around the apartment kept glowing or blinking at unpredictable moments.
 
-## CLI core
+Tape would hide one LED on one device. This project solves the repeatable part of the problem in software: OpenWrt remembers what its controllable indicators were doing, switches to a calm night profile, and puts everything back when night is over.
 
-Build a standalone CLI prototype with these commands:
+## The everyday flow
 
-- `led-nightmode list`
-- `led-nightmode status`
-- `led-nightmode night`
-- `led-nightmode day`
+1. Install the package and open **Services → LED Night Mode**.
+2. Enable it and choose **Manual**, **Fixed schedule**, or **Sunrise & sunset**.
+3. Select **Save & Apply**. The service handles the rest, including after a reboot.
 
-`night` applies a safe night profile to discovered LEDs. `day` restores each affected LED's original trigger and state.
+Fresh installations are disabled and do not touch any LED until you explicitly enable the service.
 
-## Local usage
+| Safe by default | Fits real nights | Restores normal behaviour | Extensible when needed |
+| :--- | :--- | :--- | :--- |
+| Night brightness starts at fully off. Nonzero dimming requires deliberate calibration. | Use a fixed local schedule or let `sunwait` follow sunrise and sunset. | Active triggers, brightness, and supported provider state are saved before any change. | Indicators outside Linux sysfs can use separately installed, opt-in providers. |
 
-The CLI defaults to the real sysfs and `/var/run`, so local development should always provide fixture paths:
+## Install
+
+The current release is built and validated for **OpenWrt 25.12.4**. Download the base APK from the [latest release](https://github.com/mv-go/luci-app-led-nightmode/releases/latest), copy it to the router, and install it:
 
 ```sh
-LED_SYSFS_ROOT=/path/to/fixture/sys/class/leds \
-LED_STATE_DIR=/path/to/fixture/state \
-LED_SYSFS_EMULATE=1 \
-./bin/led-nightmode list
+scp luci-app-led-nightmode-0.5.0-r7.apk root@openwrt:/tmp/
+ssh root@openwrt 'apk add --allow-untrusted /tmp/luci-app-led-nightmode-0.5.0-r7.apk'
 ```
 
-Run all local checks with:
+Open LuCI, go to **Services → LED Night Mode**, enable the service, choose a schedule, then select **Save & Apply**.
+
+If an indicator is controlled by a modem or another subsystem rather than `/sys/class/leds`, install a matching provider APK as well. The base package never scans serial ports, guesses hardware, or enables a provider on its own. The first provider supports the specifically validated two-field Quectel `QNWCFG ledmode` interface; see [provider architecture](docs/architecture/providers.md) before using or extending it.
+
+## What it can control
+
+The core discovers standard Linux LED class devices at runtime, so names and board-specific assumptions do not enter the general implementation.
+
+```text
+LuCI / UCI schedule
+        │
+        ├── Linux LED class ── save state → night profile → exact restore
+        │
+        └── optional provider ─ probe → reversible change → exact restore
+```
+
+Some physical lights cannot be controlled by software at all. For example, the first test router's PWR LED is wired directly to a power rail. Other indicators may belong to a modem and require an explicit provider. A driver's reported `max_brightness > 1` also does not prove that the physical LED can actually dim; many drivers treat every nonzero value as fully on.
+
+The [compatibility matrix](docs/compatibility.md) separates fixture tests, SDK builds, and real hardware evidence. Release `0.5.0-r7` has a complete core/provider round trip on one Banana Pi BPI-R3 Mini running OpenWrt 25.12.4. Multi-device validation is not claimed yet.
+
+## Under the hood
+
+- Native LuCI page with a simple default view and deeper controls under **Advanced**.
+- Manual, fixed-time, and sunrise/sunset scheduling with restart-safe phase resolution.
+- Persistent and idempotent restoration, including LEDs that temporarily disappear.
+- rpcd/ACL boundary with no arbitrary command or provider-path execution.
+- BusyBox `ash` compatible runtime with fixture-backed core, service, schedule, LuCI, and provider tests.
+- Architecture-independent OpenWrt packages, built as `noarch` but only claimed where evidence exists.
+
+The service and UCI boundary is documented in [service-and-uci.md](docs/architecture/service-and-uci.md). Hardware findings for the first router live in [bpi-r3-mini-led-inventory.md](docs/hardware/bpi-r3-mini-led-inventory.md).
+
+## Development
+
+Local tests never need a real router:
 
 ```sh
 make test
 ```
 
-Before a release candidate or pull request, run `make release-check`. Contribution expectations are documented in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Before a release candidate or pull request:
 
-GNU Make uses `GNUmakefile` for local checks. When OpenWrt invokes the package with `TOPDIR` set, `GNUmakefile` delegates to the root `Makefile`, which is the OpenWrt LuCI package definition and can be added to an SDK as a package source.
-
-The exact SDK validation procedure and artifact checks are documented in [`docs/building/openwrt-sdk.md`](docs/building/openwrt-sdk.md).
-
-## Service configuration
-
-The installed package provides `/etc/config/led-nightmode` with a safe disabled default:
-
-```text
-config core 'main'
-	option enabled '0'
-	option phase 'day'
-	option night_brightness '0'
-
-config schedule 'schedule'
-	option mode 'manual'
-	option night_start '23:00'
-	option day_start '07:00'
-	option twilight 'daylight'
-	# option latitude '41.7151'
-	# option longitude '44.8271'
+```sh
+make release-check
 ```
 
-`mode` selects `manual`, `fixed`, or `sun`. Manual mode maintains the core `phase`. Fixed mode uses one daily local-time interval from `night_start` to `day_start`, including intervals that cross midnight. Sun mode obtains the current phase from `sunwait` with explicit decimal coordinates and one of its standard twilight definitions. Both the sysfs core and enabled providers recalculate the phase while running and immediately calculate it again after a service or router restart.
+The root `Makefile` is the OpenWrt LuCI package definition. `GNUmakefile` supplies local checks and delegates to the package definition inside an OpenWrt build tree. See the [SDK build guide](docs/building/openwrt-sdk.md) for a reproducible package build.
 
-The `luci.led-nightmode` rpcd object exposes status, router timezone name, discovered sysfs LED capabilities, installed provider drivers, and phase resolution to read-authorized LuCI sessions. Manual phase changes, service reloads, explicit provider probes, and reversible indicator tests require write authorization. The RPC layer does not expose arbitrary commands or accept provider paths outside the fixed driver directory.
-
-The LuCI page under **Services → LED Night Mode** shows the applied and scheduled state, provides immediate persistent day/night controls, edits manual, fixed-time, and solar schedules, and configures optional external-indicator providers. Empty solar coordinates are approximated locally from the router's IANA timezone, while an HTTPS-only browser-location button can refine them without an IP-geolocation service. The page separates a read-only provider connection probe from an explicit visual test that temporarily changes and restores the physical indicator. It also explains per-LED reported brightness ranges instead of implying a universal `0–255` scale.
-
-Indicators outside `/sys/class/leds` use optional provider packages. The base package does not scan serial ports, assume modem models, or create a provider section on a fresh installation. After installing a provider package, add an external indicator in LuCI and explicitly select its driver and endpoint. The first provider package supports the validated two-field Quectel `QNWCFG ledmode` interface. The driver interface and contribution rules are documented in [`docs/architecture/providers.md`](docs/architecture/providers.md).
-
-Validated and unvalidated scope is tracked in [`docs/compatibility.md`](docs/compatibility.md). Release gates and the upstream preparation path are in [`docs/releasing.md`](docs/releasing.md).
-
-## Design direction
-
-- `max_brightness > 1` is only an unverified multi-level interface, not proof of physical dimming. The safe default is off; a nonzero target is an explicit, hardware-calibrated opt-in.
-- Binary LEDs should support switching off and, in a later phase, a sparse pulse mode.
-- Night state survives reboot by determining the current phase on startup.
-- Fixed-time scheduling follows the router's local time. Sunrise/sunset scheduling delegates astronomical calculations to `sunwait`.
-
-## Development safety
-
-Implementation must be compatible with BusyBox `ash` and ordinary OpenWrt utilities. Tests should use a fixture-backed sysfs root whenever possible. Changes to a real router require explicit approval.
+Contributions are welcome, especially careful compatibility reports and isolated providers for indicators outside Linux sysfs. Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 
 ## License
 
-Apache-2.0. The intended upstream LuCI project is also Apache-2.0 licensed.
+[Apache-2.0](LICENSE)
