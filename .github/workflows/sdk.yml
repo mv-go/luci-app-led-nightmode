@@ -19,6 +19,7 @@ jobs:
       - name: Stage package feed
         run: |
           mkdir -p "$RUNNER_TEMP/led-nightmode-feed/luci-app-led-nightmode"
+          mkdir -p "$RUNNER_TEMP/led-nightmode-artifacts"
           rsync -a --delete \
             --exclude .git \
             --exclude bin \
@@ -29,6 +30,7 @@ jobs:
         uses: openwrt/gh-action-sdk@f5813d30eeef3534b58ac7e79c5d8842b6035434
         env:
           ARCH: aarch64_cortex-a53-25.12.4
+          ARTIFACTS_DIR: ${{ runner.temp }}/led-nightmode-artifacts
           FEED_DIR: ${{ runner.temp }}/led-nightmode-feed
           # Both APKs are outputs of this single OpenWrt source package.
           PACKAGES: luci-app-led-nightmode
@@ -42,7 +44,8 @@ jobs:
             "luci-app-led-nightmode-$release_id.apk" \
             "led-nightmode-provider-quectel-qnwcfg-ledmode-$release_id.apk"
           do
-            find bin/packages -type f -name "$package" -print -quit | grep -q . || {
+            find "$RUNNER_TEMP/led-nightmode-artifacts/bin/packages" \
+              -type f -name "$package" -print -quit | grep -q . || {
               echo "Missing expected package: $package" >&2
               exit 1
             }
@@ -52,6 +55,6 @@ jobs:
         with:
           name: openwrt-25.12.4-aarch64_cortex-a53
           path: |
-            bin/packages/**/*.apk
-            logs/**
+            ${{ runner.temp }}/led-nightmode-artifacts/bin/packages/**/*.apk
+            ${{ runner.temp }}/led-nightmode-artifacts/logs/**
           if-no-files-found: error
