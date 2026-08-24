@@ -52,3 +52,12 @@ The intended destination is a new `applications/luci-app-led-nightmode` director
 The manual **Upstream LuCI** workflow performs the current-tree lint, translation-template comparison, and an official snapshot SDK build against the staged application. The staging test ensures the universal runtime stays byte-for-byte aligned while the optional hardware-specific provider does not leak into the LuCI tree.
 
 The repository currently uses a GitHub noreply identity, so the final upstream commit series cannot be prepared correctly until the contributor identity is supplied. No identity should be guessed or copied into Git history.
+
+Current preparation status:
+
+- [x] Reproducible universal application staging with provider exclusion.
+- [x] Current LuCI `master` JavaScript/JSON lint and translation-template comparison.
+- [x] Official OpenWrt snapshot SDK package build and downloaded artifact verification.
+- [x] Public `mv-go/luci` fork and local `luci-app-led-nightmode` feature branch based on current `master`.
+- [ ] Replace the noreply placeholder with the contributor's reachable identity and create a signed, signed-off commit.
+- [ ] Push the feature branch and open the upstream pull request.

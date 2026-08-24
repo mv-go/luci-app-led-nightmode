@@ -65,3 +65,14 @@ SHA-256 values of the GitHub-uploaded APKs:
 - Quectel provider APK: `a943e338c1b60e2c55c98b7680d2e88f986bf5e3f4b0d035c8111ef62ef4d626`.
 
 These hashes identify the remote workflow outputs; the independent local SDK outputs above have their own hashes because APK build metadata is not byte-for-byte reproducible between the two build environments.
+
+## Upstream snapshot validation
+
+The universal application was staged as `applications/luci-app-led-nightmode` against LuCI `master` commit `5cb5db64213d712d1ca325dd895b4e1cd2340d50`. The staged tree uses LuCI's relative `../../luci.mk`, contains the generic sysfs core and provider interface, and deliberately excludes the device-specific Quectel provider package.
+
+The [Upstream LuCI run 32741903478](https://github.com/mv-go/luci-app-led-nightmode/actions/runs/32741903478) completed successfully. It performed current LuCI JavaScript and JSON lint, regenerated and compared the translation template, then built the staged application with the official OpenWrt snapshot SDK for `aarch64_cortex-a53`. The snapshot toolchain reported GCC 14.4.0 and produced one `noarch` package:
+
+- `luci-app-led-nightmode-0.5.0-r7.apk`;
+- SHA-256 `0c33bae9722512bdd277ca557d8b6ad17f5623332c0e488e17092497a70b214e`.
+
+The package build metadata recorded the expected dependencies on `luci-base`, `jshn`, `procd`, `rpcd`, `sunwait`, and `uci`. The downloaded workflow artifact also contains the package build logs; no provider APK is present in the upstream artifact.
