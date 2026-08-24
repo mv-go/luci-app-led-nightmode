@@ -1,6 +1,6 @@
 # OpenWrt SDK build
 
-The CLI/service/LuCI/provider release is validated against the official OpenWrt 25.12.4 SDK for `mediatek/filogic`:
+The CLI/service/LuCI/provider release candidate is built against the official OpenWrt 25.12.4 SDK for `mediatek/filogic`:
 
 - SDK: `openwrt-sdk-25.12.4-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst`
 - SHA-256: `411a2277ca10f909c30275a506aab4dc28a4f1281d7fda4f19faaa2ded6630bb`
@@ -23,10 +23,10 @@ make defconfig
 make package/luci-app-led-nightmode/compile V=sc
 ```
 
-The OpenWrt 25.12 outputs are:
+The OpenWrt 25.12 outputs use these filenames under `bin/packages/aarch64_cortex-a53/<feed>/`; the feed directory depends on how the package source was linked into the SDK:
 
-- `bin/packages/aarch64_cortex-a53/luci/luci-app-led-nightmode-0.5.0-r6.apk`;
-- `bin/packages/aarch64_cortex-a53/luci/led-nightmode-provider-quectel-qnwcfg-ledmode-0.5.0-r6.apk`.
+- `luci-app-led-nightmode-0.5.0-r7.apk`;
+- `led-nightmode-provider-quectel-qnwcfg-ledmode-0.5.0-r7.apk`.
 
 The SDK is an x86_64 Linux build; an ARM64 macOS host must run it in a Linux x86_64 container or virtual machine.
 
@@ -39,18 +39,18 @@ make package/luci-app-led-nightmode/compile V=sc CONFIG_LUCI_JSMIN=
 
 ## Validated artifact
 
-Both package builds were checked with the SDK's `apk-tools 3.0.5`:
+Both `0.5.0-r7` package builds were checked with the SDK's `apk-tools 3.0.5`:
 
 - `apk verify --allow-untrusted` reported `OK`;
 - metadata reported version `0.5.0-r6` and architecture `noarch`;
-- `/etc/config/led-nightmode` is registered as a conffile with mode `0600`;
+- `/etc/config/led-nightmode` is registered as a conffile with mode `0600` and contains no device-specific provider default;
 - the init script, UCI migration, shared service executable, two service runners, CLI, and provider driver have mode `0755`; the schedule and rpcd entry points are package symlinks to the shared executable; the ACL, LuCI menu, JavaScript view, and timezone-coordinate module have mode `0644`;
 - the package contains no `.js.o` temporary files;
 - every installed runtime file matched its repository source byte for byte after extraction.
 
 Validated SHA-256 values:
 
-- base APK: `8d54ed8d0bfbe0984bcbee37bb3aac21163314ebacfc1c05c1395b7e613398ef`;
-- Quectel provider APK: `21765910a9636071104bfecc16c7b85c72fba4cd5a6f29b4b51b477aea9372b9`.
+- base APK: `48bda130edd8b53c56166d1296e4c5a595bb06b0263dcc4e2945ae5a7c94d82d`;
+- Quectel provider APK: `07601c8b282dc99b5500fdd4b3e49df6cab1e4e0599d8aabf9739b6564233206`.
 
 The locally exported artifact is kept under ignored `dist/` and is not committed to Git.

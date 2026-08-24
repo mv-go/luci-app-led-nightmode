@@ -7,6 +7,8 @@
 'require uci';
 'require view';
 
+/* global zoneCoordinates */
+
 const callStatus = rpc.declare({
 	object: 'luci.led-nightmode',
 	method: 'status'
@@ -478,7 +480,6 @@ return view.extend({
 		};
 
 		const deviceOption = s.option(form.Value, 'device', _('Device or endpoint'));
-		deviceOption.placeholder = '/dev/ttyUSB3';
 		deviceOption.validate = function(sectionId, value) {
 			return providerEnabledOption.formvalue(sectionId) !== '1' || value
 				? true

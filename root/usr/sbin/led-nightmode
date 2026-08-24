@@ -319,8 +319,7 @@ command_list() {
 	done
 
 	if [ "$found_led" -eq 0 ]; then
-		error "no LEDs found in $SYSFS_ROOT"
-		return 1
+		return 0
 	fi
 	return "$result"
 }
@@ -353,8 +352,7 @@ command_status() {
 	done
 
 	if [ "$found_led" -eq 0 ]; then
-		error "no LEDs found in $SYSFS_ROOT"
-		return 1
+		return 0
 	fi
 	return "$result"
 }
@@ -420,8 +418,8 @@ command_night() {
 	done
 
 	if [ "$found_led" -eq 0 ]; then
-		error "no LEDs found in $SYSFS_ROOT"
-		return 1
+		printf '%s\n' 'No sysfs LEDs found; nothing to change.'
+		return 0
 	fi
 	return "$result"
 }

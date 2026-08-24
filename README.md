@@ -6,7 +6,7 @@ The first test device is a Banana Pi BPI-R3 Mini. The project is designed for mu
 
 ## Current status
 
-The repository includes the hardware-validated CLI core, a UCI/procd service, fixed-time and sunrise/sunset scheduling, an rpcd/ACL interface, a native LuCI view, and an extensible provider interface for indicators outside the Linux LED class. Release `0.5.0-r6` keeps the normal LuCI workflow focused on enablement, current state, and scheduling while moving calibrated brightness, exact solar parameters, provider configuration and tests, LED capability inventory, and technical status under Advanced. It retains timezone-assisted solar setup, browser-location refinement, reversible provider tests, and fast recovery from transient provider endpoint failures. The release is fixture-tested, browser-tested, SDK-validated, and installed with a healthy runtime on the first BPI-R3 Mini.
+The repository includes the hardware-validated CLI core, a UCI/procd service, fixed-time and sunrise/sunset scheduling, an rpcd/ACL interface, a native LuCI view, and an extensible provider interface for indicators outside the Linux LED class. Release `0.5.0-r7` keeps the normal LuCI workflow focused on enablement, current state, and scheduling while moving calibrated brightness, exact solar parameters, provider configuration and tests, LED capability inventory, and technical status under Advanced. It also removes the first device's provider and serial-port hints from fresh installations and treats an empty Linux LED class as a safe no-op. `r7` is fixture-tested and SDK-validated as the current release candidate; `r6` remains the latest package revision installed and live-validated on the first BPI-R3 Mini.
 
 ## CLI core
 
@@ -36,6 +36,8 @@ Run all local checks with:
 make test
 ```
 
+Before a release candidate or pull request, run `make release-check`. Contribution expectations are documented in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 GNU Make uses `GNUmakefile` for local checks. When OpenWrt invokes the package with `TOPDIR` set, `GNUmakefile` delegates to the root `Makefile`, which is the OpenWrt LuCI package definition and can be added to an SDK as a package source.
 
 The exact SDK validation procedure and artifact checks are documented in [`docs/building/openwrt-sdk.md`](docs/building/openwrt-sdk.md).
@@ -57,11 +59,6 @@ config schedule 'schedule'
 	option twilight 'daylight'
 	# option latitude '41.7151'
 	# option longitude '44.8271'
-
-config provider 'lte'
-	option enabled '0'
-	option driver 'quectel-qnwcfg-ledmode'
-	# option device '/dev/ttyUSB3'
 ```
 
 `mode` selects `manual`, `fixed`, or `sun`. Manual mode maintains the core `phase`. Fixed mode uses one daily local-time interval from `night_start` to `day_start`, including intervals that cross midnight. Sun mode obtains the current phase from `sunwait` with explicit decimal coordinates and one of its standard twilight definitions. Both the sysfs core and enabled providers recalculate the phase while running and immediately calculate it again after a service or router restart.
@@ -70,7 +67,9 @@ The `luci.led-nightmode` rpcd object exposes status, router timezone name, disco
 
 The LuCI page under **Services → LED Night Mode** shows the applied and scheduled state, provides immediate persistent day/night controls, edits manual, fixed-time, and solar schedules, and configures optional external-indicator providers. Empty solar coordinates are approximated locally from the router's IANA timezone, while an HTTPS-only browser-location button can refine them without an IP-geolocation service. The page separates a read-only provider connection probe from an explicit visual test that temporarily changes and restores the physical indicator. It also explains per-LED reported brightness ranges instead of implying a universal `0–255` scale.
 
-Indicators outside `/sys/class/leds` use optional provider packages. The base package does not scan serial ports or assume modem models. The first provider package supports the validated two-field Quectel `QNWCFG ledmode` interface and is enabled only after an explicit device is configured. The driver interface and contribution rules are documented in [`docs/architecture/providers.md`](docs/architecture/providers.md).
+Indicators outside `/sys/class/leds` use optional provider packages. The base package does not scan serial ports, assume modem models, or create a provider section on a fresh installation. After installing a provider package, add an external indicator in LuCI and explicitly select its driver and endpoint. The first provider package supports the validated two-field Quectel `QNWCFG ledmode` interface. The driver interface and contribution rules are documented in [`docs/architecture/providers.md`](docs/architecture/providers.md).
+
+Validated and unvalidated scope is tracked in [`docs/compatibility.md`](docs/compatibility.md). Release gates and the upstream preparation path are in [`docs/releasing.md`](docs/releasing.md).
 
 ## Design direction
 

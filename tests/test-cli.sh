@@ -8,6 +8,8 @@ CLI=$PROJECT_ROOT/root/usr/sbin/led-nightmode
 TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/led-nightmode-test.XXXXXX")
 SYSFS_ROOT=$TEST_ROOT/sys/class/leds
 STATE_DIR=$TEST_ROOT/state
+EMPTY_SYSFS_ROOT=$TEST_ROOT/empty/sys/class/leds
+EMPTY_STATE_DIR=$TEST_ROOT/empty/state
 
 cleanup() {
 	rm -rf "$TEST_ROOT"
@@ -58,7 +60,14 @@ run_cli() {
 	"$CLI" "$@"
 }
 
-mkdir -p "$SYSFS_ROOT"
+run_empty_cli() {
+	LED_SYSFS_ROOT=$EMPTY_SYSFS_ROOT \
+	LED_STATE_DIR=$EMPTY_STATE_DIR \
+	LED_SYSFS_EMULATE=1 \
+	"$CLI" "$@"
+}
+
+mkdir -p "$SYSFS_ROOT" "$EMPTY_SYSFS_ROOT"
 add_led 'blue:wlan-1' 1 1 'none timer [netdev] pattern'
 add_led 'mt76-phy0' 255 0 'none timer pattern [phy0tpt]'
 printf '%s\n' 'phy0-ap0' > "$SYSFS_ROOT/blue:wlan-1/device_name"
@@ -126,5 +135,14 @@ fi
 [ -d "$STATE_DIR/blue:wlan-1" ] || fail 'missing LED state must be retained'
 mv "$TEST_ROOT/missing-led" "$SYSFS_ROOT/blue:wlan-1"
 run_cli day >/dev/null
+
+empty_list_output=$(run_empty_cli list)
+assert_eq 'name	max_brightness	brightness	active_trigger	brightness_model	timer_parameters' "$empty_list_output" 'an empty LED class returns an empty inventory'
+empty_status_output=$(run_empty_cli status)
+assert_contains "$empty_status_output" 'night_mode	inactive' 'an empty LED class reports inactive state'
+empty_night_output=$(run_empty_cli night)
+assert_contains "$empty_night_output" 'No sysfs LEDs found; nothing to change.' 'night mode is a safe no-op without sysfs LEDs'
+[ ! -e "$EMPTY_STATE_DIR" ] || fail 'an empty LED class must not create saved state'
+run_empty_cli day >/dev/null
 
 printf '%s\n' 'All CLI tests passed.'

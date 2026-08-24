@@ -9,6 +9,7 @@ SERVICE=$PROJECT_ROOT/root/usr/libexec/led-nightmode-service
 SCHEDULE=$SERVICE
 TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/led-nightmode-service-test.XXXXXX")
 SYSFS_ROOT=$TEST_ROOT/sys/class/leds
+EMPTY_SYSFS_ROOT=$TEST_ROOT/empty/sys/class/leds
 STATE_DIR=$TEST_ROOT/state
 RUNTIME_DIR=$TEST_ROOT/runtime
 FAKE_BIN=$TEST_ROOT/bin
@@ -85,16 +86,6 @@ run_rpc() {
 	LED_TEST_UCI_LOG=$RPC_UCI_LOG \
 	LED_TEST_INIT_LOG=$RPC_INIT_LOG \
 		"$SERVICE" "$@"
-}
-
-wait_for_path() {
-	path=$1
-	attempt=0
-	while [ ! -e "$path" ] && [ "$attempt" -lt 100 ]; do
-		sleep 0.05
-		attempt=$((attempt + 1))
-	done
-	[ -e "$path" ]
 }
 
 wait_for_value() {
@@ -255,7 +246,7 @@ if printf '%s\n' '{"driver":"../bad","device":"/dev/test"}' | run_rpc call test 
 	fail 'rpcd rejects visual-test provider path traversal'
 fi
 
-mkdir -p "$SYSFS_ROOT/green:status" "$SYSFS_ROOT/mt76-phy0"
+mkdir -p "$SYSFS_ROOT/green:status" "$SYSFS_ROOT/mt76-phy0" "$EMPTY_SYSFS_ROOT"
 printf '%s\n' 1 > "$SYSFS_ROOT/green:status/max_brightness"
 printf '%s\n' 1 > "$SYSFS_ROOT/green:status/brightness"
 printf '%s\n' '[none] timer' > "$SYSFS_ROOT/green:status/trigger"
@@ -272,7 +263,8 @@ LED_SYSFS_EMULATE=1 \
 "$SERVICE" night 7 >/dev/null &
 SERVICE_PID=$!
 
-wait_for_path "$STATE_DIR/green:status" || fail 'service did not apply the night profile'
+wait_for_value "$SYSFS_ROOT/green:status/brightness" 0 || fail 'service did not apply the night profile'
+[ -d "$STATE_DIR/green:status" ] || fail 'service did not save the original LED state'
 assert_eq 0 "$(cat "$SYSFS_ROOT/green:status/brightness")" 'service switches off a binary LED'
 assert_eq 7 "$(cat "$SYSFS_ROOT/mt76-phy0/brightness")" 'service applies an explicitly configured multi-level target'
 assert_eq night "$(cat "$RUNTIME_DIR/phase")" 'service publishes its current phase'
@@ -285,6 +277,22 @@ assert_eq 1 "$(cat "$SYSFS_ROOT/green:status/brightness")" 'service stop restore
 assert_eq 0 "$(cat "$SYSFS_ROOT/mt76-phy0/brightness")" 'service stop restores multi-level brightness'
 [ ! -d "$STATE_DIR" ] || fail 'service stop removes restored state'
 [ ! -e "$RUNTIME_DIR/phase" ] || fail 'service stop removes stale runtime phase'
+
+LED_NIGHTMODE_BIN=$CLI \
+LED_NIGHTMODE_SCHEDULE_BIN=$SCHEDULE \
+LED_SYSFS_ROOT=$EMPTY_SYSFS_ROOT \
+LED_STATE_DIR=$STATE_DIR \
+LED_NIGHTMODE_RUNTIME_DIR=$RUNTIME_DIR \
+LED_SYSFS_EMULATE=1 \
+"$SERVICE" night 0 >/dev/null &
+SERVICE_PID=$!
+
+wait_for_value "$RUNTIME_DIR/phase" night || fail 'service did not start with an empty LED class'
+[ ! -e "$STATE_DIR" ] || fail 'empty LED class service must not create saved state'
+kill -TERM "$SERVICE_PID"
+wait "$SERVICE_PID"
+SERVICE_PID=
+[ ! -e "$RUNTIME_DIR/phase" ] || fail 'empty LED class service stop removes stale runtime phase'
 
 mkdir -p "$FAKE_BIN"
 printf '%s\n' '#!/bin/sh' > "$FAKE_BIN/date"

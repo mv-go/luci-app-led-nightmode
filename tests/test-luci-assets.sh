@@ -41,6 +41,7 @@ assert_contains "$(cat "$VIEW")" 'Use this device location' 'LuCI offers browser
 assert_contains "$(cat "$VIEW")" 'Exact latitude' 'LuCI keeps exact solar coordinates available under Advanced'
 assert_contains "$(cat "$VIEW")" 'Detected LED brightness capabilities' 'LuCI renders device-reported brightness ranges'
 assert_contains "$(cat "$VIEW")" 'Test indicator' 'LuCI exposes the provider visual test'
+[ "$(grep -F '/dev/ttyUSB3' "$VIEW" || true)" = '' ] || fail 'LuCI must not suggest a device-specific provider endpoint'
 assert_contains "$(cat "$ACL")" '"leds"' 'read ACL grants LED inventory access'
 assert_contains "$(cat "$ACL")" '"test"' 'write ACL grants provider visual-test access'
 

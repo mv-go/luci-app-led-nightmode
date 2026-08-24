@@ -1,0 +1,32 @@
+name: OpenWrt SDK
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build OpenWrt packages
+        uses: openwrt/gh-action-sdk@f5813d30eeef3534b58ac7e79c5d8842b6035434
+        env:
+          ARCH: aarch64_cortex-a53-25.12.4
+          PACKAGES: luci-app-led-nightmode led-nightmode-provider-quectel-qnwcfg-ledmode
+          V: sc
+      - name: Upload package artifacts and logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: openwrt-25.12.4-aarch64_cortex-a53
+          path: |
+            bin/packages/**/*.apk
+            logs/**
+          if-no-files-found: error

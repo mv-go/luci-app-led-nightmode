@@ -10,8 +10,3 @@ config schedule 'schedule'
 	option twilight 'daylight'
 	# option latitude '41.7151'
 	# option longitude '44.8271'
-
-config provider 'lte'
-	option enabled '0'
-	option driver 'quectel-qnwcfg-ledmode'
-	# option device '/dev/ttyUSB3'

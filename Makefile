@@ -2,9 +2,10 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-led-nightmode
 PKG_VERSION:=0.5.0
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE
+LUCI_NAME:=luci-app-led-nightmode
 LUCI_TITLE:=LED night mode for OpenWrt
 LUCI_DESCRIPTION:=Preserve and restore OpenWrt LED triggers while applying day and night profiles.
 LUCI_DEPENDS:=+luci-base +jshn +procd +rpcd +sunwait +uci

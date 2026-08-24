@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fixture-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install BusyBox
+        run: sudo apt-get update && sudo apt-get install --yes busybox
+      - name: Check BusyBox ash syntax
+        run: make check-ash
+      - name: Run release gate
+        run: make release-check
+
+  luci-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out current LuCI lint configuration
+        uses: actions/checkout@v4
+        with:
+          repository: openwrt/luci
+          path: .upstream-luci
+          sparse-checkout: |
+            eslint.config.mjs
+            package.json
+          sparse-checkout-cone-mode: false
+      - name: Install LuCI lint dependencies
+        working-directory: .upstream-luci
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Link application into the LuCI tree
+        working-directory: .upstream-luci
+        run: mkdir -p applications && ln -s "$GITHUB_WORKSPACE" applications/luci-app-led-nightmode
+      - name: Run current LuCI JavaScript and JSON checks
+        working-directory: .upstream-luci
+        run: >-
+          npx eslint
+          applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js
+          applications/luci-app-led-nightmode/htdocs/luci-static/resources/led-nightmode/zone-coordinates.js
+          applications/luci-app-led-nightmode/root/usr/share/luci/menu.d/luci-app-led-nightmode.json
+          applications/luci-app-led-nightmode/root/usr/share/rpcd/acl.d/luci-app-led-nightmode.json
