@@ -6,7 +6,7 @@ The first test device is a Banana Pi BPI-R3 Mini. The project is designed for mu
 
 ## Current status
 
-The repository includes the hardware-validated CLI core, a UCI/procd service, fixed-time and sunrise/sunset scheduling, an rpcd/ACL interface, a native LuCI view, and an extensible provider interface for indicators outside the Linux LED class. Release `0.5.0-r3` adds timezone-assisted solar setup, browser-location refinement, explicit provider indicator tests, hardware-aware brightness guidance, fast in-process recovery from transient provider endpoint failures, and a live-tested LuCI helper-module contract. It is fixture-tested, browser-tested, SDK-validated, and live-validated on the first BPI-R3 Mini across manual day/night, fixed and solar resolution, provider probe and reversible visual tests, package upgrades, and repeated service reloads while LTE/5G and SSH remained available.
+The repository includes the hardware-validated CLI core, a UCI/procd service, fixed-time and sunrise/sunset scheduling, an rpcd/ACL interface, a native LuCI view, and an extensible provider interface for indicators outside the Linux LED class. Release `0.5.0-r6` keeps the normal LuCI workflow focused on enablement, current state, and scheduling while moving calibrated brightness, exact solar parameters, provider configuration and tests, LED capability inventory, and technical status under Advanced. It retains timezone-assisted solar setup, browser-location refinement, reversible provider tests, and fast recovery from transient provider endpoint failures. The release is fixture-tested, browser-tested, SDK-validated, and installed with a healthy runtime on the first BPI-R3 Mini.
 
 ## CLI core
 

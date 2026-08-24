@@ -64,6 +64,20 @@ function modeLabel(mode) {
 	}
 }
 
+function statusSummaryLabel(status) {
+	if (!status.enabled)
+		return _('Night mode is off');
+	if (!status.running || !status.schedule_valid)
+		return _('Night mode needs attention');
+	return status.effective_phase === 'night'
+		? _('Night mode is active — indicators are off')
+		: _('Indicators are working normally');
+}
+
+function scheduleSummaryLabel(status) {
+	return _('Current schedule: %s').format(modeLabel(status.mode));
+}
+
 function setStatusText(root, name, value) {
 	const node = root.querySelector('[data-status="%s"]'.format(name));
 	if (node)
@@ -72,6 +86,8 @@ function setStatusText(root, name, value) {
 
 function updateStatus(root, status) {
 	status = status || {};
+	setStatusText(root, 'summary', statusSummaryLabel(status));
+	setStatusText(root, 'schedule-summary', scheduleSummaryLabel(status));
 	setStatusText(root, 'effective', phaseLabel(status.effective_phase));
 	setStatusText(root, 'desired', phaseLabel(status.desired_phase));
 	setStatusText(root, 'mode', modeLabel(status.mode));
@@ -87,6 +103,68 @@ function updateStatus(root, status) {
 				? _('The saved schedule is incomplete or invalid. Check the settings below.')
 				: _('The service is enabled but is not running.'));
 	}
+}
+
+function groupSection(section, group) {
+	const render = section.render.bind(section);
+	section.render = function() {
+		return Promise.resolve(render()).then(function(node) {
+			if (node && node.setAttribute)
+				node.setAttribute('data-led-nightmode-group', group);
+			return node;
+		});
+	};
+	return section;
+}
+
+function extractAdvancedOptions(mapNode, optionNames, title, description) {
+	const fields = E('div', { 'class': 'cbi-section-node' });
+	optionNames.forEach(function(name) {
+		const field = mapNode.querySelector('.cbi-value[data-name="%s"]'.format(name));
+		if (field)
+			fields.appendChild(field);
+	});
+
+	return E('div', { 'class': 'cbi-section' }, [
+		E('h3', {}, title),
+		E('div', { 'class': 'cbi-section-descr' }, description),
+		fields
+	]);
+}
+
+function arrangeMapTabs(mapNode) {
+	const settingsPane = E('div', {
+		'data-tab': 'settings',
+		'data-tab-title': _('Settings')
+	});
+	const advancedPane = E('div', {
+		'data-tab': 'advanced',
+		'data-tab-title': _('Advanced')
+	});
+
+	advancedPane.appendChild(extractAdvancedOptions(mapNode,
+		[ '_brightness_mode', 'night_brightness' ],
+		_('Night appearance'),
+		_('The safe default turns supported indicators completely off. Custom brightness is intended for calibrated hardware.')));
+	advancedPane.appendChild(extractAdvancedOptions(mapNode,
+		[ 'latitude', 'longitude', 'twilight' ],
+		_('Sun schedule details'),
+		_('These values are used only when the sunset-to-sunrise schedule is selected.')));
+
+	Array.prototype.slice.call(mapNode.childNodes).forEach(function(node) {
+		if (!node.getAttribute)
+			return;
+		const group = node.getAttribute('data-led-nightmode-group');
+		if (group === 'settings')
+			settingsPane.appendChild(node);
+		else if (group === 'advanced')
+			advancedPane.appendChild(node);
+	});
+
+	const tabs = E('div', { 'class': 'cbi-map-tabbed' }, [ settingsPane, advancedPane ]);
+	mapNode.appendChild(tabs);
+	ui.tabs.initTabGroup(tabs.childNodes);
+	return mapNode;
 }
 
 function validateTime(sectionId, value) {
@@ -164,48 +242,34 @@ return view.extend({
 			_('Turn router indicators off at night and restore their exact previous state during the day.'));
 
 		const statusNode = E('div', { 'class': 'cbi-section' }, [
-			E('h3', {}, _('Current state')),
 			E('div', {
 				'class': 'alert-message warning',
 				'data-status': 'warning',
 				'hidden': true
 			}),
-			E('table', { 'class': 'table' }, [
-				E('tr', { 'class': 'tr' }, [
-					E('td', { 'class': 'td left', 'width': '40%' }, _('LED state now')),
-					E('td', { 'class': 'td left' }, E('strong', { 'data-status': 'effective' }, phaseLabel(initialStatus.effective_phase)))
-				]),
-				E('tr', { 'class': 'tr' }, [
-					E('td', { 'class': 'td left' }, _('Schedule wants')),
-					E('td', { 'class': 'td left', 'data-status': 'desired' }, phaseLabel(initialStatus.desired_phase))
-				]),
-				E('tr', { 'class': 'tr' }, [
-					E('td', { 'class': 'td left' }, _('Schedule mode')),
-					E('td', { 'class': 'td left', 'data-status': 'mode' }, modeLabel(initialStatus.mode))
-				]),
-				E('tr', { 'class': 'tr' }, [
-					E('td', { 'class': 'td left' }, _('Service')),
-					E('td', { 'class': 'td left' }, [
-						E('span', { 'data-status': 'enabled' }),
-						' · ',
-						E('span', { 'data-status': 'service' })
-					])
+			E('div', { 'class': 'alert-message info' }, [
+				E('strong', { 'data-status': 'summary' }, statusSummaryLabel(initialStatus)),
+				E('div', { 'style': 'margin-top:.35em' }, [
+					E('span', { 'data-status': 'schedule-summary' }, scheduleSummaryLabel(initialStatus))
 				])
 			]),
-			E('p', { 'style': 'margin-top: 1em' },
-				_('Quick actions are saved and applied immediately. They select Manual mode and do not apply other unsaved form edits.')),
-			E('div', { 'class': 'right' }, [
-				E('button', {
-					'class': 'cbi-button cbi-button-action',
-					'type': 'button',
-					'click': (event) => this.handleManualPhase(statusNode, 'day', event)
-				}, _('Switch to day now')),
-				' ',
-				E('button', {
-					'class': 'cbi-button cbi-button-action',
-					'type': 'button',
-					'click': (event) => this.handleManualPhase(statusNode, 'night', event)
-				}, _('Switch to night now'))
+			E('p', {}, _('Router LEDs are controlled automatically. Optional external indicators are configured under Advanced.')),
+			E('details', {}, [
+				E('summary', { 'style': 'cursor:pointer;font-weight:600' }, _('Manual override')),
+				E('p', {}, _('These actions are saved and applied immediately. They switch the schedule to Manual without applying other unsaved form edits.')),
+				E('div', { 'class': 'right' }, [
+					E('button', {
+						'class': 'cbi-button cbi-button-action',
+						'type': 'button',
+						'click': (event) => this.handleManualPhase(statusNode, 'day', event)
+					}, _('Turn indicators on now')),
+					' ',
+					E('button', {
+						'class': 'cbi-button cbi-button-action',
+						'type': 'button',
+						'click': (event) => this.handleManualPhase(statusNode, 'night', event)
+					}, _('Turn indicators off now'))
+				])
 			])
 		]);
 		updateStatus(statusNode, initialStatus);
@@ -214,61 +278,25 @@ return view.extend({
 		s.render = function() {
 			return statusNode;
 		};
+		groupSection(s, 'settings');
 
-		s = m.section(form.NamedSection, 'main', 'core', _('General settings'));
+		s = m.section(form.NamedSection, 'main', 'core', _('Night mode'));
 		s.addremove = false;
+		groupSection(s, 'settings');
+		const mainSection = s;
 
-		o = s.option(form.Flag, 'enabled', _('Enable LED night mode'),
+		o = s.option(form.Flag, 'enabled', _('Enable automatic LED night mode'),
 			_('A fresh installation stays disabled until you turn this on.'));
 		o.rmempty = false;
 
-		const brightnessModeOption = s.option(form.ListValue, '_brightness_mode', _('Night profile'));
-		brightnessModeOption.value('off', _('Off completely — recommended'));
-		brightnessModeOption.value('custom', _('Custom raw brightness — advanced'));
-		brightnessModeOption.cfgvalue = function(sectionId) {
-			return Number(uci.get('led-nightmode', sectionId, 'night_brightness') || 0) > 0
-				? 'custom'
-				: 'off';
-		};
-		brightnessModeOption.write = function(sectionId, value) {
-			if (value === 'off')
-				return uci.set('led-nightmode', sectionId, 'night_brightness', '0');
-		};
-		brightnessModeOption.remove = function() {};
-		brightnessModeOption.rmempty = false;
-
-		const brightnessTargetOption = s.option(form.Value, 'night_brightness', _('Custom raw brightness target'),
-			_('A non-zero sysfs value is applied only to LEDs reporting a maximum above 1. It is clamped to each LED’s individual maximum and may still behave as fully on.'));
-		brightnessTargetOption.default = '1';
-		brightnessTargetOption.datatype = 'uinteger';
-		brightnessTargetOption.depends('_brightness_mode', 'custom');
-		brightnessTargetOption.rmempty = false;
-		brightnessTargetOption.validate = function(sectionId, value) {
-			return Number(value) > 0
-				? true
-				: _('Enter a value greater than 0, or choose “Off completely”.');
-		};
-		brightnessModeOption.onchange = function(event, sectionId, value) {
-			if (value !== 'custom' || Number(brightnessTargetOption.formvalue(sectionId)) > 0)
-				return;
-			const targetElement = brightnessTargetOption.getUIElement(sectionId);
-			if (targetElement)
-				targetElement.setValue('1');
-		};
-
-		const brightnessNode = renderBrightnessCapabilities(discoveredLeds);
-		s = m.section(form.NamedSection, '_brightness_capabilities');
-		s.render = function() {
-			return brightnessNode;
-		};
-
-		s = m.section(form.NamedSection, 'schedule', 'schedule', _('Schedule'));
+		s = m.section(form.NamedSection, 'schedule', 'schedule', _('When should indicators turn off?'));
 		s.addremove = false;
+		groupSection(s, 'settings');
 
-		const modeOption = s.option(form.ListValue, 'mode', _('Mode'));
-		modeOption.value('manual', _('Manual'));
+		const modeOption = s.option(form.ListValue, 'mode', _('Schedule'));
+		modeOption.value('sun', _('Sunset to sunrise — recommended'));
 		modeOption.value('fixed', _('Daily schedule'));
-		modeOption.value('sun', _('Sunrise and sunset'));
+		modeOption.value('manual', _('Manual'));
 		modeOption.default = 'manual';
 		modeOption.rmempty = false;
 
@@ -304,53 +332,104 @@ return view.extend({
 				: _('Day and night start times must be different.');
 		};
 
-		const latitudeOption = s.option(form.Value, 'latitude', _('Latitude'),
-			_('Signed decimal degrees from −90 to 90.'));
-		latitudeOption.placeholder = '41.7151';
-		latitudeOption.depends('mode', 'sun');
-		latitudeOption.rmempty = false;
-		latitudeOption.validate = coordinateValidator(-90, 90);
-		latitudeOption.cfgvalue = function(sectionId) {
-			const saved = uci.get('led-nightmode', sectionId, 'latitude');
-			return saved || (timezoneCoordinates ? String(timezoneCoordinates[0]) : '');
-		};
-
-		const longitudeOption = s.option(form.Value, 'longitude', _('Longitude'),
-			_('Signed decimal degrees from −180 to 180.'));
-		longitudeOption.placeholder = '44.8271';
-		longitudeOption.depends('mode', 'sun');
-		longitudeOption.rmempty = false;
-		longitudeOption.validate = coordinateValidator(-180, 180);
-		longitudeOption.cfgvalue = function(sectionId) {
-			const saved = uci.get('led-nightmode', sectionId, 'longitude');
-			return saved || (timezoneCoordinates ? String(timezoneCoordinates[1]) : '');
-		};
-
 		o = s.option(form.DummyValue, '_location_hint', _('Approximate location'));
 		o.depends('mode', 'sun');
 		o.cfgvalue = function() {
 			return timezoneCoordinates
-				? _('Prefilled from router timezone %s using the representative IANA timezone location. Review or refine it before saving.').format(initialStatus.router_zonename)
-				: _('No coordinate hint is available for the router timezone. Enter coordinates manually or use browser location over HTTPS.');
+				? _('%s, estimated from the router timezone. This is usually accurate enough; exact coordinates are available under Advanced.').format(initialStatus.router_zonename)
+				: _('No location hint is available for the router timezone. Use this device location or enter exact coordinates under Advanced.');
 		};
 
-		o = s.option(form.Button, '_browser_location', _('Current device location'),
-			_('Ask this browser for a more precise location. Coordinates are placed into the form and are sent only to this router when you save.'));
+		const scheduleSection = s;
+
+		const brightnessModeOption = mainSection.option(form.ListValue, '_brightness_mode', _('Night profile'));
+		brightnessModeOption.value('off', _('Off completely — recommended'));
+		brightnessModeOption.value('custom', _('Custom raw brightness'));
+		brightnessModeOption.cfgvalue = function() {
+			return Number(uci.get('led-nightmode', 'main', 'night_brightness') || 0) > 0
+				? 'custom'
+				: 'off';
+		};
+		brightnessModeOption.write = function(sectionId, value) {
+			if (value === 'off')
+				return uci.set('led-nightmode', 'main', 'night_brightness', '0');
+		};
+		brightnessModeOption.remove = function() {};
+		brightnessModeOption.rmempty = false;
+
+		const brightnessTargetOption = mainSection.option(form.Value, 'night_brightness', _('Custom raw brightness target'),
+			_('A non-zero sysfs value is applied only to LEDs reporting a maximum above 1. It is clamped to each LED’s individual maximum and may still behave as fully on.'));
+		brightnessTargetOption.default = '1';
+		brightnessTargetOption.datatype = 'uinteger';
+		brightnessTargetOption.depends('_brightness_mode', 'custom');
+		brightnessTargetOption.rmempty = false;
+		brightnessTargetOption.validate = function(sectionId, value) {
+			return Number(value) > 0
+				? true
+				: _('Enter a value greater than 0, or choose “Off completely”.');
+		};
+		brightnessModeOption.onchange = function(event, sectionId, value) {
+			if (value !== 'custom' || Number(brightnessTargetOption.formvalue(sectionId)) > 0)
+				return;
+			const targetElement = brightnessTargetOption.getUIElement(sectionId);
+			if (targetElement)
+				targetElement.setValue('1');
+		};
+
+		const latitudeOption = scheduleSection.option(form.Value, 'latitude', _('Exact latitude'),
+			_('Signed decimal degrees from −90 to 90.'));
+		latitudeOption.placeholder = '41.7151';
+		latitudeOption.rmempty = true;
+		latitudeOption.validate = coordinateValidator(-90, 90);
+		latitudeOption.cfgvalue = function() {
+			const saved = uci.get('led-nightmode', 'schedule', 'latitude');
+			return saved || (timezoneCoordinates ? String(timezoneCoordinates[0]) : '');
+		};
+
+		const longitudeOption = scheduleSection.option(form.Value, 'longitude', _('Exact longitude'),
+			_('Signed decimal degrees from −180 to 180.'));
+		longitudeOption.placeholder = '44.8271';
+		longitudeOption.rmempty = true;
+		longitudeOption.validate = coordinateValidator(-180, 180);
+		longitudeOption.cfgvalue = function() {
+			const saved = uci.get('led-nightmode', 'schedule', 'longitude');
+			return saved || (timezoneCoordinates ? String(timezoneCoordinates[1]) : '');
+		};
+
+		o = scheduleSection.option(form.ListValue, 'twilight', _('Sun boundary'),
+			_('Civil twilight usually gives a more natural indoor night-mode transition than the exact horizon crossing.'));
+		o.value('daylight', _('Sunrise and sunset'));
+		o.value('civil', _('Civil twilight'));
+		o.value('nautical', _('Nautical twilight'));
+		o.value('astronomical', _('Astronomical twilight'));
+		o.default = 'daylight';
+		o.rmempty = false;
+
+		modeOption.validate = function(sectionId, value) {
+			if (value !== 'sun')
+				return true;
+			return latitudeOption.formvalue('schedule') && longitudeOption.formvalue('schedule')
+				? true
+				: _('Sunset-to-sunrise scheduling needs a location. Use this device location or enter exact coordinates under Advanced.');
+		};
+
+		o = scheduleSection.option(form.Button, '_browser_location', _('Location'),
+			_('Use this browser for a more precise location. Coordinates stay in the form until you save them to this router.'));
 		o.depends('mode', 'sun');
-		o.inputtitle = _('Use current location');
+		o.inputtitle = _('Use this device location');
 		o.inputstyle = 'apply';
-		o.onclick = function(event, sectionId) {
+		o.onclick = function(event) {
 			const button = event.currentTarget;
 			if (!window.isSecureContext || !navigator.geolocation) {
-				ui.addNotification(null, E('p', {}, _('Browser location requires an HTTPS LuCI session and browser permission. You can keep the approximate timezone coordinates or enter them manually.')), 'warning');
+				ui.addNotification(null, E('p', {}, _('Browser location requires an HTTPS LuCI session and browser permission. You can keep the approximate timezone location or enter exact coordinates under Advanced.')), 'warning');
 				return;
 			}
 
 			button.disabled = true;
 			return new Promise(function(resolve) {
 				navigator.geolocation.getCurrentPosition(function(position) {
-					const latitudeElement = latitudeOption.getUIElement(sectionId);
-					const longitudeElement = longitudeOption.getUIElement(sectionId);
+					const latitudeElement = latitudeOption.getUIElement('schedule');
+					const longitudeElement = longitudeOption.getUIElement('schedule');
 					if (latitudeElement)
 						latitudeElement.setValue(position.coords.latitude.toFixed(4));
 					if (longitudeElement)
@@ -359,8 +438,8 @@ return view.extend({
 					resolve();
 				}, function(error) {
 					const message = error && error.code === 1
-						? _('Location permission was denied. You can keep the approximate timezone coordinates or enter them manually.')
-						: _('The browser could not determine this device’s location. You can keep the approximate timezone coordinates or enter them manually.');
+						? _('Location permission was denied. You can keep the approximate timezone location or enter exact coordinates under Advanced.')
+						: _('The browser could not determine this device’s location. You can keep the approximate timezone location or enter exact coordinates under Advanced.');
 					ui.addNotification(null, E('p', {}, message), 'warning');
 					resolve();
 				}, {
@@ -373,20 +452,11 @@ return view.extend({
 			});
 		};
 
-		o = s.option(form.ListValue, 'twilight', _('Sun boundary'),
-			_('Civil twilight usually gives a more natural indoor night-mode transition than the exact horizon crossing.'));
-		o.value('daylight', _('Sunrise and sunset'));
-		o.value('civil', _('Civil twilight'));
-		o.value('nautical', _('Nautical twilight'));
-		o.value('astronomical', _('Astronomical twilight'));
-		o.default = 'daylight';
-		o.depends('mode', 'sun');
-		o.rmempty = false;
-
 		s = m.section(form.TypedSection, 'provider', _('External indicators'),
 			_('Optional drivers control indicators that do not appear in Linux LED sysfs, such as an LTE light managed by a modem. Nothing is auto-detected or scanned.'));
 		s.anonymous = false;
 		s.addremove = true;
+		groupSection(s, 'advanced');
 		s.sectiontitle = function(sectionId) {
 			return _('External indicator: %s').format(sectionId);
 		};
@@ -468,11 +538,58 @@ return view.extend({
 			});
 		};
 
+		const diagnosticsNode = E('div', { 'class': 'cbi-section' }, [
+			E('h3', {}, _('Technical status')),
+			E('table', { 'class': 'table' }, [
+				E('tr', { 'class': 'tr' }, [
+					E('td', { 'class': 'td left', 'width': '40%' }, _('LED state now')),
+					E('td', { 'class': 'td left', 'data-status': 'effective' }, phaseLabel(initialStatus.effective_phase))
+				]),
+				E('tr', { 'class': 'tr' }, [
+					E('td', { 'class': 'td left' }, _('Schedule wants')),
+					E('td', { 'class': 'td left', 'data-status': 'desired' }, phaseLabel(initialStatus.desired_phase))
+				]),
+				E('tr', { 'class': 'tr' }, [
+					E('td', { 'class': 'td left' }, _('Schedule mode')),
+					E('td', { 'class': 'td left', 'data-status': 'mode' }, modeLabel(initialStatus.mode))
+				]),
+				E('tr', { 'class': 'tr' }, [
+					E('td', { 'class': 'td left' }, _('Service')),
+					E('td', { 'class': 'td left' }, [
+						E('span', { 'data-status': 'enabled' }),
+						' · ',
+						E('span', { 'data-status': 'service' })
+					])
+				])
+			])
+		]);
+		updateStatus(diagnosticsNode, initialStatus);
+		this.diagnosticsNode = diagnosticsNode;
+
+		s = m.section(form.NamedSection, '_diagnostics');
+		s.render = function() {
+			return diagnosticsNode;
+		};
+		groupSection(s, 'advanced');
+
+		const brightnessNode = renderBrightnessCapabilities(discoveredLeds);
+		s = m.section(form.NamedSection, '_brightness_capabilities');
+		s.render = function() {
+			return brightnessNode;
+		};
+		groupSection(s, 'advanced');
+
 		poll.add(function() {
 			return L.resolveDefault(callStatus(), {}).then(function(status) {
 				updateStatus(statusNode, status);
+				updateStatus(diagnosticsNode, status);
 			});
 		}, 5);
+
+		const renderContents = m.renderContents.bind(m);
+		m.renderContents = function() {
+			return renderContents().then(arrangeMapTabs);
+		};
 
 		return m.render();
 	},
@@ -482,6 +599,7 @@ return view.extend({
 		const modeElement = this.modeOption && this.modeOption.getUIElement('schedule');
 		const phaseElement = this.manualPhaseOption && this.manualPhaseOption.getUIElement('schedule');
 		const scheduleMap = this.scheduleMap;
+		const diagnosticsNode = this.diagnosticsNode;
 		button.disabled = true;
 		return L.resolveDefault(callSetManual(phase), {
 			success: false,
@@ -502,6 +620,8 @@ return view.extend({
 			ui.addNotification(null, E('p', {}, _('Manual mode and the requested LED state were saved and applied. Other unsaved form edits were not applied.')), 'info');
 			return L.resolveDefault(callStatus(), {}).then(function(status) {
 				updateStatus(statusNode, status);
+				if (diagnosticsNode)
+					updateStatus(diagnosticsNode, status);
 				button.disabled = false;
 			});
 		});
