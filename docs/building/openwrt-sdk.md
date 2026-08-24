@@ -25,8 +25,8 @@ make package/luci-app-led-nightmode/compile V=sc
 
 The OpenWrt 25.12 outputs are:
 
-- `bin/packages/aarch64_cortex-a53/luci/luci-app-led-nightmode-0.4.0-r1.apk`;
-- `bin/packages/aarch64_cortex-a53/luci/led-nightmode-provider-quectel-qnwcfg-ledmode-0.4.0-r1.apk`.
+- `bin/packages/aarch64_cortex-a53/luci/luci-app-led-nightmode-0.4.0-r4.apk`;
+- `bin/packages/aarch64_cortex-a53/luci/led-nightmode-provider-quectel-qnwcfg-ledmode-0.4.0-r4.apk`.
 
 The SDK is an x86_64 Linux build; an ARM64 macOS host must run it in a Linux x86_64 container or virtual machine.
 
@@ -35,14 +35,14 @@ The SDK is an x86_64 Linux build; an ARM64 macOS host must run it in a Linux x86
 Both package builds were checked with the SDK's `apk-tools 3.0.5`:
 
 - `apk verify --allow-untrusted` reported `OK`;
-- metadata reported version `0.4.0-r1` and architecture `noarch`;
+- metadata reported version `0.4.0-r4` and architecture `noarch`;
 - `/etc/config/led-nightmode` is registered as a conffile with mode `0600`;
-- the init script, shared service executable, two service runners, CLI, and provider driver have mode `0755`; the schedule and rpcd entry points are package symlinks to the shared executable; the ACL, LuCI menu, and JavaScript view have mode `0644`;
+- the init script, UCI migration, shared service executable, two service runners, CLI, and provider driver have mode `0755`; the schedule and rpcd entry points are package symlinks to the shared executable; the ACL, LuCI menu, and JavaScript view have mode `0644`;
 - every installed runtime file matched its repository source byte for byte after extraction.
 
 Validated SHA-256 values:
 
-- base APK: `673d098b887dbede5b3a59d76718e6fbeb2014f1a1c48b745faefa4c43ddbb5c`;
-- Quectel provider APK: `4e4d4d1f11027fd27de7a753419798c93dad69ece969c209a4be966c46d47bc6`.
+- base APK: `559dbb61e19799199ed6862a756459d67022981bb93f23335798aea759bba7f5`;
+- Quectel provider APK: `47e2ede507ba6de0c77a2528693feaa9e9126a3d3d22ed4a77fea2d42f673e68`.
 
 The locally exported artifact is kept under ignored `dist/` and is not committed to Git.

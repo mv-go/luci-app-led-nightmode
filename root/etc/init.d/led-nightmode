@@ -18,8 +18,8 @@ validate_core_section() {
 validate_schedule_section() {
 	uci_validate_section led-nightmode schedule "$1" \
 		'mode:or("manual", "fixed", "sun"):manual' \
-		'night_start:string:23:00' \
-		'day_start:string:07:00' \
+		'night_start:string' \
+		'day_start:string' \
 		'latitude:string' \
 		'longitude:string' \
 		'twilight:or("daylight", "civil", "nautical", "astronomical"):daylight'
@@ -71,6 +71,7 @@ start_provider_instance() {
 	procd_set_param stdout 1
 	procd_set_param stderr 1
 	procd_set_param respawn 3600 30 0
+	procd_set_param term_timeout 20
 	procd_close_instance
 }
 
@@ -99,8 +100,8 @@ start_service() {
 		return 1
 	}
 	schedule_mode=$mode
-	schedule_night_start=$night_start
-	schedule_day_start=$day_start
+	schedule_night_start=${night_start:-23:00}
+	schedule_day_start=${day_start:-07:00}
 	schedule_latitude=$latitude
 	schedule_longitude=$longitude
 	schedule_twilight=$twilight

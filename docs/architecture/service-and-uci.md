@@ -2,7 +2,7 @@
 
 The service layer wraps the hardware-validated CLI and keeps sysfs and optional provider indicators on one schedule. OpenWrt package metadata lives in `Makefile`, installed files live under `root/`, and local developer targets live in `GNUmakefile`.
 
-The package intentionally uses ordinary OpenWrt `package.mk` and has no `luci-base` dependency at this milestone because it installs no LuCI view. The first web-interface milestone should migrate the definition to `luci.mk` and add the runtime dependency together with its actual consumer.
+The package uses OpenWrt `luci.mk` and depends on `luci-base` because it installs a native LuCI view and its rpcd/ACL boundary.
 
 ## UCI schema
 
@@ -29,6 +29,8 @@ The separate `schedule` section named `schedule` selects how the effective phase
 
 One fixed interval may either cross midnight, such as `23:00` to `07:00`, or remain within one calendar day. All times use the router's configured local timezone. Polling the local clock instead of caching an epoch means timezone and daylight-saving changes are picked up without rewriting the schedule.
 
+An install-time UCI migration adds the named schedule section when upgrading a pre-scheduling configuration. It never replaces an existing schedule or changes the enabled flag or current manual phase. The init script also supplies complete `23:00` and `07:00` fallbacks without embedding colon-containing values in the `uci_validate_section` schema.
+
 Optional non-sysfs indicators use named `provider` sections:
 
 | Option | Type | Default | Meaning |
@@ -45,7 +47,7 @@ The package ships a disabled `lte` example. A missing or disabled provider perfo
 
 The runner resolves and applies the effective phase before entering its foreground loop. Fixed mode rechecks every 15 seconds and sun mode every 60 seconds; the checks sleep between invocations and do not busy-loop. A night instance restores the saved day state when procd stops it, including during disable or reload. A day instance leaves the LEDs restored while remaining observable by procd. The existing CLI state directory remains the only recovery record; restoration failures retain that state for another attempt. `/var/run/led-nightmode/phase` publishes the successfully applied core phase for status consumers and is removed when the service stops.
 
-Each enabled provider gets an independent procd instance. The generic provider runner resolves a safe driver name only inside its fixed driver directory, calculates the phase through the same schedule resolver, and invokes `day` on normal stop. A provider failure does not erase its saved state. Persistent provider state handles devices, such as modems, whose LED setting survives a reboot. procd retries transient initial failures after 30 seconds; an already running instance retains its last successfully applied phase when a later schedule lookup fails.
+Each enabled provider gets an independent procd instance. The generic provider runner resolves a safe driver name only inside its fixed driver directory, calculates the phase through the same schedule resolver, and invokes `day` on normal stop. Provider instances receive a 20-second procd termination window so an in-flight hardware command and saved-state restoration can finish before a reload starts the replacement instance. A provider failure does not erase its saved state. Persistent provider state handles devices, such as modems, whose LED setting survives a reboot. procd retries transient initial failures after 30 seconds; an already running instance retains its last successfully applied phase when a later schedule lookup fails.
 
 `sunwait poll` returns distinct exit codes for day and night. The resolver converts signed decimal coordinates from UCI to the cardinal-suffix form expected by `sunwait`; it does not implement astronomical calculations itself.
 

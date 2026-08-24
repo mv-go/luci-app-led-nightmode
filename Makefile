@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-led-nightmode
 PKG_VERSION:=0.4.0
-PKG_RELEASE:=1
+PKG_RELEASE:=4
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE
 LUCI_TITLE:=LED night mode for OpenWrt
@@ -48,6 +48,7 @@ endef
 
 define Build/Prepare/luci-app-led-nightmode
 	chmod 0600 $(PKG_BUILD_DIR)/root/etc/config/led-nightmode
+	chmod 0755 $(PKG_BUILD_DIR)/root/etc/uci-defaults/99-led-nightmode
 endef
 
 include $(TOPDIR)/feeds/luci/luci.mk

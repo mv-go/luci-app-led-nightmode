@@ -208,8 +208,8 @@ assert_contains "$rpc_resolve_output" 'phase=day' 'rpcd resolve returns the calc
 rpc_drivers_output=$(run_rpc call drivers)
 assert_contains "$rpc_drivers_output" 'test-driver' 'rpcd lists installed provider drivers'
 
-rpc_manual_output=$(printf '%s\n' '{"phase":"night"}' | run_rpc call set_manual)
-assert_contains "$rpc_manual_output" 'success=1' 'rpcd accepts a valid manual phase'
+rpc_manual_output=$(printf '%s' '{"phase":"night"}' | run_rpc call set_manual)
+assert_contains "$rpc_manual_output" 'success=1' 'rpcd accepts valid JSON without a trailing newline'
 assert_contains "$(cat "$RPC_UCI_LOG")" "set led-nightmode.schedule.mode='manual'" 'manual RPC switches the schedule to manual mode'
 assert_contains "$(cat "$RPC_UCI_LOG")" "set led-nightmode.main.phase='night'" 'manual RPC saves the selected phase'
 assert_contains "$(cat "$RPC_INIT_LOG")" reload 'manual RPC reloads the service after saving'

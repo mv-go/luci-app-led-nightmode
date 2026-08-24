@@ -357,7 +357,8 @@ rpc_list() {
 }
 
 rpc_read_input() {
-	read -r rpc_input || rpc_input='{}'
+	rpc_input=
+	IFS= read -r rpc_input || [ -n "$rpc_input" ] || rpc_input='{}'
 	json_load "$rpc_input"
 }
 

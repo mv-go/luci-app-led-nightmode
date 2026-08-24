@@ -6,7 +6,7 @@ The first test device is a Banana Pi BPI-R3 Mini. The project is designed for mu
 
 ## Current status
 
-The repository includes the hardware-validated CLI core, a UCI/procd service, fixed-time and sunrise/sunset scheduling, an rpcd/ACL interface, a native LuCI view, and an extensible provider interface for indicators outside the Linux LED class. Release `0.4.0-r1` builds as two `noarch` APKs with the official OpenWrt 25.12.4 `mediatek/filogic` SDK: the universal base package and an optional Quectel QNWCFG provider. The previous `0.1.0-r3` release was live-validated on the first BPI-R3 Mini: a `day → night → day → night` cycle switched off all nine sysfs LEDs and its RM520N-GL LTE indicator, restored both classes during the day, and kept LTE/5G and SSH available.
+The repository includes the hardware-validated CLI core, a UCI/procd service, fixed-time and sunrise/sunset scheduling, an rpcd/ACL interface, a native LuCI view, and an extensible provider interface for indicators outside the Linux LED class. Release `0.4.0-r4` builds as two `noarch` APKs with the official OpenWrt 25.12.4 `mediatek/filogic` SDK: the universal base package and an optional Quectel QNWCFG provider. It is live-validated on the first BPI-R3 Mini across manual day/night, an automatic fixed-time boundary, solar day/night resolution, rpcd calls, provider probing, package upgrades, and repeated service reloads while LTE/5G and SSH remained available.
 
 ## CLI core
 
@@ -36,7 +36,7 @@ Run all local checks with:
 make test
 ```
 
-GNU Make uses `GNUmakefile` for local checks. When OpenWrt invokes the package with `TOPDIR` set, `GNUmakefile` delegates to the root `Makefile`, which is the OpenWrt package definition. The current CLI/service milestone uses ordinary `package.mk` and can be added to an SDK as a package source.
+GNU Make uses `GNUmakefile` for local checks. When OpenWrt invokes the package with `TOPDIR` set, `GNUmakefile` delegates to the root `Makefile`, which is the OpenWrt LuCI package definition and can be added to an SDK as a package source.
 
 The exact SDK validation procedure and artifact checks are documented in [`docs/building/openwrt-sdk.md`](docs/building/openwrt-sdk.md).
 

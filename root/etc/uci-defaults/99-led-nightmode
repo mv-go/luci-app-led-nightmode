@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if uci -q get led-nightmode.schedule >/dev/null 2>&1; then
+	exit 0
+fi
+
+uci -q batch <<'EOF'
+set led-nightmode.schedule='schedule'
+set led-nightmode.schedule.mode='manual'
+set led-nightmode.schedule.night_start='23:00'
+set led-nightmode.schedule.day_start='07:00'
+set led-nightmode.schedule.twilight='daylight'
+commit led-nightmode
+EOF

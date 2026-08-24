@@ -61,8 +61,8 @@ uci_validate_section() {
 		schedule)
 			[ "$section" = schedule ] || fail 'init validates only the named schedule section'
 			assert_contains "$*" 'mode:or("manual", "fixed", "sun"):manual' 'init restricts the schedule mode'
-			assert_contains "$*" 'night_start:string:23:00' 'init validates the night boundary'
-			assert_contains "$*" 'day_start:string:07:00' 'init validates the day boundary'
+			assert_contains "$*" 'night_start:string' 'init validates the night boundary'
+			assert_contains "$*" 'day_start:string' 'init validates the day boundary'
 			assert_contains "$*" 'twilight:or("daylight", "civil", "nautical", "astronomical"):daylight' 'init restricts twilight type'
 			mode=$MOCK_SCHEDULE_MODE
 			night_start=$MOCK_NIGHT_START
@@ -124,12 +124,21 @@ assert_contains "$CALLS" 'param respawn 3600 30 0' 'init retries transient start
 assert_contains "$CALLS" 'close' 'init closes the procd instance'
 
 CALLS=
+MOCK_NIGHT_START=
+MOCK_DAY_START=
+start_service
+assert_contains "$CALLS" 'param command /usr/libexec/led-nightmode-service night 7 manual 23:00 07:00   daylight' 'init supplies complete time defaults for an upgraded config without a schedule section'
+MOCK_NIGHT_START=23:00
+MOCK_DAY_START=07:00
+
+CALLS=
 MOCK_PROVIDER_PRESENT=1
 MOCK_PROVIDER_ENABLED=1
 start_service
 assert_contains "$CALLS" 'open main' 'provider config keeps the core instance'
 assert_contains "$CALLS" 'open provider-lte' 'enabled provider gets its own procd instance'
 assert_contains "$CALLS" 'param command /usr/libexec/led-nightmode-provider-service quectel-qnwcfg-ledmode /dev/ttyUSB3 lte night manual 23:00 07:00   daylight' 'init passes generic provider and schedule configuration to the provider runner'
+assert_contains "$CALLS" 'param term_timeout 20' 'provider gets enough time to finish an AT command and restore saved state during reload'
 
 CALLS=
 service_triggers
