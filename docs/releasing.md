@@ -24,7 +24,8 @@ The manual **OpenWrt SDK** GitHub workflow builds both packages with the officia
 - [x] Compatibility evidence and unsupported scope are documented.
 - [x] English LuCI translation template is generated from source.
 - [x] Build and verify both `0.5.0-r7` APKs in the official SDK; record hashes in the SDK document.
-- [ ] Upgrade the first router from `r6` to `r7`, verify preserved UCI, runtime health, day/night restoration, and authenticated LuCI rendering.
+- [x] Upgrade the first router from `r6` to `r7` and verify preserved UCI, runtime health, provider behaviour, connectivity, and day/night restoration.
+- [ ] Confirm authenticated LuCI rendering on the first router.
 - [ ] Validate the core on at least one additional physical OpenWrt device before describing the application broadly as multi-device validated.
 
 ## GitHub release gate

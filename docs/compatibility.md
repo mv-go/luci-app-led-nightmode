@@ -16,14 +16,14 @@ Compatibility is recorded as evidence, not inferred from a router name, CPU arch
 
 | OpenWrt | Target / architecture | Package | Evidence | Notes |
 | --- | --- | --- | --- | --- |
-| 25.12.4 | `mediatek/filogic`, `aarch64_cortex-a53` | `0.5.0-r7` | SDK-built and verified | The first live router runs this OpenWrt line; `r6` is the latest live-validated package revision. |
+| 25.12.4 | `mediatek/filogic`, `aarch64_cortex-a53` | `0.5.0-r7` | SDK-built; live core/provider-validated | Installed and round-trip validated on the first live router. |
 | Other releases and targets | Any | `0.5.0-r7` | Not yet validated | The packages are architecture-independent, but that alone is not a compatibility claim. |
 
 ## Device matrix
 
 | Device | OpenWrt | Linux LED class | External indicators | Evidence | Remaining check |
 | --- | --- | --- | --- | --- | --- |
-| Banana Pi BPI-R3 Mini | 25.12.4 | Nine discovered LEDs; seven binary and two physically binary despite reporting 255 levels | Quectel-managed LTE indicator; hard-wired PWR is not software-controllable | Core and provider live-validated through `0.5.0-r6`; detailed inventory is in [`hardware/bpi-r3-mini-led-inventory.md`](hardware/bpi-r3-mini-led-inventory.md) | Install `r7` and complete an authenticated visual LuCI check. |
+| Banana Pi BPI-R3 Mini | 25.12.4 | Nine discovered LEDs; seven binary and two physically binary despite reporting 255 levels | Quectel-managed LTE indicator; hard-wired PWR is not software-controllable | Core and provider live-validated through `0.5.0-r7`; detailed inventory is in [`hardware/bpi-r3-mini-led-inventory.md`](hardware/bpi-r3-mini-led-inventory.md) | Complete an authenticated visual LuCI check. |
 | Empty LED-class fixture | Host-side fixture | Zero LEDs | None | Fixture-tested as a safe no-op in `r7` | A real provider-only or virtual OpenWrt target is still desirable. |
 
 ## Sysfs behaviour matrix
@@ -42,7 +42,7 @@ Compatibility is recorded as evidence, not inferred from a router name, CPU arch
 
 | Driver | Hardware / firmware | Transport | Evidence | Scope |
 | --- | --- | --- | --- | --- |
-| `quectel-qnwcfg-ledmode` | Quectel RM520N-GL, `RM520NGLAAR03A04M4G_01.202.01.202` | Explicit AT port configured by the user | Fixture lifecycle plus live probe, visible off/on test, scheduled transition, and exact restoration through `r6` | Only the validated two-field `AT+QNWCFG="ledmode"` response. Other Quectel models or firmware are not implied. |
+| `quectel-qnwcfg-ledmode` | Quectel RM520N-GL, `RM520NGLAAR03A04M4G_01.202.01.202` | Explicit AT port configured by the user | Fixture lifecycle plus live probe, visible off/on test, scheduled transition, and exact restoration through `r7` | Only the validated two-field `AT+QNWCFG="ledmode"` response. Other Quectel models or firmware are not implied. |
 
 ## Qualifying another device
 
