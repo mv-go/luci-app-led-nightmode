@@ -54,7 +54,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: openwrt-25.12.4-aarch64_cortex-a53
-          path: |
-            ${{ runner.temp }}/led-nightmode-artifacts/bin/packages/**/*.apk
-            ${{ runner.temp }}/led-nightmode-artifacts/logs/**
+          path: ${{ runner.temp }}/led-nightmode-artifacts/bin/packages/**/action/*.apk
           if-no-files-found: error
