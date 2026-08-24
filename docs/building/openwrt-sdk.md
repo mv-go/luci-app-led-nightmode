@@ -54,3 +54,14 @@ Validated SHA-256 values:
 - Quectel provider APK: `07601c8b282dc99b5500fdd4b3e49df6cab1e4e0599d8aabf9739b6564233206`.
 
 The locally exported artifact is kept under ignored `dist/` and is not committed to Git.
+
+## GitHub workflow validation
+
+The manual [OpenWrt SDK run 32731204783](https://github.com/mv-go/luci-app-led-nightmode/actions/runs/32731204783) completed successfully for commit `25d39a28bdc0af7256140bdbf7e0e8ab1fdd80ab`. Its downloaded artifact contained exactly the two candidate APKs and no SDK dependency packages or build logs.
+
+SHA-256 values of the GitHub-uploaded APKs:
+
+- base APK: `97070522987be9d1d994d4c2a348a7b542a70d8c904e2fe203bf89623343483e`;
+- Quectel provider APK: `a943e338c1b60e2c55c98b7680d2e88f986bf5e3f4b0d035c8111ef62ef4d626`.
+
+These hashes identify the remote workflow outputs; the independent local SDK outputs above have their own hashes because APK build metadata is not byte-for-byte reproducible between the two build environments.

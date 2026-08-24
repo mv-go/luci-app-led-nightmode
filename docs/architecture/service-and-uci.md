@@ -39,7 +39,7 @@ Optional non-sysfs indicators use named `provider` sections:
 | `driver` | safe identifier | none | Executable driver name below `/usr/libexec/led-nightmode/providers`. |
 | `device` | string | none | Explicit transport endpoint interpreted by the selected driver. |
 
-The package ships a disabled `lte` example. A missing or disabled provider performs no probe and no write. Provider-specific commands and dependencies live in separate packages under the [provider contract](providers.md).
+Fresh installations contain no provider section: the base package cannot safely guess a modem driver or transport endpoint. A missing or disabled provider performs no probe and no write. Users add an explicit provider instance after installing the matching driver package; provider-specific commands and dependencies live in separate packages under the [provider contract](providers.md). Existing provider sections are preserved during upgrades.
 
 ## Lifecycle
 

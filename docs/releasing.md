@@ -12,7 +12,7 @@ make release-check
 
 This runs all fixture suites, POSIX shell syntax checks, release metadata checks, universal-runtime leakage checks, safe-default checks, symlink checks, and the translation-template check. GitHub CI additionally parses every shell source with BusyBox `ash`.
 
-The manual **OpenWrt SDK** GitHub workflow builds both packages with the official OpenWrt 25.12.4 `aarch64_cortex-a53` SDK image. Local SDK validation remains documented in [`building/openwrt-sdk.md`](building/openwrt-sdk.md).
+The manual **OpenWrt SDK** GitHub workflow builds both packages with the official OpenWrt 25.12.4 `aarch64_cortex-a53` SDK image. Its uploaded artifact is deliberately limited to the two candidate APKs from the package feed's `action` directory; SDK dependency packages and build logs stay out of the release payload. Local SDK validation remains documented in [`building/openwrt-sdk.md`](building/openwrt-sdk.md).
 
 ## Candidate checklist
 
