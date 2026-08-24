@@ -25,8 +25,8 @@ make package/luci-app-led-nightmode/compile V=sc
 
 The OpenWrt 25.12 outputs are:
 
-- `bin/packages/aarch64_cortex-a53/luci/luci-app-led-nightmode-0.5.0-r2.apk`;
-- `bin/packages/aarch64_cortex-a53/luci/led-nightmode-provider-quectel-qnwcfg-ledmode-0.5.0-r2.apk`.
+- `bin/packages/aarch64_cortex-a53/luci/luci-app-led-nightmode-0.5.0-r3.apk`;
+- `bin/packages/aarch64_cortex-a53/luci/led-nightmode-provider-quectel-qnwcfg-ledmode-0.5.0-r3.apk`.
 
 The SDK is an x86_64 Linux build; an ARM64 macOS host must run it in a Linux x86_64 container or virtual machine.
 
@@ -42,7 +42,7 @@ make package/luci-app-led-nightmode/compile V=sc CONFIG_LUCI_JSMIN=
 Both package builds were checked with the SDK's `apk-tools 3.0.5`:
 
 - `apk verify --allow-untrusted` reported `OK`;
-- metadata reported version `0.5.0-r2` and architecture `noarch`;
+- metadata reported version `0.5.0-r3` and architecture `noarch`;
 - `/etc/config/led-nightmode` is registered as a conffile with mode `0600`;
 - the init script, UCI migration, shared service executable, two service runners, CLI, and provider driver have mode `0755`; the schedule and rpcd entry points are package symlinks to the shared executable; the ACL, LuCI menu, JavaScript view, and timezone-coordinate module have mode `0644`;
 - the package contains no `.js.o` temporary files;
@@ -50,7 +50,7 @@ Both package builds were checked with the SDK's `apk-tools 3.0.5`:
 
 Validated SHA-256 values:
 
-- base APK: `b621658a8d90da3e25fc18492df089d8dc7f7ca59d5a44755252b77d1d3262bb`;
-- Quectel provider APK: `100e376e80343689c92e6c50b6d6541e17f69b666e6b58e87725b5ca36febb07`.
+- base APK: `0d87480ba884c8d47115e2746c3882f877080ad9d2af02805f80d81525b20851`;
+- Quectel provider APK: `ccea38502919750fc904921bfec49bedb7c9d2c7588bfd0f70c6a150c759bb70`.
 
 The locally exported artifact is kept under ignored `dist/` and is not committed to Git.

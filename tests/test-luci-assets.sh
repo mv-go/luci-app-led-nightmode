@@ -29,6 +29,8 @@ duplicate_zone=$(sed -n "s/^[[:space:]]*'\([^']*\)'.*/\1/p" "$ZONE_MAP" | sort |
 [ -z "$duplicate_zone" ] || fail "timezone coordinate map contains duplicate '$duplicate_zone'"
 
 assert_contains "$(cat "$ZONE_MAP")" "'Asia/Tbilisi': [41.7167, 44.8167]" 'timezone map contains the first live-validation location'
+assert_contains "$(cat "$ZONE_MAP")" "'require baseclass'" 'timezone map declares the LuCI base-class dependency'
+assert_contains "$(cat "$ZONE_MAP")" 'return baseclass.extend({' 'timezone map exports a LuCI class constructor'
 assert_contains "$(cat "$VIEW")" 'Quick actions are saved and applied immediately' 'LuCI explains immediate manual persistence'
 assert_contains "$(cat "$VIEW")" 'Use current location' 'LuCI offers browser geolocation'
 assert_contains "$(cat "$VIEW")" 'Detected LED brightness capabilities' 'LuCI renders device-reported brightness ranges'

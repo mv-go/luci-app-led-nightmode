@@ -1,4 +1,5 @@
 'use strict';
+'require baseclass';
 
 /*
  * Approximate representative coordinates generated from IANA tzdb 2026c
@@ -320,9 +321,9 @@ const coordinates = {
 	'Africa/Johannesburg': [-26.2500, 28.0000],
 };
 
-return {
+return baseclass.extend({
 	lookup: function(zoneName) {
 		const value = coordinates[zoneName];
 		return value ? value.slice() : null;
 	}
-};
+});
