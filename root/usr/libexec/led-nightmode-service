@@ -181,6 +181,7 @@ rpc_read_config() {
 	RPC_LATITUDE=$(rpc_uci_get led-nightmode.schedule.latitude '')
 	RPC_LONGITUDE=$(rpc_uci_get led-nightmode.schedule.longitude '')
 	RPC_TWILIGHT=$(rpc_uci_get led-nightmode.schedule.twilight daylight)
+	RPC_ROUTER_ZONENAME=$(rpc_uci_get 'system.@system[0].zonename' '')
 }
 
 rpc_resolve_phase() {
@@ -232,6 +233,37 @@ rpc_status() {
 	json_add_string manual_phase "$RPC_MANUAL_PHASE"
 	json_add_string effective_phase "$effective_phase"
 	json_add_string desired_phase "$desired_phase"
+	json_add_string router_zonename "$RPC_ROUTER_ZONENAME"
+	json_dump
+	json_cleanup
+}
+
+rpc_leds() {
+	if ! led_listing=$("$RPC_CLI" list 2>/dev/null); then
+		rpc_result 0 'could not read LED capabilities'
+		return 1
+	fi
+
+	json_init
+	json_add_boolean success 1
+	json_add_array leds
+	line_number=0
+	tab=$(printf '\t')
+	while IFS="$tab" read -r led_name max_brightness brightness active_trigger brightness_model timer_parameters; do
+		line_number=$((line_number + 1))
+		[ "$line_number" -gt 1 ] || continue
+		[ -n "$led_name" ] || continue
+		json_add_object ''
+		json_add_string name "$led_name"
+		json_add_string max_brightness "$max_brightness"
+		json_add_string brightness "$brightness"
+		json_add_string active_trigger "$active_trigger"
+		json_add_string brightness_model "$brightness_model"
+		json_close_object
+	done <<-EOF
+	$led_listing
+	EOF
+	json_close_array
 	json_dump
 	json_cleanup
 }
@@ -320,6 +352,42 @@ rpc_probe() {
 	fi
 }
 
+rpc_test_provider() {
+	test_driver=$1
+	test_device=$2
+	test_instance=${3:-test}
+	rpc_valid_identifier "$test_driver" || {
+		rpc_result 0 'invalid provider driver'
+		return 1
+	}
+	rpc_valid_identifier "$test_instance" || {
+		rpc_result 0 'invalid provider instance'
+		return 1
+	}
+	[ -n "$test_device" ] || {
+		rpc_result 0 'provider device is required'
+		return 1
+	}
+	provider_bin=$RPC_PROVIDER_DIR/$test_driver
+	[ -x "$provider_bin" ] || {
+		rpc_result 0 'provider driver is unavailable'
+		return 1
+	}
+	if test_output=$(LED_PROVIDER_DEVICE="$test_device" \
+		LED_PROVIDER_INSTANCE="$test_instance" \
+		LED_PROVIDER_STATE_DIR="$RPC_PROVIDER_STATE_ROOT/$test_instance" \
+		"$provider_bin" test 2>&1); then
+		json_init
+		json_add_boolean success 1
+		json_add_string output "$test_output"
+		json_dump
+		json_cleanup
+	else
+		rpc_result 0 "$test_output"
+		return 1
+	fi
+}
+
 rpc_drivers() {
 	json_init
 	json_add_array drivers
@@ -338,11 +406,18 @@ rpc_list() {
 	json_init
 	json_add_object status
 	json_close_object
+	json_add_object leds
+	json_close_object
 	json_add_object resolve
 	json_close_object
 	json_add_object drivers
 	json_close_object
 	json_add_object probe
+	json_add_string driver driver
+	json_add_string device device
+	json_add_string instance instance
+	json_close_object
+	json_add_object test
 	json_add_string driver driver
 	json_add_string device device
 	json_add_string instance instance
@@ -366,6 +441,7 @@ rpc_call() {
 	method=${1:-}
 	case $method in
 		status) rpc_status ;;
+		leds) rpc_leds ;;
 		resolve) rpc_resolve ;;
 		drivers) rpc_drivers ;;
 		reload) rpc_reload ;;
@@ -393,6 +469,20 @@ rpc_call() {
 			json_cleanup
 			rpc_probe "$requested_driver" "$requested_device" "$requested_instance"
 			;;
+		test)
+			requested_driver=
+			requested_device=
+			requested_instance=
+			rpc_read_input || {
+				rpc_result 0 'invalid request'
+				return 1
+			}
+			json_get_var requested_driver driver
+			json_get_var requested_device device
+			json_get_var requested_instance instance
+			json_cleanup
+			rpc_test_provider "$requested_driver" "$requested_device" "$requested_instance"
+			;;
 		*)
 			rpc_result 0 'unknown method'
 			return 1
@@ -408,6 +498,8 @@ rpc_main() {
 	RPC_PHASE_FILE=${LED_RPCD_PHASE_FILE:-/var/run/led-nightmode/phase}
 	RPC_RUNTIME_DIR=${LED_RPCD_RUNTIME_DIR:-/var/run/led-nightmode}
 	RPC_PROVIDER_DIR=${LED_RPCD_PROVIDER_DIR:-/usr/libexec/led-nightmode/providers}
+	RPC_PROVIDER_STATE_ROOT=${LED_RPCD_PROVIDER_STATE_ROOT:-/etc/led-nightmode/state/providers}
+	RPC_CLI=${LED_RPCD_CLI_BIN:-/usr/sbin/led-nightmode}
 	rpc_load_json || return 1
 	case $1 in
 		list) rpc_list ;;

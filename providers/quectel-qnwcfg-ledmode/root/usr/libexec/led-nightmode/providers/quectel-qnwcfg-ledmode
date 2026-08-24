@@ -9,11 +9,73 @@ STATE_FILE=$STATE_DIR/ledmode
 PICOCOM=${LED_QUECTEL_PICOCOM:-picocom}
 EMULATE_FILE=${LED_QUECTEL_EMULATE_FILE:-}
 COMMAND=${1:-}
+INSTANCE=${LED_PROVIDER_INSTANCE:-quectel-qnwcfg-ledmode}
+LOCK_DIR=${LED_PROVIDER_LOCK_DIR:-/var/lock/led-nightmode-provider-$INSTANCE}
+LOCK_ATTEMPTS=${LED_PROVIDER_LOCK_ATTEMPTS:-10}
+TEST_SECONDS=${LED_PROVIDER_TEST_SECONDS:-3}
+TEST_STATE_FILE=$STATE_DIR/test-ledmode
+LOCK_HELD=0
+TEST_ACTIVE=0
 
 umask 077
 
 error() {
 	printf '%s: %s\n' "$PROGRAM" "$*" >&2
+}
+
+is_uint() {
+	case $1 in
+		''|*[!0-9]*) return 1 ;;
+		*) return 0 ;;
+	esac
+}
+
+valid_identifier() {
+	case $1 in
+		''|*[!a-zA-Z0-9_-]*) return 1 ;;
+		*) return 0 ;;
+	esac
+}
+
+release_lock() {
+	[ "$LOCK_HELD" -eq 1 ] || return 0
+	rm -f "$LOCK_DIR/pid"
+	rmdir "$LOCK_DIR" 2>/dev/null || true
+	LOCK_HELD=0
+}
+
+acquire_lock() {
+	is_uint "$LOCK_ATTEMPTS" || {
+		error 'LED_PROVIDER_LOCK_ATTEMPTS must be a non-negative integer'
+		return 1
+	}
+	lock_parent=${LOCK_DIR%/*}
+	[ "$lock_parent" = "$LOCK_DIR" ] || mkdir -p "$lock_parent" || return 1
+	attempt=0
+	while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+		lock_pid=
+		[ ! -r "$LOCK_DIR/pid" ] || lock_pid=$(cat "$LOCK_DIR/pid" 2>/dev/null) || lock_pid=
+		if is_uint "$lock_pid" && ! kill -0 "$lock_pid" 2>/dev/null; then
+			rm -f "$LOCK_DIR/pid"
+			rmdir "$LOCK_DIR" 2>/dev/null || true
+			continue
+		fi
+		attempt=$((attempt + 1))
+		if [ -z "$lock_pid" ] && [ "$attempt" -gt 1 ]; then
+			rmdir "$LOCK_DIR" 2>/dev/null || true
+			continue
+		fi
+		[ "$attempt" -lt "$LOCK_ATTEMPTS" ] || {
+			error "provider instance '$INSTANCE' is busy"
+			return 1
+		}
+		sleep 1
+	done
+	printf '%s\n' "$$" > "$LOCK_DIR/pid" || {
+		rmdir "$LOCK_DIR" 2>/dev/null || true
+		return 1
+	}
+	LOCK_HELD=1
 }
 
 valid_ledmode() {
@@ -156,6 +218,43 @@ load_ledmode() {
 	valid_ledmode "$SAVED_LEDMODE"
 }
 
+save_test_ledmode() {
+	test_mode=$1
+	mkdir -p "$STATE_DIR" || return 1
+	temporary_test_state=$STATE_DIR/.test-ledmode.tmp.$$
+	printf '%s\n' "$test_mode" > "$temporary_test_state" || return 1
+	mv "$temporary_test_state" "$TEST_STATE_FILE"
+}
+
+restore_test_ledmode() {
+	[ -f "$TEST_STATE_FILE" ] || {
+		TEST_ACTIVE=0
+		return 0
+	}
+	test_original=$(cat "$TEST_STATE_FILE") || return 1
+	valid_ledmode "$test_original" || {
+		error 'saved visual-test LED state is invalid'
+		return 1
+	}
+	set_ledmode "$test_original" || {
+		error "could not restore visual-test LED mode $test_original"
+		return 1
+	}
+	rm -f "$TEST_STATE_FILE" || return 1
+	rmdir "$STATE_DIR" 2>/dev/null || true
+	TEST_ACTIVE=0
+}
+
+cleanup() {
+	cleanup_status=$?
+	trap - 0 HUP INT TERM
+	if [ "$TEST_ACTIVE" -eq 1 ] && ! restore_test_ledmode; then
+		cleanup_status=1
+	fi
+	release_lock
+	exit "$cleanup_status"
+}
+
 command_probe() {
 	require_transport || return 1
 	query_ledmode || return 1
@@ -171,6 +270,38 @@ command_status() {
 		managed=no
 	fi
 	printf 'quectel-qnwcfg-ledmode\t%s\t%s\n' "$LEDMODE" "$managed"
+}
+
+command_test() {
+	require_transport || return 1
+	is_uint "$TEST_SECONDS" || {
+		error 'LED_PROVIDER_TEST_SECONDS must be a non-negative integer'
+		return 1
+	}
+	if [ -f "$TEST_STATE_FILE" ]; then
+		TEST_ACTIVE=1
+		restore_test_ledmode || {
+			error 'could not recover the previous visual test'
+			return 1
+		}
+	fi
+	query_ledmode || return 1
+	test_original=$LEDMODE
+	test_first=${test_original%,*}
+	case $test_original in
+		*,0) test_target=$test_first,1 ;;
+		*,1) test_target=$test_first,0 ;;
+	esac
+	save_test_ledmode "$test_original" || {
+		error 'could not save the visual-test LED state'
+		return 1
+	}
+	TEST_ACTIVE=1
+	set_ledmode "$test_target" || return 1
+	sleep "$TEST_SECONDS" || return 1
+	restore_test_ledmode || return 1
+	printf 'quectel-qnwcfg-ledmode: indicator changed temporarily (%s -> %s -> %s)\n' \
+		"$test_original" "$test_target" "$test_original"
 }
 
 command_night() {
@@ -210,13 +341,32 @@ command_day() {
 	printf 'quectel-qnwcfg-ledmode: original LED mode restored (%s)\n' "$SAVED_LEDMODE"
 }
 
+valid_identifier "$INSTANCE" || {
+	error 'LED_PROVIDER_INSTANCE must be a safe identifier'
+	exit 1
+}
+acquire_lock || exit 1
+trap cleanup 0
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
 case $COMMAND in
-	probe) command_probe ;;
-	status) command_status ;;
-	night) command_night ;;
-	day) command_day ;;
+	test) command_test ;;
+	probe|status|night|day)
+		if [ -f "$TEST_STATE_FILE" ]; then
+			TEST_ACTIVE=1
+			restore_test_ledmode || exit 1
+		fi
+		case $COMMAND in
+			probe) command_probe ;;
+			status) command_status ;;
+			night) command_night ;;
+			day) command_day ;;
+		esac
+		;;
 	*)
-		error 'usage: quectel-qnwcfg-ledmode {probe|status|night|day}'
+		error 'usage: quectel-qnwcfg-ledmode {probe|status|test|night|day}'
 		exit 2
 		;;
 esac

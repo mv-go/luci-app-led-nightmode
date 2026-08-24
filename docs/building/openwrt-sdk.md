@@ -25,24 +25,32 @@ make package/luci-app-led-nightmode/compile V=sc
 
 The OpenWrt 25.12 outputs are:
 
-- `bin/packages/aarch64_cortex-a53/luci/luci-app-led-nightmode-0.4.0-r4.apk`;
-- `bin/packages/aarch64_cortex-a53/luci/led-nightmode-provider-quectel-qnwcfg-ledmode-0.4.0-r4.apk`.
+- `bin/packages/aarch64_cortex-a53/luci/luci-app-led-nightmode-0.5.0-r1.apk`;
+- `bin/packages/aarch64_cortex-a53/luci/led-nightmode-provider-quectel-qnwcfg-ledmode-0.5.0-r1.apk`.
 
 The SDK is an x86_64 Linux build; an ARM64 macOS host must run it in a Linux x86_64 container or virtual machine.
+
+Some minimal SDK environments retain `CONFIG_LUCI_JSMIN=y` without shipping the host-side `jsmin` executable. In that case, build this package with `CONFIG_LUCI_JSMIN=` on both the clean and compile invocations. This produces the supported unminified LuCI assets and avoids incomplete `.js.o` temporary files:
+
+```sh
+make package/luci-app-led-nightmode/clean CONFIG_LUCI_JSMIN=
+make package/luci-app-led-nightmode/compile V=sc CONFIG_LUCI_JSMIN=
+```
 
 ## Validated artifact
 
 Both package builds were checked with the SDK's `apk-tools 3.0.5`:
 
 - `apk verify --allow-untrusted` reported `OK`;
-- metadata reported version `0.4.0-r4` and architecture `noarch`;
+- metadata reported version `0.5.0-r1` and architecture `noarch`;
 - `/etc/config/led-nightmode` is registered as a conffile with mode `0600`;
-- the init script, UCI migration, shared service executable, two service runners, CLI, and provider driver have mode `0755`; the schedule and rpcd entry points are package symlinks to the shared executable; the ACL, LuCI menu, and JavaScript view have mode `0644`;
+- the init script, UCI migration, shared service executable, two service runners, CLI, and provider driver have mode `0755`; the schedule and rpcd entry points are package symlinks to the shared executable; the ACL, LuCI menu, JavaScript view, and timezone-coordinate module have mode `0644`;
+- the package contains no `.js.o` temporary files;
 - every installed runtime file matched its repository source byte for byte after extraction.
 
 Validated SHA-256 values:
 
-- base APK: `559dbb61e19799199ed6862a756459d67022981bb93f23335798aea759bba7f5`;
-- Quectel provider APK: `47e2ede507ba6de0c77a2528693feaa9e9126a3d3d22ed4a77fea2d42f673e68`.
+- base APK: `3e0c52a68318b865e3080e17f1d869f91a324999a9b13379f0f73ff98b7197d6`;
+- Quectel provider APK: `dfe813b0b820bffaf2be5f287449379eb5cf23f05e851b3bc9f61e3c7118a00b`.
 
 The locally exported artifact is kept under ignored `dist/` and is not committed to Git.

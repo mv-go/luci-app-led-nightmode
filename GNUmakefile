@@ -16,6 +16,7 @@ SHELL_SOURCES := \
 	root/usr/sbin/led-nightmode \
 	tests/test-cli.sh \
 	tests/test-init.sh \
+	tests/test-luci-assets.sh \
 	tests/test-modem-provider.sh \
 	tests/test-service.sh \
 	tests/test-uci-defaults.sh
@@ -26,6 +27,7 @@ check:
 test: check
 	./tests/test-cli.sh
 	./tests/test-init.sh
+	./tests/test-luci-assets.sh
 	./tests/test-modem-provider.sh
 	./tests/test-service.sh
 	./tests/test-uci-defaults.sh

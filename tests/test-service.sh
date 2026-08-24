@@ -21,6 +21,8 @@ RPC_UCI_LOG=$TEST_ROOT/uci-log
 RPC_INIT_LOG=$TEST_ROOT/init-log
 RPC_PHASE_FILE=$TEST_ROOT/rpc-phase
 RPC_PROVIDER_DIR=$TEST_ROOT/providers
+RPC_PROVIDER_STATE_ROOT=$TEST_ROOT/provider-state
+RPC_CLI=$RPC_BIN/led-nightmode
 SERVICE_PID=
 
 cleanup() {
@@ -78,6 +80,8 @@ run_rpc() {
 	LED_RPCD_PHASE_FILE=$RPC_PHASE_FILE \
 	LED_RPCD_RUNTIME_DIR=$TEST_ROOT/rpc-runtime \
 	LED_RPCD_PROVIDER_DIR=$RPC_PROVIDER_DIR \
+	LED_RPCD_PROVIDER_STATE_ROOT=$RPC_PROVIDER_STATE_ROOT \
+	LED_RPCD_CLI_BIN=$RPC_CLI \
 	LED_TEST_UCI_LOG=$RPC_UCI_LOG \
 	LED_TEST_INIT_LOG=$RPC_INIT_LOG \
 		"$SERVICE" "$@"
@@ -165,6 +169,7 @@ printf '%s\n' 'led-nightmode.schedule.mode) printf "%s\n" fixed ;;' >> "$RPC_BIN
 printf '%s\n' 'led-nightmode.schedule.night_start) printf "%s\n" 23:00 ;;' >> "$RPC_BIN/uci"
 printf '%s\n' 'led-nightmode.schedule.day_start) printf "%s\n" 07:00 ;;' >> "$RPC_BIN/uci"
 printf '%s\n' 'led-nightmode.schedule.twilight) printf "%s\n" daylight ;;' >> "$RPC_BIN/uci"
+printf '%s\n' 'system.@system\[0\].zonename) printf "%s\n" Asia/Tbilisi ;;' >> "$RPC_BIN/uci"
 printf '%s\n' '*) exit 1 ;;' >> "$RPC_BIN/uci"
 printf '%s\n' 'esac' >> "$RPC_BIN/uci"
 printf '%s\n' 'elif [ "$1" = -q ] && [ "$2" = batch ]; then' >> "$RPC_BIN/uci"
@@ -180,17 +185,29 @@ printf '%s\n' '*) exit 1 ;;' >> "$RPC_BIN/init"
 printf '%s\n' 'esac' >> "$RPC_BIN/init"
 chmod +x "$RPC_BIN/init"
 
+printf '%s\n' '#!/bin/sh' > "$RPC_CLI"
+printf '%s\n' '[ "$1" = list ] || exit 1' >> "$RPC_CLI"
+printf '%s\n' 'printf "name\\tmax_brightness\\tbrightness\\tactive_trigger\\tbrightness_model\\ttimer_parameters\\n"' >> "$RPC_CLI"
+printf '%s\n' 'printf "green:status\\t1\\t0\\tnone\\tbinary\\tno\\n"' >> "$RPC_CLI"
+printf '%s\n' 'printf "mt76-phy0\\t255\\t0\\tnone\\tunverified-multilevel\\tno\\n"' >> "$RPC_CLI"
+chmod +x "$RPC_CLI"
+
 printf '%s\n' '#!/bin/sh' > "$RPC_PROVIDER_DIR/test-driver"
-printf '%s\n' '[ "$1" = probe ] || exit 1' >> "$RPC_PROVIDER_DIR/test-driver"
-printf '%s\n' 'printf "test-driver\\tsupported\\t%s\\n" "$LED_PROVIDER_DEVICE"' >> "$RPC_PROVIDER_DIR/test-driver"
+printf '%s\n' 'case $1 in' >> "$RPC_PROVIDER_DIR/test-driver"
+printf '%s\n' 'probe) printf "test-driver\\tsupported\\t%s\\n" "$LED_PROVIDER_DEVICE" ;;' >> "$RPC_PROVIDER_DIR/test-driver"
+printf '%s\n' 'test) printf "test-driver: visual test restored (%s)\\n" "$LED_PROVIDER_DEVICE" ;;' >> "$RPC_PROVIDER_DIR/test-driver"
+printf '%s\n' '*) exit 1 ;;' >> "$RPC_PROVIDER_DIR/test-driver"
+printf '%s\n' 'esac' >> "$RPC_PROVIDER_DIR/test-driver"
 chmod +x "$RPC_PROVIDER_DIR/test-driver"
 printf '%s\n' night > "$RPC_PHASE_FILE"
 
 rpc_list_output=$(run_rpc list)
 assert_contains "$rpc_list_output" 'object:status' 'rpcd lists the status method'
+assert_contains "$rpc_list_output" 'object:leds' 'rpcd lists the LED inventory method'
 assert_contains "$rpc_list_output" 'object:resolve' 'rpcd lists the resolve method'
 assert_contains "$rpc_list_output" 'object:drivers' 'rpcd lists the installed-driver method'
 assert_contains "$rpc_list_output" 'object:probe' 'rpcd lists the provider probe method'
+assert_contains "$rpc_list_output" 'object:test' 'rpcd lists the provider visual-test method'
 assert_contains "$rpc_list_output" 'object:set_manual' 'rpcd lists the manual phase method'
 assert_contains "$rpc_list_output" 'object:reload' 'rpcd lists the reload method'
 
@@ -200,6 +217,12 @@ assert_contains "$rpc_status_output" 'running=1' 'rpcd status reports a running 
 assert_contains "$rpc_status_output" 'mode=fixed' 'rpcd status reports the configured mode'
 assert_contains "$rpc_status_output" 'effective_phase=night' 'rpcd status reports the applied runtime phase'
 assert_contains "$rpc_status_output" 'desired_phase=day' 'rpcd status resolves the desired phase independently'
+assert_contains "$rpc_status_output" 'router_zonename=Asia/Tbilisi' 'rpcd status exposes the router timezone name for local coordinate hints'
+
+rpc_leds_output=$(run_rpc call leds)
+assert_contains "$rpc_leds_output" 'name=green:status' 'rpcd LED inventory includes binary LEDs'
+assert_contains "$rpc_leds_output" 'max_brightness=255' 'rpcd LED inventory includes device-reported maxima'
+assert_contains "$rpc_leds_output" 'brightness_model=unverified-multilevel' 'rpcd LED inventory preserves the unverified dimming classification'
 
 rpc_resolve_output=$(run_rpc call resolve)
 assert_contains "$rpc_resolve_output" 'success=1' 'rpcd resolve succeeds for valid configuration'
@@ -223,6 +246,13 @@ assert_contains "$rpc_probe_output" 'success=1' 'rpcd accepts a safe explicit pr
 assert_contains "$rpc_probe_output" 'test-driver' 'rpcd returns provider probe output'
 if printf '%s\n' '{"driver":"../bad","device":"/dev/test"}' | run_rpc call probe >/dev/null 2>&1; then
 	fail 'rpcd rejects provider path traversal'
+fi
+
+rpc_test_output=$(printf '%s\n' '{"driver":"test-driver","device":"/dev/test","instance":"test"}' | run_rpc call test)
+assert_contains "$rpc_test_output" 'success=1' 'rpcd runs an explicit provider visual test'
+assert_contains "$rpc_test_output" 'visual test restored' 'rpcd reports provider visual-test restoration'
+if printf '%s\n' '{"driver":"../bad","device":"/dev/test"}' | run_rpc call test >/dev/null 2>&1; then
+	fail 'rpcd rejects visual-test provider path traversal'
 fi
 
 mkdir -p "$SYSFS_ROOT/green:status" "$SYSFS_ROOT/mt76-phy0"

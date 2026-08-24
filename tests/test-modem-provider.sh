@@ -11,6 +11,7 @@ SCHEDULE=$PROJECT_ROOT/root/usr/libexec/led-nightmode-service
 TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/led-nightmode-provider-test.XXXXXX")
 EMULATE_FILE=$TEST_ROOT/modem-ledmode
 STATE_DIR=$TEST_ROOT/state
+LOCK_DIR=$TEST_ROOT/lock
 FAKE_BIN=$TEST_ROOT/bin
 FAKE_TIME=$TEST_ROOT/local-time
 RUNNER_PID=
@@ -65,7 +66,10 @@ wait_for_value() {
 
 run_provider() {
 	LED_PROVIDER_DEVICE=/dev/emulated \
+	LED_PROVIDER_INSTANCE=lte \
 	LED_PROVIDER_STATE_DIR=$STATE_DIR \
+	LED_PROVIDER_LOCK_DIR=$LOCK_DIR \
+	LED_PROVIDER_TEST_SECONDS=${LED_TEST_SECONDS:-0} \
 	LED_QUECTEL_EMULATE_FILE=$EMULATE_FILE \
 		"$PROVIDER" "$@"
 }
@@ -73,6 +77,11 @@ run_provider() {
 printf '%s\n' '0,0' > "$EMULATE_FILE"
 probe_output=$(run_provider probe)
 assert_contains "$probe_output" "$(printf 'quectel-qnwcfg-ledmode\tsupported\t0,0')" 'probe reports a supported response'
+
+test_output=$(run_provider test)
+assert_contains "$test_output" '0,0 -> 0,1 -> 0,0' 'visual test reports the temporary indicator transition'
+assert_eq '0,0' "$(cat "$EMULATE_FILE")" 'visual test restores the exact original modem LED mode'
+[ ! -e "$STATE_DIR" ] || fail 'successful visual test removes its temporary state'
 
 run_provider night >/dev/null
 assert_eq '0,1' "$(cat "$EMULATE_FILE")" 'night disables the modem indicator'
@@ -83,9 +92,30 @@ assert_eq '0,0' "$(cat "$STATE_DIR/ledmode")" 'repeated night does not replace o
 status_output=$(run_provider status)
 assert_contains "$status_output" "$(printf 'quectel-qnwcfg-ledmode\t0,1\tyes')" 'status reports managed night state'
 
+test_output=$(run_provider test)
+assert_contains "$test_output" '0,1 -> 0,0 -> 0,1' 'visual test changes a currently disabled indicator in the visible direction'
+assert_eq '0,1' "$(cat "$EMULATE_FILE")" 'visual test restores the managed night state'
+assert_eq '0,0' "$(cat "$STATE_DIR/ledmode")" 'visual test does not replace the saved day state'
+
 run_provider day >/dev/null
 assert_eq '0,0' "$(cat "$EMULATE_FILE")" 'day restores the original modem LED mode'
 [ ! -e "$STATE_DIR" ] || fail 'day removes restored provider state'
+
+LED_PROVIDER_DEVICE=/dev/emulated \
+LED_PROVIDER_INSTANCE=lte \
+LED_PROVIDER_STATE_DIR=$STATE_DIR \
+LED_PROVIDER_LOCK_DIR=$LOCK_DIR \
+LED_PROVIDER_TEST_SECONDS=2 \
+LED_QUECTEL_EMULATE_FILE=$EMULATE_FILE \
+"$PROVIDER" test >/dev/null &
+TEST_PID=$!
+wait_for_value "$EMULATE_FILE" '0,1' || fail 'interruptible visual test did not change the indicator'
+kill -TERM "$TEST_PID"
+if wait "$TEST_PID"; then
+	fail 'interrupted visual test must report failure'
+fi
+assert_eq '0,0' "$(cat "$EMULATE_FILE")" 'signal cleanup restores the visual-test state'
+[ ! -e "$STATE_DIR" ] || fail 'signal cleanup removes restored visual-test state'
 
 printf '%s\n' 'broken' > "$EMULATE_FILE"
 if run_provider probe >/dev/null 2>&1; then
@@ -96,6 +126,7 @@ printf '%s\n' '0,0' > "$EMULATE_FILE"
 LED_PROVIDER_DIR=$PROVIDER_DIR \
 LED_NIGHTMODE_SCHEDULE_BIN=$SCHEDULE \
 LED_PROVIDER_STATE_DIR=$STATE_DIR \
+LED_PROVIDER_LOCK_DIR=$LOCK_DIR \
 LED_QUECTEL_EMULATE_FILE=$EMULATE_FILE \
 "$RUNNER" quectel-qnwcfg-ledmode /dev/emulated lte night >/dev/null &
 RUNNER_PID=$!
@@ -119,6 +150,7 @@ LED_PROVIDER_DIR=$PROVIDER_DIR \
 LED_NIGHTMODE_SCHEDULE_BIN=$SCHEDULE \
 LED_SCHEDULE_INTERVAL=0.05 \
 LED_PROVIDER_STATE_DIR=$STATE_DIR \
+LED_PROVIDER_LOCK_DIR=$LOCK_DIR \
 LED_QUECTEL_EMULATE_FILE=$EMULATE_FILE \
 "$RUNNER" quectel-qnwcfg-ledmode /dev/emulated lte day fixed 23:00 07:00 '' '' daylight >/dev/null &
 RUNNER_PID=$!

@@ -1,8 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-led-nightmode
-PKG_VERSION:=0.4.0
-PKG_RELEASE:=4
+PKG_VERSION:=0.5.0
+PKG_RELEASE:=1
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE
 LUCI_TITLE:=LED night mode for OpenWrt

@@ -6,7 +6,7 @@ Build a universal OpenWrt LED night-mode application. The first test device is a
 
 ## Current milestone
 
-The hardware CLI, package/UCI/procd, optional non-sysfs provider, scheduling, rpcd/ACL, and native LuCI milestones are complete. Release `0.4.0-r4` is fixture-tested, browser-tested, SDK-validated, and live hardware-validated on the first test router. The base package remains universal; a separate Quectel QNWCFG provider controls the modem-managed LTE indicator. The next phase is multi-device compatibility validation and upstream/release preparation. The authenticated LuCI page has local browser coverage, but its installed-router interaction still needs a browser session that is logged in to this router.
+The hardware CLI, package/UCI/procd, optional non-sysfs provider, scheduling, rpcd/ACL, and native LuCI milestones are complete. Release `0.5.0-r1` is fixture-tested, browser-tested, and SDK-validated locally; release `0.4.0-r4` remains the latest version live-validated on the first test router. The base package remains universal; a separate Quectel QNWCFG provider controls the modem-managed LTE indicator. Installing and live-validating `0.5.0-r1` is the next hardware step and still requires explicit user authorization.
 
 The initial inventory and live round-trip result are stored in `docs/hardware/bpi-r3-mini-led-inventory.md`. The service/UCI boundary is documented in `docs/architecture/service-and-uci.md`.
 
@@ -19,7 +19,7 @@ The initial inventory and live round-trip result are stored in `docs/hardware/bp
 - Keep filesystem access behind a configurable sysfs root so tests can use fixtures instead of a live router.
 - Do not implement astronomical calculations. Solar scheduling uses `sunwait`.
 - Keep package defaults write-safe: a fresh install must not change LEDs until the UCI service is explicitly enabled.
-- Keep device-specific non-sysfs commands in optional provider drivers. Providers require explicit endpoints, read-only capability probes, saved-state restoration, and fixture-backed lifecycle tests; the sysfs core must not scan serial ports or infer modem models.
+- Keep device-specific non-sysfs commands in optional provider drivers. Providers require explicit endpoints, read-only capability probes, serialized reversible visual tests, saved-state restoration, and fixture-backed lifecycle tests; the sysfs core must not scan serial ports or infer modem models.
 - Keep the installed CLI at `root/usr/sbin/led-nightmode`; `bin/led-nightmode` is only a local convenience wrapper.
 
 ## Safety and validation
