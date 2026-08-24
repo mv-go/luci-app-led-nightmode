@@ -24,6 +24,8 @@ Provider state defaults to `/etc/led-nightmode/state/providers/<instance>` becau
 
 The read-only `probe` only proves that the configured endpoint exposes the expected control interface. The explicit `test` command proves a reversible command round trip and gives the user a chance to watch the physical indicator; software readback alone cannot prove that the endpoint is wired to the expected lamp. Driver commands for one instance must share a lock so a visual test cannot race a scheduled phase transition or service reload.
 
+The long-running provider runner recomputes the requested phase before every attempt. A transient endpoint or schedule failure keeps the process alive and is retried after a short interval; a successful application returns to the normal manual, fixed, or solar polling interval. This avoids waiting for procd's process-respawn delay after temporary serial-port contention.
+
 The service never searches serial ports or guesses a device from its marketing name. A user or future LuCI view explicitly enables a driver and endpoint after `probe` succeeds. Unknown hardware remains untouched.
 
 ## Packaging and contributions

@@ -14,6 +14,9 @@ STATE_DIR=$TEST_ROOT/state
 LOCK_DIR=$TEST_ROOT/lock
 FAKE_BIN=$TEST_ROOT/bin
 FAKE_TIME=$TEST_ROOT/local-time
+FLAKY_PROVIDER_DIR=$TEST_ROOT/providers
+FLAKY_MARKER=$TEST_ROOT/flaky-first-failure
+FLAKY_STATE=$TEST_ROOT/flaky-state
 RUNNER_PID=
 
 cleanup() {
@@ -137,6 +140,36 @@ wait "$RUNNER_PID"
 RUNNER_PID=
 assert_eq '0,0' "$(cat "$EMULATE_FILE")" 'provider runner stop restores day state'
 [ ! -e "$STATE_DIR" ] || fail 'provider runner stop removes restored state'
+
+mkdir -p "$FLAKY_PROVIDER_DIR"
+printf '%s\n' '#!/bin/sh' > "$FLAKY_PROVIDER_DIR/flaky-driver"
+printf '%s\n' 'case $1 in' >> "$FLAKY_PROVIDER_DIR/flaky-driver"
+printf '%s\n' 'night)' >> "$FLAKY_PROVIDER_DIR/flaky-driver"
+printf '%s\n' '  if [ ! -e "$LED_TEST_FLAKY_MARKER" ]; then' >> "$FLAKY_PROVIDER_DIR/flaky-driver"
+printf '%s\n' '    : > "$LED_TEST_FLAKY_MARKER"' >> "$FLAKY_PROVIDER_DIR/flaky-driver"
+printf '%s\n' '    exit 1' >> "$FLAKY_PROVIDER_DIR/flaky-driver"
+printf '%s\n' '  fi' >> "$FLAKY_PROVIDER_DIR/flaky-driver"
+printf '%s\n' '  printf "%s\n" night > "$LED_TEST_FLAKY_STATE"' >> "$FLAKY_PROVIDER_DIR/flaky-driver"
+printf '%s\n' '  ;;' >> "$FLAKY_PROVIDER_DIR/flaky-driver"
+printf '%s\n' 'day) printf "%s\n" day > "$LED_TEST_FLAKY_STATE" ;;' >> "$FLAKY_PROVIDER_DIR/flaky-driver"
+printf '%s\n' '*) exit 1 ;;' >> "$FLAKY_PROVIDER_DIR/flaky-driver"
+printf '%s\n' 'esac' >> "$FLAKY_PROVIDER_DIR/flaky-driver"
+chmod +x "$FLAKY_PROVIDER_DIR/flaky-driver"
+
+LED_PROVIDER_DIR=$FLAKY_PROVIDER_DIR \
+LED_NIGHTMODE_SCHEDULE_BIN=$SCHEDULE \
+LED_PROVIDER_RETRY_INTERVAL=0.05 \
+LED_TEST_FLAKY_MARKER=$FLAKY_MARKER \
+LED_TEST_FLAKY_STATE=$FLAKY_STATE \
+"$RUNNER" flaky-driver /dev/emulated flaky night >/dev/null 2>&1 &
+RUNNER_PID=$!
+
+wait_for_value "$FLAKY_STATE" night || fail 'provider runner did not retry a transient initial failure'
+kill -0 "$RUNNER_PID" 2>/dev/null || fail 'provider runner exited after a transient initial failure'
+kill -TERM "$RUNNER_PID"
+wait "$RUNNER_PID"
+RUNNER_PID=
+assert_eq day "$(cat "$FLAKY_STATE")" 'retried provider runner restores day state when stopped'
 
 mkdir -p "$FAKE_BIN"
 printf '%s\n' '#!/bin/sh' > "$FAKE_BIN/date"

@@ -6,7 +6,7 @@ Build a universal OpenWrt LED night-mode application. The first test device is a
 
 ## Current milestone
 
-The hardware CLI, package/UCI/procd, optional non-sysfs provider, scheduling, rpcd/ACL, and native LuCI milestones are complete. Release `0.5.0-r1` is fixture-tested, browser-tested, and SDK-validated locally; release `0.4.0-r4` remains the latest version live-validated on the first test router. The base package remains universal; a separate Quectel QNWCFG provider controls the modem-managed LTE indicator. Installing and live-validating `0.5.0-r1` is the next hardware step and still requires explicit user authorization.
+The hardware CLI, package/UCI/procd, optional non-sysfs provider, scheduling, rpcd/ACL, and native LuCI milestones are complete. Release `0.5.0-r2` is fixture-tested, browser-tested, SDK-validated, and live-validated on the first test router. The base package remains universal; a separate Quectel QNWCFG provider controls the modem-managed LTE indicator. The next phase is multi-device compatibility validation and upstream/release preparation.
 
 The initial inventory and live round-trip result are stored in `docs/hardware/bpi-r3-mini-led-inventory.md`. The service/UCI boundary is documented in `docs/architecture/service-and-uci.md`.
 
