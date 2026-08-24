@@ -58,6 +58,8 @@ jobs:
         run: >-
           ./scripts/stage-upstream-luci.sh
           "$GITHUB_WORKSPACE/.upstream-luci/applications/luci-app-led-nightmode"
+      - name: Prepare the snapshot artifact directory
+        run: mkdir -p "$RUNNER_TEMP/led-nightmode-snapshot"
       - name: Build the staged application with the snapshot SDK
         uses: openwrt/gh-action-sdk@f5813d30eeef3534b58ac7e79c5d8842b6035434
         env:
