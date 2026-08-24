@@ -10,7 +10,7 @@ LUCI_TITLE:=LED night mode for OpenWrt
 LUCI_DESCRIPTION:=Preserve and restore OpenWrt LED triggers while applying day and night profiles.
 LUCI_DEPENDS:=+luci-base +jshn +procd +rpcd +sunwait +uci
 LUCI_PKGARCH:=all
-LUCI_MAINTAINER:=mv-go <28507807+mv-go@users.noreply.github.com>
+LUCI_MAINTAINER:=mv-go <rapture-ribose6k@icloud.com>
 LUCI_URL:=https://github.com/mv-go/luci-app-led-nightmode
 
 define Package/led-nightmode-provider-quectel-qnwcfg-ledmode
@@ -19,7 +19,7 @@ define Package/led-nightmode-provider-quectel-qnwcfg-ledmode
   TITLE:=Quectel QNWCFG LED provider for LED Night Mode
   DEPENDS:=+luci-app-led-nightmode +picocom
   PKGARCH:=all
-  MAINTAINER:=mv-go <28507807+mv-go@users.noreply.github.com>
+  MAINTAINER:=mv-go <rapture-ribose6k@icloud.com>
   URL:=https://github.com/mv-go/luci-app-led-nightmode
 endef
 
