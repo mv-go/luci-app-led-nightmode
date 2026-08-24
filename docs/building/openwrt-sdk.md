@@ -42,7 +42,7 @@ make package/luci-app-led-nightmode/compile V=sc CONFIG_LUCI_JSMIN=
 Both `0.5.0-r7` package builds were checked with the SDK's `apk-tools 3.0.5`:
 
 - `apk verify --allow-untrusted` reported `OK`;
-- metadata reported version `0.5.0-r6` and architecture `noarch`;
+- metadata reported version `0.5.0-r7` and architecture `noarch`;
 - `/etc/config/led-nightmode` is registered as a conffile with mode `0600` and contains no device-specific provider default;
 - the init script, UCI migration, shared service executable, two service runners, CLI, and provider driver have mode `0755`; the schedule and rpcd entry points are package symlinks to the shared executable; the ACL, LuCI menu, JavaScript view, and timezone-coordinate module have mode `0644`;
 - the package contains no `.js.o` temporary files;

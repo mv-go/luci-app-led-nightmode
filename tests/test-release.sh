@@ -43,6 +43,7 @@ grep -Fq "Release \`$release_id\`" "$PROJECT_ROOT/README.md" || fail "README doe
 grep -Fq "\`$release_id\`" "$PROJECT_ROOT/docs/compatibility.md" || fail "compatibility matrix does not identify release $release_id"
 grep -Fq "\`$release_id\`" "$PROJECT_ROOT/docs/releasing.md" || fail "release checklist does not identify release $release_id"
 grep -Fq "## $package_version" "$PROJECT_ROOT/CHANGELOG.md" || fail "changelog does not contain version $package_version"
+grep -Fq "metadata reported version \`$release_id\`" "$PROJECT_ROOT/docs/building/openwrt-sdk.md" || fail "SDK document does not identify artifact metadata version $release_id"
 
 grep -Eq "^[[:space:]]*option enabled '0'$" "$DEFAULT_CONFIG" || fail 'fresh installs must remain disabled'
 if grep -Eq "^[[:space:]]*config provider" "$DEFAULT_CONFIG"; then
