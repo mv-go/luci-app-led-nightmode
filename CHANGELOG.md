@@ -13,3 +13,10 @@ This project uses semantic versions for application releases. OpenWrt's `PKG_REL
 - Added native rpcd/ACL integration, upgrade-safe UCI defaults, and fixture-backed core, service, schedule, LuCI, init, and provider tests.
 - Removed device-specific provider defaults from the universal package and made an empty Linux LED class a safe no-op.
 - Added a compatibility evidence matrix, release gate, translation template, and GitHub CI/SDK workflows.
+
+Known limitations:
+
+- Physical behaviour is live-validated on one OpenWrt device; multi-device validation is not claimed.
+- The BPI-R3 Mini's hard-wired PWR indicator has no software control path.
+- Indicators outside the Linux LED class require an explicit provider. The bundled Quectel provider is scoped to the validated two-field command response and does not imply support for every modem or firmware.
+- A reported `max_brightness > 1` does not prove physical dimming; the safe default remains fully off.

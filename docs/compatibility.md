@@ -23,7 +23,7 @@ Compatibility is recorded as evidence, not inferred from a router name, CPU arch
 
 | Device | OpenWrt | Linux LED class | External indicators | Evidence | Remaining check |
 | --- | --- | --- | --- | --- | --- |
-| Banana Pi BPI-R3 Mini | 25.12.4 | Nine discovered LEDs; seven binary and two physically binary despite reporting 255 levels | Quectel-managed LTE indicator; hard-wired PWR is not software-controllable | Core and provider live-validated through `0.5.0-r7`; detailed inventory is in [`hardware/bpi-r3-mini-led-inventory.md`](hardware/bpi-r3-mini-led-inventory.md) | Complete an authenticated visual LuCI check. |
+| Banana Pi BPI-R3 Mini | 25.12.4 | Nine discovered LEDs; seven binary and two physically binary despite reporting 255 levels | Quectel-managed LTE indicator; hard-wired PWR is not software-controllable | Core and provider live-validated through `0.5.0-r7`; the owner confirmed the authenticated LuCI view; detailed inventory is in [`hardware/bpi-r3-mini-led-inventory.md`](hardware/bpi-r3-mini-led-inventory.md) | Validate another physical OpenWrt device before making multi-device claims. |
 | Empty LED-class fixture | Host-side fixture | Zero LEDs | None | Fixture-tested as a safe no-op in `r7` | A real provider-only or virtual OpenWrt target is still desirable. |
 
 ## Sysfs behaviour matrix

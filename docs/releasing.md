@@ -1,6 +1,6 @@
 # Releasing
 
-The current candidate is `0.5.0-r7`. Preparing and validating a candidate does not publish the private repository, create a tag, or change access controls.
+Application release `0.5.0` uses OpenWrt package revision `r7`. Preparing and validating the candidate does not by itself publish the private repository, create a tag, or change access controls.
 
 ## Automated gate
 
@@ -25,8 +25,8 @@ The manual **OpenWrt SDK** GitHub workflow builds both packages with the officia
 - [x] English LuCI translation template is generated from source.
 - [x] Build and verify both `0.5.0-r7` APKs in the official SDK; record hashes in the SDK document.
 - [x] Upgrade the first router from `r6` to `r7` and verify preserved UCI, runtime health, provider behaviour, connectivity, and day/night restoration.
-- [ ] Confirm authenticated LuCI rendering on the first router.
-- [ ] Validate the core on at least one additional physical OpenWrt device before describing the application broadly as multi-device validated.
+- [x] Confirm authenticated LuCI rendering on the first router; the owner completed the visual check.
+- [x] Keep multi-device validation out of `v0.5.0` claims; a second physical OpenWrt target is explicitly deferred by the owner.
 
 ## GitHub release gate
 
