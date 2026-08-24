@@ -30,8 +30,23 @@ jobs:
         env:
           ARCH: aarch64_cortex-a53-25.12.4
           FEED_DIR: ${{ runner.temp }}/led-nightmode-feed
-          PACKAGES: luci-app-led-nightmode led-nightmode-provider-quectel-qnwcfg-ledmode
+          # Both APKs are outputs of this single OpenWrt source package.
+          PACKAGES: luci-app-led-nightmode
           V: sc
+      - name: Check expected package outputs
+        run: |
+          package_version=$(sed -n 's/^PKG_VERSION:=//p' Makefile)
+          package_release=$(sed -n 's/^PKG_RELEASE:=//p' Makefile)
+          release_id="$package_version-r$package_release"
+          for package in \
+            "luci-app-led-nightmode-$release_id.apk" \
+            "led-nightmode-provider-quectel-qnwcfg-ledmode-$release_id.apk"
+          do
+            find bin/packages -type f -name "$package" -print -quit | grep -q . || {
+              echo "Missing expected package: $package" >&2
+              exit 1
+            }
+          done
       - name: Upload package artifacts and logs
         uses: actions/upload-artifact@v7
         with:
