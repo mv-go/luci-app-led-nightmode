@@ -65,7 +65,7 @@ The headless runtime and its LuCI UI have separate upstream destinations: `utils
 - prepare a focused feature branch rather than submitting from `main`;
 - rewrite/squash the upstream commit series with component-prefixed subjects and `Signed-off-by` lines using the contributor's real first and last name and a non-noreply email address.
 
-The manual **Upstream LuCI** workflow performs the current-tree lint, translation-template comparison, and an official snapshot SDK build against the staged application and core package. The staging tests enforce the ownership boundary and ensure the optional hardware-specific provider does not leak into either tree.
+The manual **Upstream LuCI** workflow accepts the published tag archive SHA-256, performs the current-tree lint and translation-template comparison, then builds the staged application and core package together with an official snapshot SDK. The staging tests enforce the ownership boundary and ensure the optional hardware-specific provider does not leak into either tree.
 
 The repository uses the reachable address `rapture-ribose6k@icloud.com`, and the published preparation commit is signed and signed off. Its author name is currently `mv-go`; before the final upstream commit series, the owner must confirm the public first-and-last-name form required by LuCI's contribution rules. No name should be guessed or copied into Git history.
 

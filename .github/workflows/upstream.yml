@@ -2,6 +2,11 @@ name: Upstream LuCI
 
 on:
   workflow_dispatch:
+    inputs:
+      source_hash:
+        description: SHA-256 of the v0.5.1 GitHub source archive
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -58,6 +63,11 @@ jobs:
         run: >-
           ./scripts/stage-upstream-luci.sh
           "$GITHUB_WORKSPACE/.upstream-luci/applications/luci-app-led-nightmode"
+      - name: Stage the upstream core package
+        run: >-
+          ./scripts/stage-upstream-packages.sh
+          "$GITHUB_WORKSPACE/.upstream-luci/utils/led-nightmode"
+          "${{ inputs.source_hash }}"
       - name: Prepare the snapshot artifact directory
         run: mkdir -p "$RUNNER_TEMP/led-nightmode-snapshot"
       - name: Build the staged application with the snapshot SDK
@@ -70,17 +80,26 @@ jobs:
           V: sc
       - name: Check the snapshot package output
         run: |
-          find "$RUNNER_TEMP/led-nightmode-snapshot/bin/packages" \
-            -type f -name 'luci-app-led-nightmode-*.apk' -print -quit \
-            | grep -q . || {
-              echo 'Missing snapshot luci-app-led-nightmode APK' >&2
-              exit 1
-            }
+          for package in led-nightmode luci-app-led-nightmode; do
+            find "$RUNNER_TEMP/led-nightmode-snapshot/bin/packages" \
+              -type f -name "$package-*.apk" -print -quit \
+              | grep -q . || {
+                echo "Missing snapshot $package APK" >&2
+                exit 1
+              }
+          done
+          if find "$RUNNER_TEMP/led-nightmode-snapshot/bin/packages" \
+            -type f -name 'led-nightmode-provider-*.apk' -print -quit \
+            | grep -q .; then
+            echo 'Hardware-specific provider leaked into the upstream snapshot build' >&2
+            exit 1
+          fi
       - name: Upload the snapshot package and logs
         uses: actions/upload-artifact@v7
         with:
           name: upstream-luci-snapshot-aarch64_cortex-a53
           path: |
+            ${{ runner.temp }}/led-nightmode-snapshot/bin/packages/**/action/led-nightmode-*.apk
             ${{ runner.temp }}/led-nightmode-snapshot/bin/packages/**/action/luci-app-led-nightmode-*.apk
             ${{ runner.temp }}/led-nightmode-snapshot/logs/
           if-no-files-found: error
