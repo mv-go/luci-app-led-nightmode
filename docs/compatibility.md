@@ -16,7 +16,7 @@ Compatibility is recorded as evidence, not inferred from a router name, CPU arch
 
 | OpenWrt | Target / architecture | Package | Evidence | Notes |
 | --- | --- | --- | --- | --- |
-| 25.12.4 | `mediatek/filogic`, `aarch64_cortex-a53` | `0.5.0-r8` candidate | SDK-built; live core/provider reboot-validated | Moves LED Night Mode after the stock OpenWrt LED setup and migrates enabled legacy `S95` autostart links to `S97`. A software reboot was validated; a physical unplug/replug remains an owner-side confirmation. |
+| 25.12.4 | `mediatek/filogic`, `aarch64_cortex-a53` | `0.5.0-r8` candidate | SDK-built; live core/provider reboot- and power-cycle-validated | Moves LED Night Mode after the stock OpenWrt LED setup and migrates enabled legacy `S95` autostart links to `S97`. Both a software reboot and the original physical unplug/replug path were validated at Night. |
 | 25.12.4 | `mediatek/filogic`, `aarch64_cortex-a53` | `0.5.0-r7` | SDK-built; live core/provider-validated | Installed and round-trip validated on the first live router. |
 | Other releases and targets | Any | `0.5.0-r8` candidate | Not yet validated | The packages are architecture-independent, but that alone is not a compatibility claim. |
 
@@ -24,7 +24,7 @@ Compatibility is recorded as evidence, not inferred from a router name, CPU arch
 
 | Device | OpenWrt | Linux LED class | External indicators | Evidence | Remaining check |
 | --- | --- | --- | --- | --- | --- |
-| Banana Pi BPI-R3 Mini | 25.12.4 | Nine discovered LEDs; seven binary and two physically binary despite reporting 255 levels | Quectel-managed LTE indicator; hard-wired PWR is not software-controllable | Core and provider live-validated through candidate `0.5.0-r8`, including corrected startup order in a forced-Night software reboot; the owner confirmed the authenticated LuCI view; detailed inventory is in [`hardware/bpi-r3-mini-led-inventory.md`](hardware/bpi-r3-mini-led-inventory.md) | Physically unplug/replug once at Night for exact reproduction-path confirmation; validate another physical OpenWrt device before making multi-device claims. |
+| Banana Pi BPI-R3 Mini | 25.12.4 | Nine discovered LEDs; seven binary and two physically binary despite reporting 255 levels | Quectel-managed LTE indicator; hard-wired PWR is not software-controllable | Core and provider live-validated through candidate `0.5.0-r8`, including corrected startup order in a forced-Night software reboot and the original physical unplug/replug path; the owner confirmed the authenticated LuCI view; detailed inventory is in [`hardware/bpi-r3-mini-led-inventory.md`](hardware/bpi-r3-mini-led-inventory.md) | Validate another physical OpenWrt device before making multi-device claims. |
 | Empty LED-class fixture | Host-side fixture | Zero LEDs | None | Fixture-tested as a safe no-op in `r7` | A real provider-only or virtual OpenWrt target is still desirable. |
 
 ## Sysfs behaviour matrix

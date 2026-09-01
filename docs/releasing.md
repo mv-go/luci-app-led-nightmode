@@ -26,7 +26,7 @@ The manual **OpenWrt SDK** GitHub workflow builds both packages with the officia
 - [x] Build and verify both `0.5.0-r8` APKs in the official SDK; record hashes in the SDK document.
 - [x] Upgrade the first router from `r7` to `r8`, verify the legacy `S95` autostart link migrates to `S97`, and confirm preserved UCI, runtime health, provider behaviour, and connectivity.
 - [x] Reboot the first router while forced to Night and confirm every managed sysfs LED remains at trigger `none` and brightness `0` after startup completes.
-- [ ] Physically unplug/replug the first router at Night to reproduce the owner's exact original power-loss path; this is a final hardware confirmation, not a blocker for pushing the validated candidate source.
+- [x] Physically unplug/replug the first router at Night to reproduce the owner's exact original power-loss path; the owner confirmed the expected result.
 - [x] Confirm authenticated LuCI rendering on the first router; the owner completed the visual check.
 - [x] Keep multi-device validation out of `v0.5.0` claims; a second physical OpenWrt target is explicitly deferred by the owner.
 
@@ -53,7 +53,7 @@ The intended destination is a new `applications/luci-app-led-nightmode` director
 
 The manual **Upstream LuCI** workflow performs the current-tree lint, translation-template comparison, and an official snapshot SDK build against the staged application. The staging test ensures the universal runtime stays byte-for-byte aligned while the optional hardware-specific provider does not leak into the LuCI tree.
 
-The repository currently uses a GitHub noreply identity, so the final upstream commit series cannot be prepared correctly until the contributor identity is supplied. No identity should be guessed or copied into Git history.
+The repository uses the reachable address `rapture-ribose6k@icloud.com`, and the published preparation commit is signed and signed off. Its author name is currently `mv-go`; before the final upstream commit series, the owner must confirm the public first-and-last-name form required by LuCI's contribution rules. No name should be guessed or copied into Git history.
 
 Current preparation status:
 
@@ -61,5 +61,6 @@ Current preparation status:
 - [x] Current LuCI `master` JavaScript/JSON lint and translation-template comparison.
 - [x] Official OpenWrt snapshot SDK package build and downloaded artifact verification.
 - [x] Public `mv-go/luci` fork and local `luci-app-led-nightmode` feature branch based on current `master`.
-- [ ] Replace the noreply placeholder with the contributor's reachable identity and create a signed, signed-off commit.
-- [ ] Push the feature branch and open the upstream pull request.
+- [x] Replace the noreply placeholder with the contributor's reachable email and verify a signed, signed-off preparation commit.
+- [x] Push the preparation feature branch without opening a pull request.
+- [ ] Confirm the contributor's public author/sign-off name, replace the monolithic preparation branch after the core/LuCI split, and open the upstream pull request.

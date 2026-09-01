@@ -7,6 +7,7 @@ This project uses semantic versions for application releases. OpenWrt's `PKG_REL
 - Fixed boot-time LED trigger ordering by starting LED Night Mode after OpenWrt's stock `led` init script and migrating enabled legacy autostart links during package upgrade.
 - Verified both APKs with the official OpenWrt 25.12.4 SDK and upgraded the first live router without changing its UCI configuration.
 - Confirmed the corrected startup order in a forced-Night reboot: all nine sysfs LEDs remained at trigger `none` and brightness `0` after boot, while the modem provider retried until its endpoint became ready.
+- Confirmed the original physical unplug/replug path at Night on the first live router.
 
 ## 0.5.0 - 2026-08-24
 

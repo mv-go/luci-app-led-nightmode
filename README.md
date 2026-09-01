@@ -59,7 +59,7 @@ LuCI / UCI schedule
 
 Some physical lights cannot be controlled by software at all. For example, the first test router's PWR LED is wired directly to a power rail. Other indicators may belong to a modem and require an explicit provider. A driver's reported `max_brightness > 1` also does not prove that the physical LED can actually dim; many drivers treat every nonzero value as fully on.
 
-The [compatibility matrix](docs/compatibility.md) separates fixture tests, SDK builds, and real hardware evidence. Published release `0.5.0-r7` has a complete core/provider round trip on one Banana Pi BPI-R3 Mini running OpenWrt 25.12.4. Candidate `0.5.0-r8` fixes the boot ordering defect and has passed an official-SDK build plus a forced-Night live reboot on that router. Multi-device validation is not claimed yet.
+The [compatibility matrix](docs/compatibility.md) separates fixture tests, SDK builds, and real hardware evidence. Published release `0.5.0-r7` has a complete core/provider round trip on one Banana Pi BPI-R3 Mini running OpenWrt 25.12.4. Candidate `0.5.0-r8` fixes the boot ordering defect and has passed an official-SDK build, a forced-Night software reboot, and a physical Night power cycle on that router. Multi-device validation is not claimed yet.
 
 ## Under the hood
 
