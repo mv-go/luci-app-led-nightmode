@@ -2,7 +2,7 @@
 
 Release `0.5.1-r1` produces three packages: the headless `led-nightmode` core, the UI-only `luci-app-led-nightmode`, and the optional Quectel provider. The official SDK artifact metadata reported version `0.5.1-r1`; an isolated `apk-tools` 3 upgrade transaction from monolithic `0.5.0-r8` confirms that every installed path has exactly one owner and the existing UCI configuration is preserved.
 
-The CLI/service/LuCI/provider release candidate is built against the official OpenWrt 25.12.4 SDK for `mediatek/filogic`:
+The CLI/service/LuCI/provider release is built against the official OpenWrt 25.12.4 SDK for `mediatek/filogic`:
 
 - SDK: `openwrt-sdk-25.12.4-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst`
 - SHA-256: `411a2277ca10f909c30275a506aab4dc28a4f1281d7fda4f19faaa2ded6630bb`

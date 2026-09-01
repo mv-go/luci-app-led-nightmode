@@ -6,7 +6,7 @@ Build a universal OpenWrt LED night-mode application. The first test device is a
 
 ## Current milestone
 
-The hardware CLI, package/UCI/procd, optional non-sysfs provider, scheduling, rpcd/ACL, and native LuCI milestones are complete. Published package revision `0.5.0-r8` keeps the simple-by-default UI and universal write-safe defaults from `r7`, and fixes the live boot-order defect by starting after OpenWrt's stock LED init script and migrating enabled legacy autostart links. Both APKs are fixture-tested, verified in the official OpenWrt 25.12.4 SDK, published in the `v0.5.0` GitHub release, and installed on the first test router. A forced Night software reboot confirmed that all nine sysfs LEDs remain off after startup; the LTE provider reached its off mode after the modem became ready, connectivity remained available, and the exact original solar configuration was restored afterward. The owner also confirmed the exact physical unplug/replug path at Night with the expected result. The first-device release validation is complete. A second physical OpenWrt device is deferred and `v0.5.0` must not claim multi-device validation. Development candidate `0.5.1-r1` performs the approved core/LuCI split before two linked upstream Draft PRs.
+The hardware CLI, package/UCI/procd, optional non-sysfs provider, scheduling, rpcd/ACL, and native LuCI milestones are complete. Release `0.5.1-r1` separates the headless `led-nightmode` runtime, UI-only `luci-app-led-nightmode`, and optional provider into three non-overlapping APKs. The official OpenWrt 25.12.4 SDK builds all three, and an isolated `apk-tools` 3 transaction verifies the upgrade from monolithic `0.5.0-r8` while preserving UCI. The published `r8` package remains the live-hardware baseline: on the first BPI-R3 Mini, forced-Night reboot and physical unplug/replug both kept all managed indicators off, restored the original solar configuration afterward, and preserved connectivity. The split release is not yet a live-router claim. A second physical OpenWrt device is deferred, so no multi-device validation is claimed. The next milestone is two linked upstream Draft PRs for `openwrt/packages` and `openwrt/luci`.
 
 The initial inventory and live round-trip result are stored in `docs/hardware/bpi-r3-mini-led-inventory.md`. The service/UCI boundary is documented in `docs/architecture/service-and-uci.md`.
 
@@ -20,7 +20,7 @@ The initial inventory and live round-trip result are stored in `docs/hardware/bp
 - Do not implement astronomical calculations. Solar scheduling uses `sunwait`.
 - Keep package defaults write-safe: a fresh install must not change LEDs until the UCI service is explicitly enabled.
 - Keep device-specific non-sysfs commands in optional provider drivers. Providers require explicit endpoints, read-only capability probes, serialized reversible visual tests, saved-state restoration, and fixture-backed lifecycle tests; the sysfs core must not scan serial ports or infer modem models.
-- Keep the installed CLI at `root/usr/sbin/led-nightmode`; `bin/led-nightmode` is only a local convenience wrapper.
+- Keep the installed CLI at `/usr/sbin/led-nightmode`; its package source is `core/root/usr/sbin/led-nightmode`, while `bin/led-nightmode` is only a local convenience wrapper.
 
 ## Safety and validation
 
