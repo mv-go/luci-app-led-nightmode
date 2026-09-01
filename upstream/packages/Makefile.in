@@ -49,4 +49,10 @@ define Package/led-nightmode/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/core/root/usr/sbin/led-nightmode $(1)/usr/sbin/led-nightmode
 endef
 
+define Package/led-nightmode/postinst
+#!/bin/sh
+[ -n "$${IPKG_INSTROOT}" ] || /etc/init.d/rpcd reload 2>/dev/null
+exit 0
+endef
+
 $(eval $(call BuildPackage,led-nightmode))

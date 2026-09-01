@@ -48,6 +48,12 @@ define Package/led-nightmode/install
 	$(INSTALL_BIN) ./core/root/usr/sbin/led-nightmode $(1)/usr/sbin/led-nightmode
 endef
 
+define Package/led-nightmode/postinst
+#!/bin/sh
+[ -n "$${IPKG_INSTROOT}" ] || /etc/init.d/rpcd reload 2>/dev/null
+exit 0
+endef
+
 define Package/led-nightmode-provider-quectel-qnwcfg-ledmode
   SECTION:=utils
   CATEGORY:=Utilities
@@ -73,7 +79,6 @@ define Package/luci-app-led-nightmode/postinst
 [ -n "$${IPKG_INSTROOT}" ] || {
 	rm -f /tmp/luci-indexcache.*
 	rm -rf /tmp/luci-modulecache/
-	/etc/init.d/rpcd reload 2>/dev/null
 }
 exit 0
 endef

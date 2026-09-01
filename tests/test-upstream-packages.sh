@@ -23,6 +23,8 @@ grep -Fqx 'PKG_VERSION:=0.5.1' "$package_dir/Makefile" || fail 'core package ver
 grep -Fqx "PKG_HASH:=$source_hash" "$package_dir/Makefile" || fail 'source hash was not substituted'
 grep -Fq 'archive/refs/tags/v$(PKG_VERSION).tar.gz?' "$package_dir/Makefile" || fail 'immutable source URL is missing'
 grep -Fq '$(PKG_BUILD_DIR)/core/root/' "$package_dir/Makefile" || fail 'core source tree is not used'
+grep -Fq 'define Package/led-nightmode/postinst' "$package_dir/Makefile" || fail 'core contribution does not own its rpcd lifecycle reload'
+grep -Fq '/etc/init.d/rpcd reload' "$package_dir/Makefile" || fail 'core contribution does not reload rpcd after live installation'
 if grep -Eq 'luci-app-led-nightmode/(install|conffiles)|htdocs|/usr/share/luci|quectel' "$package_dir/Makefile"; then
 	fail 'LuCI or hardware-specific provider content leaked into the core contribution'
 fi

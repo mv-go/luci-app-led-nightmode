@@ -40,6 +40,8 @@ grep -Fqx 'LUCI_NAME:=luci-app-led-nightmode' "$PACKAGE_MAKEFILE" || fail 'stand
 grep -Fqx 'LUCI_DEPENDS:=+luci-base +led-nightmode' "$PACKAGE_MAKEFILE" || fail 'LuCI package must depend on the split core'
 grep -Fq 'define Package/led-nightmode' "$PACKAGE_MAKEFILE" || fail 'core package definition is missing'
 grep -Fq 'define Package/led-nightmode/conffiles' "$PACKAGE_MAKEFILE" || fail 'core package must own the UCI conffile'
+grep -Fq 'define Package/led-nightmode/postinst' "$PACKAGE_MAKEFILE" || fail 'core package must own rpcd lifecycle reload'
+grep -Fq '/etc/init.d/rpcd reload' "$PACKAGE_MAKEFILE" || fail 'core package must reload rpcd after live installation'
 if grep -Fq 'define Package/luci-app-led-nightmode/conffiles' "$PACKAGE_MAKEFILE"; then
 	fail 'LuCI package must not retain ownership of the core UCI conffile'
 fi

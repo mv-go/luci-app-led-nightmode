@@ -16,7 +16,6 @@ define Package/luci-app-led-nightmode/postinst
 [ -n "$${IPKG_INSTROOT}" ] || {
 	rm -f /tmp/luci-indexcache.*
 	rm -rf /tmp/luci-modulecache/
-	/etc/init.d/rpcd reload 2>/dev/null
 }
 exit 0
 endef

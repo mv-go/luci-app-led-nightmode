@@ -36,6 +36,9 @@ if find "$application" -type f -o -type l | grep -Eq '/(etc/config|etc/init\.d|e
 	fail 'core runtime leaked into the LuCI application'
 fi
 grep -Fqx 'LUCI_DEPENDS:=+luci-base +led-nightmode' "$application/Makefile" || fail 'LuCI package does not depend on the split core'
+if grep -Fq '/etc/init.d/rpcd reload' "$application/Makefile"; then
+	fail 'UI-only contribution retained the core rpcd lifecycle reload'
+fi
 
 for field in PKG_NAME PKG_VERSION PKG_RELEASE PKG_LICENSE LUCI_TITLE LUCI_DESCRIPTION LUCI_DEPENDS LUCI_URL; do
 	standalone=$(sed -n "s/^$field:=//p" "$PROJECT_ROOT/Makefile")
