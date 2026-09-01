@@ -52,6 +52,33 @@ jobs:
               exit 1
             }
           done
+      - name: Download the monolithic r8 upgrade baseline
+        run: |
+          mkdir -p "$RUNNER_TEMP/led-nightmode-r8"
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/led-nightmode-r8/luci-app-led-nightmode-0.5.0-r8.apk" \
+            https://github.com/mv-go/luci-app-led-nightmode/releases/download/v0.5.0/luci-app-led-nightmode-0.5.0-r8.apk
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/led-nightmode-r8/led-nightmode-provider-quectel-qnwcfg-ledmode-0.5.0-r8.apk" \
+            https://github.com/mv-go/luci-app-led-nightmode/releases/download/v0.5.0/led-nightmode-provider-quectel-qnwcfg-ledmode-0.5.0-r8.apk
+          cd "$RUNNER_TEMP/led-nightmode-r8"
+          printf '%s  %s\n' \
+            7d21cc100f3cfd230c8a0723dbc68b0dc34afaa0739c0120eb7dec6b92513bd3 \
+            luci-app-led-nightmode-0.5.0-r8.apk \
+            50cdd1fb81e7189b29fe8442415a777481572d9a450b4bcccee8eb06df62ea8c \
+            led-nightmode-provider-quectel-qnwcfg-ledmode-0.5.0-r8.apk \
+            | sha256sum --check
+      - name: Verify the monolithic-to-split APK transaction
+        run: |
+          split_dir=$(dirname "$(find "$RUNNER_TEMP/led-nightmode-artifacts/bin/packages" \
+            -type f -name 'led-nightmode-0.5.1-r1.apk' -print -quit)")
+          test -n "$split_dir"
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/workspace:ro" \
+            --volume "$RUNNER_TEMP/led-nightmode-r8:/old:ro" \
+            --volume "$split_dir:/new:ro" \
+            alpine@sha256:020dfcbaaf4cc1078bf2d9c7ba31a8466e334061dcd2f248001d68f79e52c000 \
+            /workspace/tests/test-apk-split-upgrade.sh /old /new
       - name: Upload package artifacts and logs
         uses: actions/upload-artifact@v7
         with:

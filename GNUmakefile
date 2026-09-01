@@ -17,6 +17,7 @@ SHELL_SOURCES := \
 	scripts/stage-upstream-luci.sh \
 	tests/test-cli.sh \
 	tests/test-init.sh \
+	tests/test-apk-split-upgrade.sh \
 	tests/test-luci-assets.sh \
 	tests/test-modem-provider.sh \
 	tests/test-release.sh \
