@@ -1,6 +1,6 @@
 # OpenWrt SDK build
 
-Development candidate `0.5.1-r1` produces three packages: the headless `led-nightmode` core, the UI-only `luci-app-led-nightmode`, and the optional Quectel provider. The official SDK artifact metadata reported version `0.5.1-r1`; an isolated `apk-tools` 3 upgrade transaction from monolithic `0.5.0-r8` confirms that every installed path has exactly one owner and the existing UCI configuration is preserved.
+Release `0.5.1-r1` produces three packages: the headless `led-nightmode` core, the UI-only `luci-app-led-nightmode`, and the optional Quectel provider. The official SDK artifact metadata reported version `0.5.1-r1`; an isolated `apk-tools` 3 upgrade transaction from monolithic `0.5.0-r8` confirms that every installed path has exactly one owner and the existing UCI configuration is preserved.
 
 The CLI/service/LuCI/provider release candidate is built against the official OpenWrt 25.12.4 SDK for `mediatek/filogic`:
 
@@ -67,7 +67,7 @@ make package/luci-app-led-nightmode/clean CONFIG_LUCI_JSMIN=
 make package/luci-app-led-nightmode/compile V=sc CONFIG_LUCI_JSMIN=
 ```
 
-## Validated `0.5.1-r1` split candidate
+## Validated `0.5.1-r1` split release
 
 The pinned official SDK workflow produced and verified all three architecture-independent APKs. Inspection confirmed these ownership boundaries:
 
@@ -75,7 +75,7 @@ The pinned official SDK workflow produced and verified all three architecture-in
 - `luci-app-led-nightmode` owns only the LuCI JavaScript, menu, ACL, and translations and depends on `led-nightmode`;
 - `led-nightmode-provider-quectel-qnwcfg-ledmode` owns only its optional provider driver and depends on `led-nightmode`.
 
-The workflow installs the published monolithic `0.5.0-r8` base and provider into an empty Alpine `apk-tools` 3 root, changes the UCI configuration, and then installs all three split packages in one transaction. The transaction completes without file conflicts, preserves the changed configuration, places the new package default at `/etc/config/led-nightmode.apk-new`, transfers each path to exactly one intended package, and verifies the installed executables, data files, and symlinks against the source tree. This is an isolated package-upgrade test; the split candidate has not been installed on the physical router.
+The workflow installs the published monolithic `0.5.0-r8` base and provider into an empty Alpine `apk-tools` 3 root, changes the UCI configuration, and then installs all three split packages in one transaction. The transaction completes without file conflicts, preserves the changed configuration, places the new package default at `/etc/config/led-nightmode.apk-new`, transfers each path to exactly one intended package, and verifies the installed executables, data files, and symlinks against the source tree. This is an isolated package-upgrade test; the split release has not been installed on the physical router.
 
 The automated transaction first passed in [OpenWrt SDK run 33561379190](https://github.com/mv-go/luci-app-led-nightmode/actions/runs/33561379190) for commit `13c703f561b3c794b6efaef306af80eb47c58f16`. Final release artifact hashes are recorded after the release commit's own SDK run.
 

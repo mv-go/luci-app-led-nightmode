@@ -2,12 +2,14 @@
 
 This project uses semantic versions for application releases. OpenWrt's `PKG_RELEASE` suffix is incremented when packaging or installed files change without a new application version.
 
-## 0.5.1-r1 (unreleased split candidate)
+## 0.5.1-r1 - 2026-09-02
 
 - Split the universal runtime into a headless `led-nightmode` package.
 - Keep `luci-app-led-nightmode` UI-only with a dependency on the core package.
 - Make the optional Quectel provider depend on `led-nightmode` instead of LuCI.
 - Preserve the existing UCI path, service name, runtime paths, safe defaults, and provider contract.
+- Verify a transactional `apk-tools` 3 upgrade from monolithic `0.5.0-r8`, including preserved UCI configuration and non-overlapping package ownership.
+- Add reproducible, provider-free staging for separate `openwrt/packages` and `openwrt/luci` contributions.
 
 ## OpenWrt package revision 0.5.0-r8 - 2026-09-02
 

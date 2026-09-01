@@ -34,18 +34,18 @@ Fresh installations are disabled and do not touch any LED until you explicitly e
 
 ## Install
 
-The latest published package is `0.5.0-r8`, built and validated for **OpenWrt 25.12.4**. It fixes boot-time LED trigger ordering and migrates enabled legacy autostart links during upgrade. Download the base APK from the [latest release](https://github.com/mv-go/luci-app-led-nightmode/releases/latest), copy it to the router, and install it:
+The latest published package set is `0.5.1-r1`, built and validated for **OpenWrt 25.12.4**. It separates the headless runtime from the LuCI UI while keeping the same service, configuration, and upgrade path. Download both APKs from the [latest release](https://github.com/mv-go/luci-app-led-nightmode/releases/latest), copy them to the router, and install them together:
 
 ```sh
-scp luci-app-led-nightmode-0.5.0-r8.apk root@openwrt:/tmp/
-ssh root@openwrt 'apk add --allow-untrusted /tmp/luci-app-led-nightmode-0.5.0-r8.apk'
+scp led-nightmode-0.5.1-r1.apk luci-app-led-nightmode-0.5.1-r1.apk root@openwrt:/tmp/
+ssh root@openwrt 'apk add --allow-untrusted /tmp/led-nightmode-0.5.1-r1.apk /tmp/luci-app-led-nightmode-0.5.1-r1.apk'
 ```
 
 Open LuCI, go to **Services → LED Night Mode**, enable the service, choose a schedule, then select **Save & Apply**.
 
 If an indicator is controlled by a modem or another subsystem rather than `/sys/class/leds`, install a matching provider APK as well. The base package never scans serial ports, guesses hardware, or enables a provider on its own. The first provider supports the specifically validated two-field Quectel `QNWCFG ledmode` interface; see [provider architecture](docs/architecture/providers.md) before using or extending it.
 
-The current source candidate is `0.5.1-r1`. It separates the headless `led-nightmode` runtime from the UI-only `luci-app-led-nightmode` package while preserving the existing configuration and service contract.
+The headless `led-nightmode` package can also be installed on its own when LuCI is not wanted.
 
 ## What it can control
 

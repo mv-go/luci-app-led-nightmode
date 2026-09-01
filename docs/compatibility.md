@@ -16,7 +16,7 @@ Compatibility is recorded as evidence, not inferred from a router name, CPU arch
 
 | OpenWrt | Target / architecture | Package | Evidence | Notes |
 | --- | --- | --- | --- | --- |
-| 25.12.4 | `mediatek/filogic`, `aarch64_cortex-a53` | `0.5.1-r1` split candidate | Fixture-tested; SDK-built; offline upgrade-validated | The official SDK produced three non-overlapping packages. An `apk-tools` 3 transaction from monolithic `0.5.0-r8` preserved the existing UCI file, installed the new default as `.apk-new`, and transferred every runtime path to its intended owner. This is packaging evidence, not a live-router upgrade claim. |
+| 25.12.4 | `mediatek/filogic`, `aarch64_cortex-a53` | `0.5.1-r1` | Published; fixture-tested; SDK-built; offline upgrade-validated | The official SDK produced three non-overlapping packages. An `apk-tools` 3 transaction from monolithic `0.5.0-r8` preserved the existing UCI file, installed the new default as `.apk-new`, and transferred every runtime path to its intended owner. This is packaging evidence, not a live-router upgrade claim. |
 | 25.12.4 | `mediatek/filogic`, `aarch64_cortex-a53` | `0.5.0-r8` | Published; SDK-built; live core/provider reboot- and power-cycle-validated | Moves LED Night Mode after the stock OpenWrt LED setup and migrates enabled legacy `S95` autostart links to `S97`. Both a software reboot and the original physical unplug/replug path were validated at Night. |
 | 25.12.4 | `mediatek/filogic`, `aarch64_cortex-a53` | `0.5.0-r7` | SDK-built; live core/provider-validated | Installed and round-trip validated on the first live router. |
 | Other releases and targets | Any | `0.5.0-r8` | Not yet validated | The packages are architecture-independent, but that alone is not a compatibility claim. |

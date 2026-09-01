@@ -1,6 +1,6 @@
 # Releasing
 
-Application release `0.5.0` has published OpenWrt package revision `r8`. The `v0.5.0` tag remains fixed because `r8` is a packaging revision, while the release carries the two verified `r8` APKs and their SHA-256 file. Development candidate `0.5.1-r1` splits the headless core from the LuCI UI and must pass the split gate before a new tag or release is created.
+Application release `0.5.1` has published OpenWrt package revision `r1`. It splits the headless core from the LuCI UI while preserving the runtime and upgrade contract. The earlier `v0.5.0` release remains the validated monolithic baseline used by the automated upgrade test.
 
 ## Split gate
 
@@ -44,13 +44,12 @@ The manual **OpenWrt SDK** GitHub workflow builds all three packages with the of
 
 ## GitHub release gate
 
-After every candidate item is complete:
+For `v0.5.1`:
 
 1. Confirm the working tree is clean and CI is green.
-2. Create signed release notes from [`CHANGELOG.md`](../CHANGELOG.md), including known hardware limitations and exact APK hashes.
-3. Keep the application tag at `v0.5.0`; `r8` is an OpenWrt packaging revision, not a separate semantic-version tag.
-4. Attach the two verified APKs and their SHA-256 file.
-5. Publish or change repository visibility only with explicit owner approval.
+2. Create a signed `v0.5.1` tag and release notes from [`CHANGELOG.md`](../CHANGELOG.md), including known hardware limitations, the offline-only nature of the split-upgrade validation, and exact APK hashes.
+3. Attach the three verified APKs and their SHA-256 file.
+4. Publish or change repository visibility only with explicit owner approval.
 
 ## Upstream gate
 
