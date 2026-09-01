@@ -29,7 +29,7 @@ The separate `schedule` section named `schedule` selects how the effective phase
 
 One fixed interval may either cross midnight, such as `23:00` to `07:00`, or remain within one calendar day. All times use the router's configured local timezone. Polling the local clock instead of caching an epoch means timezone and daylight-saving changes are picked up without rewriting the schedule.
 
-An install-time UCI migration adds the named schedule section when upgrading a pre-scheduling configuration. It never replaces an existing schedule or changes the enabled flag or current manual phase. The init script also supplies complete `23:00` and `07:00` fallbacks without embedding colon-containing values in the `uci_validate_section` schema.
+An install-time migration adds the named schedule section when upgrading a pre-scheduling configuration. It never replaces an existing schedule or changes the enabled flag or current manual phase. The same migration moves the obsolete priority-95 autostart link to the current post-stock-LED priority while preserving whether the service was enabled. The init script also supplies complete `23:00` and `07:00` fallbacks without embedding colon-containing values in the `uci_validate_section` schema.
 
 Optional non-sysfs indicators use named `provider` sections:
 
@@ -43,7 +43,7 @@ Fresh installations contain no provider section: the base package cannot safely 
 
 ## Lifecycle
 
-`/etc/init.d/led-nightmode` validates the UCI sections and registers foreground runners with procd. Configuration changes trigger a service reload. A disabled core section creates no processes and writes no LED state.
+`/etc/init.d/led-nightmode` validates the UCI sections and registers foreground runners with procd. It starts after OpenWrt's stock `led` init script so the stock boot-time trigger setup cannot overwrite an already applied night profile. Configuration changes trigger a service reload. A disabled core section creates no processes and writes no LED state.
 
 The runner resolves and applies the effective phase before entering its foreground loop. Fixed mode rechecks every 15 seconds and sun mode every 60 seconds; the checks sleep between invocations and do not busy-loop. A night instance restores the saved day state when procd stops it, including during disable or reload. A day instance leaves the LEDs restored while remaining observable by procd. The existing CLI state directory remains the only recovery record; restoration failures retain that state for another attempt. `/var/run/led-nightmode/phase` publishes the successfully applied core phase for status consumers and is removed when the service stops.
 

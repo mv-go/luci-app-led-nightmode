@@ -2,6 +2,12 @@
 
 This project uses semantic versions for application releases. OpenWrt's `PKG_RELEASE` suffix is incremented when packaging or installed files change without a new application version.
 
+## Unreleased (`0.5.0-r8` candidate)
+
+- Fixed boot-time LED trigger ordering by starting LED Night Mode after OpenWrt's stock `led` init script and migrating enabled legacy autostart links during package upgrade.
+- Verified both APKs with the official OpenWrt 25.12.4 SDK and upgraded the first live router without changing its UCI configuration.
+- Confirmed the corrected startup order in a forced-Night reboot: all nine sysfs LEDs remained at trigger `none` and brightness `0` after boot, while the modem provider retried until its endpoint became ready.
+
 ## 0.5.0 - 2026-08-24
 
 - Reworked LuCI into a simple default Settings flow with technical controls under Advanced.

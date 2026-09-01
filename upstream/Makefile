@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-led-nightmode
 PKG_VERSION:=0.5.0
-PKG_RELEASE:=7
+PKG_RELEASE:=8
 PKG_LICENSE:=Apache-2.0
 PKG_MAINTAINER:=mv-go <rapture-ribose6k@icloud.com>
 

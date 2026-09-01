@@ -1,5 +1,15 @@
 #!/bin/sh
 
+RC_D=${LED_NIGHTMODE_RC_D:-/etc/rc.d}
+INIT=${LED_NIGHTMODE_INIT:-/etc/init.d/led-nightmode}
+
+# Package upgrades preserve enabled rc.d links. Move installations enabled by
+# releases that started at 95 to the post-stock-LED priority used now.
+if [ -L "$RC_D/S95led-nightmode" ]; then
+	"$INIT" disable || exit 1
+	"$INIT" enable || exit 1
+fi
+
 if uci -q get led-nightmode.schedule >/dev/null 2>&1; then
 	exit 0
 fi

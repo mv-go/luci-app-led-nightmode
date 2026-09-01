@@ -1,6 +1,6 @@
 # Releasing
 
-Application release `0.5.0` uses OpenWrt package revision `r7`. Preparing and validating the candidate does not by itself publish the private repository, create a tag, or change access controls.
+Application release `0.5.0` has published OpenWrt package revision `r7`; the current source candidate is `r8`. Preparing and validating the candidate does not by itself publish a GitHub release, create a tag, or change access controls.
 
 ## Automated gate
 
@@ -23,8 +23,10 @@ The manual **OpenWrt SDK** GitHub workflow builds both packages with the officia
 - [x] Current upstream LuCI JavaScript and JSON lint passes and is enforced in CI.
 - [x] Compatibility evidence and unsupported scope are documented.
 - [x] English LuCI translation template is generated from source.
-- [x] Build and verify both `0.5.0-r7` APKs in the official SDK; record hashes in the SDK document.
-- [x] Upgrade the first router from `r6` to `r7` and verify preserved UCI, runtime health, provider behaviour, connectivity, and day/night restoration.
+- [x] Build and verify both `0.5.0-r8` APKs in the official SDK; record hashes in the SDK document.
+- [x] Upgrade the first router from `r7` to `r8`, verify the legacy `S95` autostart link migrates to `S97`, and confirm preserved UCI, runtime health, provider behaviour, and connectivity.
+- [x] Reboot the first router while forced to Night and confirm every managed sysfs LED remains at trigger `none` and brightness `0` after startup completes.
+- [ ] Physically unplug/replug the first router at Night to reproduce the owner's exact original power-loss path; this is a final hardware confirmation, not a blocker for pushing the validated candidate source.
 - [x] Confirm authenticated LuCI rendering on the first router; the owner completed the visual check.
 - [x] Keep multi-device validation out of `v0.5.0` claims; a second physical OpenWrt target is explicitly deferred by the owner.
 
@@ -34,7 +36,7 @@ After every candidate item is complete:
 
 1. Confirm the working tree is clean and CI is green.
 2. Create signed release notes from [`CHANGELOG.md`](../CHANGELOG.md), including known hardware limitations and exact APK hashes.
-3. Tag the application version as `v0.5.0`; `r7` remains the OpenWrt packaging revision, not a separate semantic-version tag.
+3. Keep the application tag at `v0.5.0`; `r8` is an OpenWrt packaging revision, not a separate semantic-version tag.
 4. Attach the two verified APKs and their SHA-256 file.
 5. Publish or change repository visibility only with explicit owner approval.
 

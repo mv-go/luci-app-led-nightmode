@@ -105,6 +105,11 @@ procd_add_validation() { record_call "validation $*"; }
 
 . "$INIT"
 
+case $START in
+	''|*[!0-9]*) fail 'init START priority must be numeric' ;;
+esac
+[ "$START" -gt 96 ] || fail 'init must start after the stock OpenWrt LED service at priority 96'
+
 duplicate_sections=$(awk '$1 == "config" && NF >= 3 { name=$3; gsub(/\047/, "", name); seen[name]++; if (seen[name] == 2) print name }' "$PROJECT_ROOT/root/etc/config/led-nightmode")
 [ -z "$duplicate_sections" ] || fail "default UCI config repeats named sections: $duplicate_sections"
 

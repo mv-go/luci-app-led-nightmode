@@ -12,6 +12,19 @@ The SDK archive and checksum are published in the [OpenWrt 25.12.4 mediatek/filo
 
 ## Build
 
+The preferred reproducible path is the manual **OpenWrt SDK** GitHub workflow in [`.github/workflows/sdk.yml`](../../.github/workflows/sdk.yml). It pins `openwrt/gh-action-sdk` to an exact commit, runs on a native Linux worker, stages only the package feed input, and uploads only the two package outputs. The feed staging deliberately excludes `upstream/`: that directory is a separate LuCI-tree snapshot with its own `Makefile`, and presenting it to the downstream feed scanner produces a misleading `../../luci.mk` error.
+
+For a local pre-push build, mirror the same workflow with `ghcr.io/openwrt/sdk:aarch64_cortex-a53-25.12.4`. Put the tracked source tree and artifacts in named Docker volumes rather than mounting the whole working directory. Preserve the container's `/builder` volume until validation is complete so a failed invocation can reuse downloaded and compiled dependencies. Ensure the artifacts volume is writable by the SDK container before starting the build.
+
+On Apple Silicon, Docker Desktop runs this x86_64 image through emulation. A parallel first pass can fail in a nested GNU make with `write jobserver: Bad file descriptor`; this was reproduced in the Lua dependency rather than in LED Night Mode. Reuse the same warm `/builder` volume and repeat the package target serially:
+
+```sh
+make BUILD_LOG=1 CONFIG_AUTOREMOVE=y V=sc -j1 \
+  package/luci-app-led-nightmode/compile
+```
+
+Do not discard the warm builder first: the official action prepares a large target dependency set even though both final application packages are `noarch`. The serial fallback is slow but avoids the emulated jobserver failure. Native Linux CI remains the normal first-choice build path.
+
 Place this repository in the SDK package tree, enable it, and run the package target:
 
 ```sh
@@ -25,10 +38,22 @@ make package/luci-app-led-nightmode/compile V=sc
 
 The OpenWrt 25.12 outputs use these filenames under `bin/packages/aarch64_cortex-a53/<feed>/`; the feed directory depends on how the package source was linked into the SDK:
 
-- `luci-app-led-nightmode-0.5.0-r7.apk`;
-- `led-nightmode-provider-quectel-qnwcfg-ledmode-0.5.0-r7.apk`.
+- `luci-app-led-nightmode-0.5.0-r8.apk`;
+- `led-nightmode-provider-quectel-qnwcfg-ledmode-0.5.0-r8.apk`.
 
 The SDK is an x86_64 Linux build; an ARM64 macOS host must run it in a Linux x86_64 container or virtual machine.
+
+For a fresh Ubuntu 24.04 container, install the complete host tool set before running any SDK target. The `python3-setuptools` and `swig` entries are required by the Filogic U-Boot prerequisite checks even though this application itself does not compile U-Boot:
+
+```sh
+apt-get update
+apt-get install -y --no-install-recommends \
+  bison build-essential ca-certificates file flex gawk gcc-multilib gettext git \
+  libncurses-dev libssl-dev python3 python3-dev python3-setuptools rsync swig \
+  unzip wget zlib1g-dev zstd
+```
+
+On Docker Desktop for macOS, copying the repository through a large bind-mounted directory can fail with `Resource deadlock avoided`. Create a tar archive of the tracked working-tree files on the host, exclude `upstream/`, mount that single archive read-only, and extract it into the feed volume as `luci-app-led-nightmode`. Set `COPYFILE_DISABLE=1` while creating the archive so macOS does not add `._*` AppleDouble files. This also excludes ignored release artifacts and local backup files from the package source.
 
 Some minimal SDK environments retain `CONFIG_LUCI_JSMIN=y` without shipping the host-side `jsmin` executable. In that case, build this package with `CONFIG_LUCI_JSMIN=` on both the clean and compile invocations. This produces the supported unminified LuCI assets and avoids incomplete `.js.o` temporary files:
 
@@ -37,23 +62,26 @@ make package/luci-app-led-nightmode/clean CONFIG_LUCI_JSMIN=
 make package/luci-app-led-nightmode/compile V=sc CONFIG_LUCI_JSMIN=
 ```
 
-## Validated artifact
+## Validated `0.5.0-r8` candidate artifact
 
-Both `0.5.0-r7` package builds were checked with the SDK's `apk-tools 3.0.5`:
+Both `0.5.0-r8` package builds were produced by the pinned official SDK action image and checked with its `apk-tools 3.0.5`:
 
 - `apk verify --allow-untrusted` reported `OK`;
-- metadata reported version `0.5.0-r7` and architecture `noarch`;
+- metadata reported version `0.5.0-r8` and architecture `noarch`;
 - `/etc/config/led-nightmode` is registered as a conffile with mode `0600` and contains no device-specific provider default;
 - the init script, UCI migration, shared service executable, two service runners, CLI, and provider driver have mode `0755`; the schedule and rpcd entry points are package symlinks to the shared executable; the ACL, LuCI menu, JavaScript view, and timezone-coordinate module have mode `0644`;
 - the package contains no `.js.o` temporary files;
-- every installed runtime file matched its repository source byte for byte after extraction.
+- every non-JavaScript runtime file matched its repository source byte for byte after extraction, and both JavaScript assets matched the output of the SDK's own `jsmin` applied to their sources;
+- the extracted init script contains `START=97`, and the extracted UCI-defaults script migrates an enabled legacy `S95led-nightmode` link by disabling and re-enabling the service at its current priority.
 
 Validated SHA-256 values:
 
-- base APK: `48bda130edd8b53c56166d1296e4c5a595bb06b0263dcc4e2945ae5a7c94d82d`;
-- Quectel provider APK: `07601c8b282dc99b5500fdd4b3e49df6cab1e4e0599d8aabf9739b6564233206`.
+- base APK: `7d21cc100f3cfd230c8a0723dbc68b0dc34afaa0739c0120eb7dec6b92513bd3`;
+- Quectel provider APK: `50cdd1fb81e7189b29fe8442415a777481572d9a450b4bcccee8eb06df62ea8c`.
 
 The locally exported artifact is kept under ignored `dist/` and is not committed to Git.
+
+The architecture image used by the pinned action currently prepares the `bcm27xx/bcm2710` SDK target internally. This is official SDK packaging evidence for `aarch64_cortex-a53`, not a physical-device claim. Both outputs declare `noarch`; the separate live BPI-R3 Mini validation below establishes behaviour on `mediatek/filogic`.
 
 ## GitHub workflow validation
 

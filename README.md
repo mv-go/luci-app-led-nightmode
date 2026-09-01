@@ -34,7 +34,7 @@ Fresh installations are disabled and do not touch any LED until you explicitly e
 
 ## Install
 
-The current release is built and validated for **OpenWrt 25.12.4**. Download the base APK from the [latest release](https://github.com/mv-go/luci-app-led-nightmode/releases/latest), copy it to the router, and install it:
+The latest published package is `0.5.0-r7`, built and validated for **OpenWrt 25.12.4**. The current source candidate is `0.5.0-r8`, which fixes boot-time LED trigger ordering and still requires release publication. Download the published base APK from the [latest release](https://github.com/mv-go/luci-app-led-nightmode/releases/latest), copy it to the router, and install it:
 
 ```sh
 scp luci-app-led-nightmode-0.5.0-r7.apk root@openwrt:/tmp/
@@ -59,7 +59,7 @@ LuCI / UCI schedule
 
 Some physical lights cannot be controlled by software at all. For example, the first test router's PWR LED is wired directly to a power rail. Other indicators may belong to a modem and require an explicit provider. A driver's reported `max_brightness > 1` also does not prove that the physical LED can actually dim; many drivers treat every nonzero value as fully on.
 
-The [compatibility matrix](docs/compatibility.md) separates fixture tests, SDK builds, and real hardware evidence. Release `0.5.0-r7` has a complete core/provider round trip on one Banana Pi BPI-R3 Mini running OpenWrt 25.12.4. Multi-device validation is not claimed yet.
+The [compatibility matrix](docs/compatibility.md) separates fixture tests, SDK builds, and real hardware evidence. Published release `0.5.0-r7` has a complete core/provider round trip on one Banana Pi BPI-R3 Mini running OpenWrt 25.12.4. Candidate `0.5.0-r8` fixes the boot ordering defect and has passed an official-SDK build plus a forced-Night live reboot on that router. Multi-device validation is not claimed yet.
 
 ## Under the hood
 

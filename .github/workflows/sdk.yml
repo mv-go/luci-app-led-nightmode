@@ -25,6 +25,7 @@ jobs:
             --exclude bin \
             --exclude dist \
             --exclude logs \
+            --exclude upstream \
             ./ "$RUNNER_TEMP/led-nightmode-feed/luci-app-led-nightmode/"
       - name: Build OpenWrt packages
         uses: openwrt/gh-action-sdk@f5813d30eeef3534b58ac7e79c5d8842b6035434

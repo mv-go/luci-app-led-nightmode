@@ -1,6 +1,8 @@
 #!/bin/sh /etc/rc.common
 
-START=95
+# OpenWrt's stock /etc/init.d/led runs at 96 and reapplies the normal LED
+# triggers. Start afterwards so the selected night profile is the final state.
+START=97
 STOP=10
 USE_PROCD=1
 

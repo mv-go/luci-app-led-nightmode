@@ -39,7 +39,7 @@ grep -Fqx 'PKG_LICENSE_FILES:=LICENSE' "$PACKAGE_MAKEFILE" || fail 'package lice
 grep -Fqx 'LUCI_NAME:=luci-app-led-nightmode' "$PACKAGE_MAKEFILE" || fail 'standalone SDK builds require an explicit LuCI package name'
 [ -s "$PROJECT_ROOT/LICENSE" ] || fail 'LICENSE is missing or empty'
 
-grep -Fq "Release \`$release_id\`" "$PROJECT_ROOT/README.md" || fail "README does not identify release $release_id"
+grep -Fq "\`$release_id\`" "$PROJECT_ROOT/README.md" || fail "README does not identify package revision $release_id"
 grep -Fq "\`$release_id\`" "$PROJECT_ROOT/docs/compatibility.md" || fail "compatibility matrix does not identify release $release_id"
 grep -Fq "\`$release_id\`" "$PROJECT_ROOT/docs/releasing.md" || fail "release checklist does not identify release $release_id"
 grep -Fq "## $package_version" "$PROJECT_ROOT/CHANGELOG.md" || fail "changelog does not contain version $package_version"
