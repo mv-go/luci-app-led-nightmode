@@ -4,7 +4,7 @@ include Makefile
 
 else
 
-.PHONY: check check-ash test release-check stage-upstream stage-upstream-luci
+.PHONY: check check-ash test release-check stage-upstream stage-upstream-luci stage-upstream-packages
 
 SHELL_SOURCES := \
 	bin/led-nightmode \
@@ -14,6 +14,7 @@ SHELL_SOURCES := \
 	core/root/usr/libexec/led-nightmode-service \
 	providers/quectel-qnwcfg-ledmode/root/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode \
 	core/root/usr/sbin/led-nightmode \
+	scripts/stage-upstream-packages.sh \
 	scripts/stage-upstream-luci.sh \
 	tests/test-cli.sh \
 	tests/test-init.sh \
@@ -23,6 +24,7 @@ SHELL_SOURCES := \
 	tests/test-release.sh \
 	tests/test-service.sh \
 	tests/test-upstream.sh \
+	tests/test-upstream-packages.sh \
 	tests/test-uci-defaults.sh
 
 check:
@@ -39,6 +41,7 @@ test: check
 	./tests/test-modem-provider.sh
 	./tests/test-service.sh
 	./tests/test-upstream.sh
+	./tests/test-upstream-packages.sh
 	./tests/test-uci-defaults.sh
 
 release-check: test
@@ -49,5 +52,9 @@ stage-upstream: stage-upstream-luci
 stage-upstream-luci:
 	@test -n "$(DEST)" || { echo 'Usage: make stage-upstream-luci DEST=/path/to/luci/applications/luci-app-led-nightmode' >&2; exit 2; }
 	./scripts/stage-upstream-luci.sh "$(DEST)"
+
+stage-upstream-packages:
+	@test -n "$(DEST)" && test -n "$(PKG_HASH)" || { echo 'Usage: make stage-upstream-packages DEST=/path/to/packages/utils/led-nightmode PKG_HASH=<sha256>' >&2; exit 2; }
+	./scripts/stage-upstream-packages.sh "$(DEST)" "$(PKG_HASH)"
 
 endif

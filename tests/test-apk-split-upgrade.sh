@@ -84,6 +84,22 @@ owner_of /usr/sbin/led-nightmode | grep -Fq 'owned by led-nightmode-' || fail 'c
 owner_of /www/luci-static/resources/view/led-nightmode.js | grep -Fq 'owned by luci-app-led-nightmode-' || fail 'LuCI view ownership is incorrect'
 owner_of /usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode | grep -Fq 'owned by led-nightmode-provider-quectel-qnwcfg-ledmode-' || fail 'provider ownership is incorrect'
 
+for relative_path in \
+	etc/init.d/led-nightmode \
+	etc/uci-defaults/99-led-nightmode \
+	usr/libexec/led-nightmode-provider-service \
+	usr/libexec/led-nightmode-service \
+	usr/sbin/led-nightmode
+do
+	cmp "$PROJECT_ROOT/core/root/$relative_path" "$installed_root/$relative_path" >/dev/null || fail "installed core file differs from source: $relative_path"
+done
+
+[ "$(readlink "$installed_root/usr/libexec/led-nightmode-schedule")" = led-nightmode-service ] || fail 'installed schedule symlink is incorrect'
+[ "$(readlink "$installed_root/usr/libexec/rpcd/luci.led-nightmode")" = ../led-nightmode-service ] || fail 'installed rpcd symlink is incorrect'
+cmp "$PROJECT_ROOT/root/usr/share/luci/menu.d/luci-app-led-nightmode.json" "$installed_root/usr/share/luci/menu.d/luci-app-led-nightmode.json" >/dev/null || fail 'installed LuCI menu differs from source'
+cmp "$PROJECT_ROOT/root/usr/share/rpcd/acl.d/luci-app-led-nightmode.json" "$installed_root/usr/share/rpcd/acl.d/luci-app-led-nightmode.json" >/dev/null || fail 'installed LuCI ACL differs from source'
+cmp "$PROJECT_ROOT/providers/quectel-qnwcfg-ledmode/root/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode" "$installed_root/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode" >/dev/null || fail 'installed provider differs from source'
+
 core_list=$installed_root/lib/apk/packages/led-nightmode.list
 luci_list=$installed_root/lib/apk/packages/luci-app-led-nightmode.list
 provider_list=$installed_root/lib/apk/packages/led-nightmode-provider-quectel-qnwcfg-ledmode.list
