@@ -1,20 +1,21 @@
 # OpenWrt SDK build
 
-Development candidate `0.5.1-r1` produces three packages: the headless `led-nightmode` core, the UI-only `luci-app-led-nightmode`, and the optional Quectel provider. Its split gate requires that package metadata reported version `0.5.1-r1`, that every installed path has exactly one owner, and that an upgrade from monolithic `0.5.0-r8` succeeds transactionally. The validated `r8` evidence below remains the baseline until those checks complete.
+Development candidate `0.5.1-r1` produces three packages: the headless `led-nightmode` core, the UI-only `luci-app-led-nightmode`, and the optional Quectel provider. The official SDK artifact metadata reported version `0.5.1-r1`; an isolated `apk-tools` 3 upgrade transaction from monolithic `0.5.0-r8` confirms that every installed path has exactly one owner and the existing UCI configuration is preserved.
 
 The CLI/service/LuCI/provider release candidate is built against the official OpenWrt 25.12.4 SDK for `mediatek/filogic`:
 
 - SDK: `openwrt-sdk-25.12.4-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst`
 - SHA-256: `411a2277ca10f909c30275a506aab4dc28a4f1281d7fda4f19faaa2ded6630bb`
 - Package architecture: `noarch`
-- Base runtime dependencies: `libc`, `luci-base`, `jshn`, `procd`, `rpcd`, `sunwait`, and `uci`
-- Quectel provider dependencies: the base package and `picocom`
+- Core runtime dependencies: `libc`, `jshn`, `procd`, `rpcd`, `sunwait`, and `uci`
+- LuCI dependencies: the core package, `libc`, and `luci-base`
+- Quectel provider dependencies: the core package, `libc`, and `picocom`
 
 The SDK archive and checksum are published in the [OpenWrt 25.12.4 mediatek/filogic downloads](https://downloads.openwrt.org/releases/25.12.4/targets/mediatek/filogic/).
 
 ## Build
 
-The preferred reproducible path is the manual **OpenWrt SDK** GitHub workflow in [`.github/workflows/sdk.yml`](../../.github/workflows/sdk.yml). It pins `openwrt/gh-action-sdk` to an exact commit, runs on a native Linux worker, stages only the package feed input, and uploads only the two package outputs. The feed staging deliberately excludes `upstream/`: that directory is a separate LuCI-tree snapshot with its own `Makefile`, and presenting it to the downstream feed scanner produces a misleading `../../luci.mk` error.
+The preferred reproducible path is the manual **OpenWrt SDK** GitHub workflow in [`.github/workflows/sdk.yml`](../../.github/workflows/sdk.yml). It pins `openwrt/gh-action-sdk` to an exact commit, runs on a native Linux worker, stages only the package feed input, verifies a monolithic-to-split upgrade with a digest-pinned Alpine image, and uploads only the three package outputs. The feed staging deliberately excludes `upstream/`: that directory contains separate contribution snapshots and presenting the LuCI definition to the downstream feed scanner produces a misleading `../../luci.mk` error.
 
 For a local pre-push build, mirror the same workflow with `ghcr.io/openwrt/sdk:aarch64_cortex-a53-25.12.4`. Put the tracked source tree and artifacts in named Docker volumes rather than mounting the whole working directory. Preserve the container's `/builder` volume until validation is complete so a failed invocation can reuse downloaded and compiled dependencies. Ensure the artifacts volume is writable by the SDK container before starting the build.
 
@@ -33,15 +34,17 @@ Place this repository in the SDK package tree, enable it, and run the package ta
 ln -s /path/to/luci-app-led-nightmode package/luci-app-led-nightmode
 make defconfig
 printf '%s\n' 'CONFIG_PACKAGE_luci-app-led-nightmode=m' >> .config
+printf '%s\n' 'CONFIG_PACKAGE_led-nightmode=m' >> .config
 printf '%s\n' 'CONFIG_PACKAGE_led-nightmode-provider-quectel-qnwcfg-ledmode=m' >> .config
 make defconfig
 make package/luci-app-led-nightmode/compile V=sc
 ```
 
-The OpenWrt 25.12 outputs use these filenames under `bin/packages/aarch64_cortex-a53/<feed>/`; the feed directory depends on how the package source was linked into the SDK:
+The split OpenWrt 25.12 outputs use these filenames under `bin/packages/aarch64_cortex-a53/<feed>/`; the feed directory depends on how the package source was linked into the SDK:
 
-- `luci-app-led-nightmode-0.5.0-r8.apk`;
-- `led-nightmode-provider-quectel-qnwcfg-ledmode-0.5.0-r8.apk`.
+- `led-nightmode-0.5.1-r1.apk`;
+- `luci-app-led-nightmode-0.5.1-r1.apk`;
+- `led-nightmode-provider-quectel-qnwcfg-ledmode-0.5.1-r1.apk`.
 
 The SDK is an x86_64 Linux build; an ARM64 macOS host must run it in a Linux x86_64 container or virtual machine.
 
@@ -57,12 +60,24 @@ apt-get install -y --no-install-recommends \
 
 On Docker Desktop for macOS, copying the repository through a large bind-mounted directory can fail with `Resource deadlock avoided`. Create a tar archive of the tracked working-tree files on the host, exclude `upstream/`, mount that single archive read-only, and extract it into the feed volume as `luci-app-led-nightmode`. Set `COPYFILE_DISABLE=1` while creating the archive so macOS does not add `._*` AppleDouble files. This also excludes ignored release artifacts and local backup files from the package source.
 
-Some minimal SDK environments retain `CONFIG_LUCI_JSMIN=y` without shipping the host-side `jsmin` executable. In that case, build this package with `CONFIG_LUCI_JSMIN=` on both the clean and compile invocations. This produces the supported unminified LuCI assets and avoids incomplete `.js.o` temporary files:
+Some minimal SDK environments retain `CONFIG_LUCI_JSMIN=y` without shipping the host-side `jsmin` executable. In that case, build the LuCI package with `CONFIG_LUCI_JSMIN=` on both the clean and compile invocations. This produces the supported unminified LuCI assets and avoids incomplete `.js.o` temporary files:
 
 ```sh
 make package/luci-app-led-nightmode/clean CONFIG_LUCI_JSMIN=
 make package/luci-app-led-nightmode/compile V=sc CONFIG_LUCI_JSMIN=
 ```
+
+## Validated `0.5.1-r1` split candidate
+
+The pinned official SDK workflow produced and verified all three architecture-independent APKs. Inspection confirmed these ownership boundaries:
+
+- `led-nightmode` owns UCI configuration, init and migration scripts, the CLI, service runners, shared service implementation, and rpcd entry point;
+- `luci-app-led-nightmode` owns only the LuCI JavaScript, menu, ACL, and translations and depends on `led-nightmode`;
+- `led-nightmode-provider-quectel-qnwcfg-ledmode` owns only its optional provider driver and depends on `led-nightmode`.
+
+The workflow installs the published monolithic `0.5.0-r8` base and provider into an empty Alpine `apk-tools` 3 root, changes the UCI configuration, and then installs all three split packages in one transaction. The transaction completes without file conflicts, preserves the changed configuration, places the new package default at `/etc/config/led-nightmode.apk-new`, transfers each path to exactly one intended package, and verifies the installed executables, data files, and symlinks against the source tree. This is an isolated package-upgrade test; the split candidate has not been installed on the physical router.
+
+The automated transaction first passed in [OpenWrt SDK run 33561379190](https://github.com/mv-go/luci-app-led-nightmode/actions/runs/33561379190) for commit `13c703f561b3c794b6efaef306af80eb47c58f16`. Final release artifact hashes are recorded after the release commit's own SDK run.
 
 ## Validated `0.5.0-r8` candidate artifact
 
