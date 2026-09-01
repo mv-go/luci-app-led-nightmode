@@ -4,16 +4,16 @@ include Makefile
 
 else
 
-.PHONY: check check-ash test release-check stage-upstream
+.PHONY: check check-ash test release-check stage-upstream stage-upstream-luci
 
 SHELL_SOURCES := \
 	bin/led-nightmode \
-	root/etc/init.d/led-nightmode \
-	root/etc/uci-defaults/99-led-nightmode \
-	root/usr/libexec/led-nightmode-provider-service \
-	root/usr/libexec/led-nightmode-service \
+	core/root/etc/init.d/led-nightmode \
+	core/root/etc/uci-defaults/99-led-nightmode \
+	core/root/usr/libexec/led-nightmode-provider-service \
+	core/root/usr/libexec/led-nightmode-service \
 	providers/quectel-qnwcfg-ledmode/root/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode \
-	root/usr/sbin/led-nightmode \
+	core/root/usr/sbin/led-nightmode \
 	scripts/stage-upstream-luci.sh \
 	tests/test-cli.sh \
 	tests/test-init.sh \
@@ -43,8 +43,10 @@ test: check
 release-check: test
 	./tests/test-release.sh
 
-stage-upstream:
-	@test -n "$(DEST)" || { echo 'Usage: make stage-upstream DEST=/path/to/luci/applications/luci-app-led-nightmode' >&2; exit 2; }
+stage-upstream: stage-upstream-luci
+
+stage-upstream-luci:
+	@test -n "$(DEST)" || { echo 'Usage: make stage-upstream-luci DEST=/path/to/luci/applications/luci-app-led-nightmode' >&2; exit 2; }
 	./scripts/stage-upstream-luci.sh "$(DEST)"
 
 endif

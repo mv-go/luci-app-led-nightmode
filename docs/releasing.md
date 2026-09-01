@@ -1,6 +1,18 @@
 # Releasing
 
-Application release `0.5.0` has published OpenWrt package revision `r8`. The `v0.5.0` tag remains fixed because `r8` is a packaging revision, while the release carries the two verified `r8` APKs and their SHA-256 file.
+Application release `0.5.0` has published OpenWrt package revision `r8`. The `v0.5.0` tag remains fixed because `r8` is a packaging revision, while the release carries the two verified `r8` APKs and their SHA-256 file. Development candidate `0.5.1-r1` splits the headless core from the LuCI UI and must pass the split gate before a new tag or release is created.
+
+## Split gate
+
+- [x] Move the universal runtime into a separately owned `led-nightmode` package tree.
+- [x] Keep the LuCI package limited to JavaScript, menu, ACL, and translations with a dependency on `led-nightmode`.
+- [x] Change the Quectel provider dependency from LuCI to the core package.
+- [x] Keep fixture tests green and add package-boundary assertions.
+- [ ] Build and inspect all three `0.5.1-r1` APKs with the official stable SDK.
+- [ ] Verify transactional upgrade from the monolithic `0.5.0-r8` package without file conflicts or UCI changes.
+- [ ] Stage and validate the immutable-source `openwrt/packages` contribution.
+- [ ] Stage and validate the UI-only `openwrt/luci` contribution against the core package.
+- [ ] Confirm the public author/sign-off name before final upstream commits.
 
 ## Automated gate
 

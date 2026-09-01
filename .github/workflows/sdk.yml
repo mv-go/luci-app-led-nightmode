@@ -33,7 +33,7 @@ jobs:
           ARCH: aarch64_cortex-a53-25.12.4
           ARTIFACTS_DIR: ${{ runner.temp }}/led-nightmode-artifacts
           FEED_DIR: ${{ runner.temp }}/led-nightmode-feed
-          # Both APKs are outputs of this single OpenWrt source package.
+          # The core, LuCI UI, and optional provider are outputs of this source package.
           PACKAGES: luci-app-led-nightmode
           V: sc
       - name: Check expected package outputs
@@ -42,6 +42,7 @@ jobs:
           package_release=$(sed -n 's/^PKG_RELEASE:=//p' Makefile)
           release_id="$package_version-r$package_release"
           for package in \
+            "led-nightmode-$release_id.apk" \
             "luci-app-led-nightmode-$release_id.apk" \
             "led-nightmode-provider-quectel-qnwcfg-ledmode-$release_id.apk"
           do

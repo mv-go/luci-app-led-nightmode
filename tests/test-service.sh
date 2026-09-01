@@ -4,8 +4,8 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
-CLI=$PROJECT_ROOT/root/usr/sbin/led-nightmode
-SERVICE=$PROJECT_ROOT/root/usr/libexec/led-nightmode-service
+CLI=$PROJECT_ROOT/core/root/usr/sbin/led-nightmode
+SERVICE=$PROJECT_ROOT/core/root/usr/libexec/led-nightmode-service
 SCHEDULE=$SERVICE
 TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/led-nightmode-service-test.XXXXXX")
 SYSFS_ROOT=$TEST_ROOT/sys/class/leds

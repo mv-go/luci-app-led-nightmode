@@ -3,4 +3,4 @@
 set -u
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-exec "$SCRIPT_DIR/../root/usr/sbin/led-nightmode" "$@"
+exec "$SCRIPT_DIR/../core/root/usr/sbin/led-nightmode" "$@"

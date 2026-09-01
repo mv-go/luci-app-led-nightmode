@@ -30,7 +30,7 @@ The service never searches serial ports or guesses a device from its marketing n
 
 ## Packaging and contributions
 
-Provider drivers are separate OpenWrt packages. The base `luci-app-led-nightmode` package has no serial-terminal dependency. The first optional package, `led-nightmode-provider-quectel-qnwcfg-ledmode`, adds `picocom` and a driver for the two-field `AT+QNWCFG="ledmode"` response whose second field supports an all-lights-off state.
+Provider drivers are separate OpenWrt packages. The headless `led-nightmode` core has no serial-terminal dependency. The first optional package, `led-nightmode-provider-quectel-qnwcfg-ledmode`, depends on the core, adds `picocom`, and provides a driver for the two-field `AT+QNWCFG="ledmode"` response whose second field supports an all-lights-off state. Installing a provider does not pull in LuCI.
 
 Adding hardware support means adding a provider driver, fixture-backed lifecycle and visual-test restoration tests, package metadata, and at least one documented hardware/firmware validation. A new driver should be used when command syntax or restoration semantics differ. Extending a central model-name table is not part of the architecture.
 

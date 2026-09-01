@@ -45,6 +45,8 @@ Open LuCI, go to **Services → LED Night Mode**, enable the service, choose a s
 
 If an indicator is controlled by a modem or another subsystem rather than `/sys/class/leds`, install a matching provider APK as well. The base package never scans serial ports, guesses hardware, or enables a provider on its own. The first provider supports the specifically validated two-field Quectel `QNWCFG ledmode` interface; see [provider architecture](docs/architecture/providers.md) before using or extending it.
 
+The current source candidate is `0.5.1-r1`. It separates the headless `led-nightmode` runtime from the UI-only `luci-app-led-nightmode` package while preserving the existing configuration and service contract.
+
 ## What it can control
 
 The core discovers standard Linux LED class devices at runtime, so names and board-specific assumptions do not enter the general implementation.
@@ -63,7 +65,7 @@ The [compatibility matrix](docs/compatibility.md) separates fixture tests, SDK b
 
 ## Under the hood
 
-- Native LuCI page with a simple default view and deeper controls under **Advanced**.
+- Headless `led-nightmode` core plus an optional native LuCI package with a simple default view and deeper controls under **Advanced**.
 - Manual, fixed-time, and sunrise/sunset scheduling with restart-safe phase resolution.
 - Persistent and idempotent restoration, including LEDs that temporarily disappear.
 - rpcd/ACL boundary with no arbitrary command or provider-path execution.

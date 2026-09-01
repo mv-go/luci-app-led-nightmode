@@ -2,6 +2,13 @@
 
 This project uses semantic versions for application releases. OpenWrt's `PKG_RELEASE` suffix is incremented when packaging or installed files change without a new application version.
 
+## 0.5.1-r1 (unreleased split candidate)
+
+- Split the universal runtime into a headless `led-nightmode` package.
+- Keep `luci-app-led-nightmode` UI-only with a dependency on the core package.
+- Make the optional Quectel provider depend on `led-nightmode` instead of LuCI.
+- Preserve the existing UCI path, service name, runtime paths, safe defaults, and provider contract.
+
 ## OpenWrt package revision 0.5.0-r8 - 2026-09-02
 
 - Fixed boot-time LED trigger ordering by starting LED Night Mode after OpenWrt's stock `led` init script and migrating enabled legacy autostart links during package upgrade.

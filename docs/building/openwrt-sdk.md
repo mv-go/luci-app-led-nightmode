@@ -1,5 +1,7 @@
 # OpenWrt SDK build
 
+Development candidate `0.5.1-r1` produces three packages: the headless `led-nightmode` core, the UI-only `luci-app-led-nightmode`, and the optional Quectel provider. Its split gate requires that package metadata reported version `0.5.1-r1`, that every installed path has exactly one owner, and that an upgrade from monolithic `0.5.0-r8` succeeds transactionally. The validated `r8` evidence below remains the baseline until those checks complete.
+
 The CLI/service/LuCI/provider release candidate is built against the official OpenWrt 25.12.4 SDK for `mediatek/filogic`:
 
 - SDK: `openwrt-sdk-25.12.4-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst`

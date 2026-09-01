@@ -4,8 +4,8 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
-INIT=$PROJECT_ROOT/root/etc/init.d/led-nightmode
-LED_NIGHTMODE_SCHEDULE_BIN=$PROJECT_ROOT/root/usr/libexec/led-nightmode-service
+INIT=$PROJECT_ROOT/core/root/etc/init.d/led-nightmode
+LED_NIGHTMODE_SCHEDULE_BIN=$PROJECT_ROOT/core/root/usr/libexec/led-nightmode-service
 export LED_NIGHTMODE_SCHEDULE_BIN
 CALLS=
 MOCK_ENABLED=0
@@ -110,7 +110,7 @@ case $START in
 esac
 [ "$START" -gt 96 ] || fail 'init must start after the stock OpenWrt LED service at priority 96'
 
-duplicate_sections=$(awk '$1 == "config" && NF >= 3 { name=$3; gsub(/\047/, "", name); seen[name]++; if (seen[name] == 2) print name }' "$PROJECT_ROOT/root/etc/config/led-nightmode")
+duplicate_sections=$(awk '$1 == "config" && NF >= 3 { name=$3; gsub(/\047/, "", name); seen[name]++; if (seen[name] == 2) print name }' "$PROJECT_ROOT/core/root/etc/config/led-nightmode")
 [ -z "$duplicate_sections" ] || fail "default UCI config repeats named sections: $duplicate_sections"
 
 start_service

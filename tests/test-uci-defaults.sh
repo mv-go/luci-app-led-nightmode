@@ -4,7 +4,7 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
-MIGRATION=$PROJECT_ROOT/root/etc/uci-defaults/99-led-nightmode
+MIGRATION=$PROJECT_ROOT/core/root/etc/uci-defaults/99-led-nightmode
 TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/led-nightmode-uci-defaults-test.XXXXXX")
 trap 'rm -rf "$TEST_ROOT"' EXIT HUP INT TERM
 

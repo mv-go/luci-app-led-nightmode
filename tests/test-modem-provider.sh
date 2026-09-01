@@ -6,8 +6,8 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
 PROVIDER_DIR=$PROJECT_ROOT/providers/quectel-qnwcfg-ledmode/root/usr/libexec/led-nightmode/providers
 PROVIDER=$PROVIDER_DIR/quectel-qnwcfg-ledmode
-RUNNER=$PROJECT_ROOT/root/usr/libexec/led-nightmode-provider-service
-SCHEDULE=$PROJECT_ROOT/root/usr/libexec/led-nightmode-service
+RUNNER=$PROJECT_ROOT/core/root/usr/libexec/led-nightmode-provider-service
+SCHEDULE=$PROJECT_ROOT/core/root/usr/libexec/led-nightmode-service
 TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/led-nightmode-provider-test.XXXXXX")
 EMULATE_FILE=$TEST_ROOT/modem-ledmode
 STATE_DIR=$TEST_ROOT/state
