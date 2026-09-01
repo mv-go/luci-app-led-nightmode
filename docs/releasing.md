@@ -1,6 +1,6 @@
 # Releasing
 
-Application release `0.5.0` has published OpenWrt package revision `r7`; the current source candidate is `r8`. Preparing and validating the candidate does not by itself publish a GitHub release, create a tag, or change access controls.
+Application release `0.5.0` has published OpenWrt package revision `r8`. The `v0.5.0` tag remains fixed because `r8` is a packaging revision, while the release carries the two verified `r8` APKs and their SHA-256 file.
 
 ## Automated gate
 
@@ -14,7 +14,7 @@ This runs all fixture suites, POSIX shell syntax checks, release metadata checks
 
 The manual **OpenWrt SDK** GitHub workflow builds both packages with the official OpenWrt 25.12.4 `aarch64_cortex-a53` SDK image. Its uploaded artifact is deliberately limited to the two candidate APKs from the package feed's `action` directory; SDK dependency packages and build logs stay out of the release payload. Local SDK validation remains documented in [`building/openwrt-sdk.md`](building/openwrt-sdk.md).
 
-## Candidate checklist
+## Release checklist
 
 - [x] Fresh installation is write-safe and disabled.
 - [x] Universal runtime contains no first-device LED names, modem model, provider driver, or serial-port default.

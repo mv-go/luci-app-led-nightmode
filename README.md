@@ -34,11 +34,11 @@ Fresh installations are disabled and do not touch any LED until you explicitly e
 
 ## Install
 
-The latest published package is `0.5.0-r7`, built and validated for **OpenWrt 25.12.4**. The current source candidate is `0.5.0-r8`, which fixes boot-time LED trigger ordering and still requires release publication. Download the published base APK from the [latest release](https://github.com/mv-go/luci-app-led-nightmode/releases/latest), copy it to the router, and install it:
+The latest published package is `0.5.0-r8`, built and validated for **OpenWrt 25.12.4**. It fixes boot-time LED trigger ordering and migrates enabled legacy autostart links during upgrade. Download the base APK from the [latest release](https://github.com/mv-go/luci-app-led-nightmode/releases/latest), copy it to the router, and install it:
 
 ```sh
-scp luci-app-led-nightmode-0.5.0-r7.apk root@openwrt:/tmp/
-ssh root@openwrt 'apk add --allow-untrusted /tmp/luci-app-led-nightmode-0.5.0-r7.apk'
+scp luci-app-led-nightmode-0.5.0-r8.apk root@openwrt:/tmp/
+ssh root@openwrt 'apk add --allow-untrusted /tmp/luci-app-led-nightmode-0.5.0-r8.apk'
 ```
 
 Open LuCI, go to **Services → LED Night Mode**, enable the service, choose a schedule, then select **Save & Apply**.
@@ -59,7 +59,7 @@ LuCI / UCI schedule
 
 Some physical lights cannot be controlled by software at all. For example, the first test router's PWR LED is wired directly to a power rail. Other indicators may belong to a modem and require an explicit provider. A driver's reported `max_brightness > 1` also does not prove that the physical LED can actually dim; many drivers treat every nonzero value as fully on.
 
-The [compatibility matrix](docs/compatibility.md) separates fixture tests, SDK builds, and real hardware evidence. Published release `0.5.0-r7` has a complete core/provider round trip on one Banana Pi BPI-R3 Mini running OpenWrt 25.12.4. Candidate `0.5.0-r8` fixes the boot ordering defect and has passed an official-SDK build, a forced-Night software reboot, and a physical Night power cycle on that router. Multi-device validation is not claimed yet.
+The [compatibility matrix](docs/compatibility.md) separates fixture tests, SDK builds, and real hardware evidence. Published package revision `0.5.0-r8` has passed an official-SDK build, a complete core/provider round trip, a forced-Night software reboot, and a physical Night power cycle on one Banana Pi BPI-R3 Mini running OpenWrt 25.12.4. Multi-device validation is not claimed yet.
 
 ## Under the hood
 
