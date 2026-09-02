@@ -12,7 +12,7 @@ Application release `0.5.1` has published OpenWrt package revision `r1`. It spli
 - [x] Verify transactional upgrade from the monolithic `0.5.0-r8` package without file conflicts or UCI changes.
 - [x] Stage and fixture-validate the immutable-source `openwrt/packages` contribution; replace its hash placeholder with the published tag archive hash before upstream validation.
 - [x] Stage and validate the UI-only `openwrt/luci` contribution against the core package.
-- [ ] Confirm the public author/sign-off name before final upstream commits.
+- [x] Confirm `Mv Go` as the public author/sign-off name before final upstream commits.
 
 ## Automated gate
 
@@ -66,7 +66,7 @@ The headless runtime and its LuCI UI have separate upstream destinations: `utils
 
 The manual **Upstream LuCI** workflow accepts the published tag archive SHA-256, performs the current-tree lint and translation-template comparison, then builds the staged application and core package together with an official snapshot SDK. The staging tests enforce the ownership boundary and ensure the optional hardware-specific provider does not leak into either tree.
 
-The repository uses the reachable address `rapture-ribose6k@icloud.com`, and the published preparation commit is signed and signed off. Its author name is currently `mv-go`; before the final upstream commit series, the owner must confirm the public first-and-last-name form required by LuCI's contribution rules. No name should be guessed or copied into Git history.
+The owner confirmed `Mv Go` as the public first-and-last-name form for upstream author, `Signed-off-by`, and maintainer metadata. The reachable address remains `rapture-ribose6k@icloud.com`; it is linked to GitHub and the SSH signing key is already verified. The GitHub account name remains `mv-go`.
 
 Current preparation status:
 
@@ -78,4 +78,5 @@ Current preparation status:
 - [x] Push the preparation feature branch without opening a pull request.
 - [x] Publish signed `v0.5.1`, verify its source archive hash, and build the split core/UI staging together with the official snapshot SDK.
 - [x] Create the `mv-go/packages` fork and prepare local core and LuCI branches from current upstream `master` without temporary commits.
-- [ ] Confirm the contributor's public author/sign-off name, replace the monolithic preparation branch after the core/LuCI split, and open the upstream pull request.
+- [x] Confirm `Mv Go` as the contributor's public author/sign-off and maintainer name.
+- [ ] Replace the monolithic preparation branch with the split commits and open the two linked Draft PRs.

@@ -38,6 +38,8 @@ grep -Fqx 'PKG_LICENSE:=Apache-2.0' "$PACKAGE_MAKEFILE" || fail 'package license
 grep -Fqx 'PKG_LICENSE_FILES:=LICENSE' "$PACKAGE_MAKEFILE" || fail 'package license file metadata is missing'
 grep -Fqx 'LUCI_NAME:=luci-app-led-nightmode' "$PACKAGE_MAKEFILE" || fail 'standalone SDK builds require an explicit LuCI package name'
 grep -Fqx 'LUCI_DEPENDS:=+luci-base +led-nightmode' "$PACKAGE_MAKEFILE" || fail 'LuCI package must depend on the split core'
+grep -Fqx 'LUCI_MAINTAINER:=Mv Go <rapture-ribose6k@icloud.com>' "$PACKAGE_MAKEFILE" || fail 'LuCI maintainer identity is incorrect'
+[ "$(grep -Fxc '  MAINTAINER:=Mv Go <rapture-ribose6k@icloud.com>' "$PACKAGE_MAKEFILE")" -eq 2 ] || fail 'core/provider maintainer identity is incorrect'
 grep -Fq 'define Package/led-nightmode' "$PACKAGE_MAKEFILE" || fail 'core package definition is missing'
 grep -Fq 'define Package/led-nightmode/conffiles' "$PACKAGE_MAKEFILE" || fail 'core package must own the UCI conffile'
 grep -Fq 'define Package/led-nightmode/postinst' "$PACKAGE_MAKEFILE" || fail 'core package must own rpcd lifecycle reload'

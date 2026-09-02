@@ -4,7 +4,7 @@ PKG_NAME:=luci-app-led-nightmode
 PKG_VERSION:=0.5.1
 PKG_RELEASE:=1
 PKG_LICENSE:=Apache-2.0
-PKG_MAINTAINER:=mv-go <rapture-ribose6k@icloud.com>
+PKG_MAINTAINER:=Mv Go <rapture-ribose6k@icloud.com>
 
 LUCI_TITLE:=LED night mode for OpenWrt
 LUCI_DESCRIPTION:=Preserve and restore OpenWrt LED triggers while applying day and night profiles.

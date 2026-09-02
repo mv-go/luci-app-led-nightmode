@@ -26,6 +26,7 @@ diff -r "$PROJECT_ROOT/po" "$application/po" >/dev/null || fail 'staged translat
 diff -r "$PROJECT_ROOT/root" "$application/root" >/dev/null || fail 'staged LuCI metadata differs from the source tree'
 
 grep -Fq 'include ../../luci.mk' "$application/Makefile" || fail 'upstream Makefile does not use the LuCI-tree include'
+grep -Fqx 'PKG_MAINTAINER:=Mv Go <rapture-ribose6k@icloud.com>' "$application/Makefile" || fail 'LuCI maintainer identity is incorrect'
 if grep -Fq 'feeds/luci/luci.mk' "$application/Makefile"; then
 	fail 'standalone-feed include leaked into the upstream Makefile'
 fi

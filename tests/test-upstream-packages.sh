@@ -19,6 +19,7 @@ source_hash=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 [ -f "$package_dir/Makefile" ] || fail 'packages Makefile was not staged'
 [ "$(find "$package_dir" -type f | wc -l | tr -d ' ')" -eq 1 ] || fail 'core contribution contains files beyond its Makefile'
 grep -Fqx 'PKG_NAME:=led-nightmode' "$package_dir/Makefile" || fail 'core package name is incorrect'
+grep -Fqx 'PKG_MAINTAINER:=Mv Go <rapture-ribose6k@icloud.com>' "$package_dir/Makefile" || fail 'core maintainer identity is incorrect'
 grep -Fqx 'PKG_VERSION:=0.5.1' "$package_dir/Makefile" || fail 'core package version is incorrect'
 grep -Fqx "PKG_HASH:=$source_hash" "$package_dir/Makefile" || fail 'source hash was not substituted'
 grep -Fq 'archive/refs/tags/v$(PKG_VERSION).tar.gz?' "$package_dir/Makefile" || fail 'immutable source URL is missing'
