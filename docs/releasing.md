@@ -11,7 +11,7 @@ Application release `0.5.1` has published OpenWrt package revision `r1`. It spli
 - [x] Build and inspect all three `0.5.1-r1` APKs with the official stable SDK.
 - [x] Verify transactional upgrade from the monolithic `0.5.0-r8` package without file conflicts or UCI changes.
 - [x] Stage and fixture-validate the immutable-source `openwrt/packages` contribution; replace its hash placeholder with the published tag archive hash before upstream validation.
-- [ ] Stage and validate the UI-only `openwrt/luci` contribution against the core package.
+- [x] Stage and validate the UI-only `openwrt/luci` contribution against the core package.
 - [ ] Confirm the public author/sign-off name before final upstream commits.
 
 ## Automated gate
@@ -76,4 +76,6 @@ Current preparation status:
 - [x] Public `mv-go/luci` fork and local `luci-app-led-nightmode` feature branch based on current `master`.
 - [x] Replace the noreply placeholder with the contributor's reachable email and verify a signed, signed-off preparation commit.
 - [x] Push the preparation feature branch without opening a pull request.
+- [x] Publish signed `v0.5.1`, verify its source archive hash, and build the split core/UI staging together with the official snapshot SDK.
+- [x] Create the `mv-go/packages` fork and prepare local core and LuCI branches from current upstream `master` without temporary commits.
 - [ ] Confirm the contributor's public author/sign-off name, replace the monolithic preparation branch after the core/LuCI split, and open the upstream pull request.

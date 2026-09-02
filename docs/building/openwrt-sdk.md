@@ -77,7 +77,15 @@ The pinned official SDK workflow produced and verified all three architecture-in
 
 The workflow installs the published monolithic `0.5.0-r8` base and provider into an empty Alpine `apk-tools` 3 root, changes the UCI configuration, and then installs all three split packages in one transaction. The transaction completes without file conflicts, preserves the changed configuration, places the new package default at `/etc/config/led-nightmode.apk-new`, transfers each path to exactly one intended package, and verifies the installed executables, data files, and symlinks against the source tree. This is an isolated package-upgrade test; the split release has not been installed on the physical router.
 
-The automated transaction first passed in [OpenWrt SDK run 33561379190](https://github.com/mv-go/luci-app-led-nightmode/actions/runs/33561379190) for commit `13c703f561b3c794b6efaef306af80eb47c58f16`. Final release artifact hashes are recorded after the release commit's own SDK run.
+The automated transaction first passed in [OpenWrt SDK run 33561379190](https://github.com/mv-go/luci-app-led-nightmode/actions/runs/33561379190) for commit `13c703f561b3c794b6efaef306af80eb47c58f16`. The final [tag SDK run 33589828395](https://github.com/mv-go/luci-app-led-nightmode/actions/runs/33589828395) passed for signed tag `v0.5.1` at commit `ba5e2a177eed728a39c5c9ae1a3ea32f58866352`.
+
+Published `0.5.1-r1` SHA-256 values:
+
+- core APK: `7933d0f2aae7613911f26da4f6dddcd7a0db4f8dbddaa6a2bce7856b9e411d31`;
+- LuCI APK: `592d16304fb52ad2e4901e97e47cc89e7ec81e5ca0456156c26adba4e8d4400c`;
+- Quectel provider APK: `3650113cd7c9fb374aaaeb5970c25ac42cd0e8bad8a8e973b6b392182a5a6ef9`.
+
+The release assets were downloaded again from GitHub and passed the attached `SHA256SUMS` file.
 
 ## Validated `0.5.0-r8` candidate artifact
 
@@ -112,6 +120,10 @@ SHA-256 values of the GitHub-uploaded APKs:
 These hashes identify the remote workflow outputs; the independent local SDK outputs above have their own hashes because APK build metadata is not byte-for-byte reproducible between the two build environments.
 
 ## Upstream snapshot validation
+
+For the split release, source archive `v0.5.1` has SHA-256 `7e7af0c3e6970f47f1af975863ede0339f359a3fafce7d6cdc637e168305c4cc`. [Upstream run 33589848628](https://github.com/mv-go/luci-app-led-nightmode/actions/runs/33589848628) staged the immutable-source core package and UI-only LuCI application together against current LuCI `master`. Current JavaScript/JSON lint and the translation-template comparison passed; the official snapshot SDK produced exactly the expected core and LuCI APKs, with no hardware-specific provider output.
+
+The earlier monolithic validation remains useful historical evidence:
 
 The universal application was staged as `applications/luci-app-led-nightmode` against LuCI `master` commit `5cb5db64213d712d1ca325dd895b4e1cd2340d50`. The staged tree uses LuCI's relative `../../luci.mk`, contains the generic sysfs core and provider interface, and deliberately excludes the device-specific Quectel provider package.
 
