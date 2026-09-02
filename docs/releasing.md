@@ -68,6 +68,13 @@ The manual **Upstream LuCI** workflow accepts the published tag archive SHA-256,
 
 The owner confirmed `Mv Go` as the public first-and-last-name form for upstream author, `Signed-off-by`, and maintainer metadata. The reachable address remains `rapture-ribose6k@icloud.com`; it is linked to GitHub and the SSH signing key is already verified. The GitHub account name remains `mv-go`.
 
+The split submissions are now open as linked Draft PRs:
+
+- [`openwrt/packages#30426`](https://github.com/openwrt/packages/pull/30426) contains the headless runtime at signed commit `149aa43865f572f6533982650457284da931ab35`.
+- [`openwrt/luci#8998`](https://github.com/openwrt/luci/pull/8998) contains the UI-only application at signed commit `4d4740dc3d51e8bde1d1a2b5c4c44a2c3d237172` and declares the packages PR as its dependency.
+
+Both submissions pass all FormalityCheck jobs. GitHub reports their full upstream workflows as `action_required` with no jobs started because external-fork code needs maintainer approval; this is an approval gate, not a test failure. The source repository's staging scripts reproduce both PR trees byte-for-byte.
+
 Current preparation status:
 
 - [x] Reproducible universal application staging with provider exclusion.
@@ -79,4 +86,4 @@ Current preparation status:
 - [x] Publish signed `v0.5.1`, verify its source archive hash, and build the split core/UI staging together with the official snapshot SDK.
 - [x] Create the `mv-go/packages` fork and prepare local core and LuCI branches from current upstream `master` without temporary commits.
 - [x] Confirm `Mv Go` as the contributor's public author/sign-off and maintainer name.
-- [ ] Replace the monolithic preparation branch with the split commits and open the two linked Draft PRs.
+- [x] Replace the monolithic preparation branch with the split commits and open the two linked Draft PRs.
