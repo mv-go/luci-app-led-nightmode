@@ -16,6 +16,7 @@ SHELL_SOURCES := \
 	core/root/usr/sbin/led-nightmode \
 	scripts/stage-upstream-packages.sh \
 	scripts/stage-upstream-luci.sh \
+	upstream/packages/test-version.sh \
 	tests/test-cli.sh \
 	tests/test-init.sh \
 	tests/test-apk-split-upgrade.sh \

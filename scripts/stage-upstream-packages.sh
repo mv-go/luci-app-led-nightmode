@@ -42,5 +42,6 @@ mkdir -p "$destination"
 sed "s/@PKG_HASH@/$source_hash/" \
 	"$project_root/upstream/packages/Makefile.in" \
 	> "$destination/Makefile"
+cp "$project_root/upstream/packages/test-version.sh" "$destination/test-version.sh"
 
 printf 'Staged immutable-source core package at %s\n' "$destination"
