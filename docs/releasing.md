@@ -73,7 +73,7 @@ The split submissions are now open as linked Draft PRs:
 - [`openwrt/packages#30426`](https://github.com/openwrt/packages/pull/30426) contains the headless runtime at signed commit `149aa43865f572f6533982650457284da931ab35`.
 - [`openwrt/luci#8998`](https://github.com/openwrt/luci/pull/8998) contains the UI-only application at signed commit `4d4740dc3d51e8bde1d1a2b5c4c44a2c3d237172` and declares the packages PR as its dependency.
 
-Both submissions pass all FormalityCheck jobs. GitHub reports their full upstream workflows as `action_required` with no jobs started because external-fork code needs maintainer approval; this is an approval gate, not a test failure. The source repository's staging scripts reproduce both PR trees byte-for-byte.
+Both submissions pass all FormalityCheck jobs. GitHub reports their full upstream workflows as `action_required` with no jobs started because external-fork code needs maintainer approval; this is an approval gate, not a test failure. The source repository's staging scripts reproduce both PR trees byte-for-byte, and upstream validation run [`33591782367`](https://github.com/mv-go/luci-app-led-nightmode/actions/runs/33591782367) successfully built those final staged trees together with the official snapshot SDK.
 
 Current preparation status:
 
