@@ -42,7 +42,7 @@ jobs:
         run: |
           .upstream-luci/build/i18n-scan.pl \
             .upstream-luci/applications/luci-app-led-nightmode \
-            | sed 's|^#: \.upstream-luci/applications/luci-app-led-nightmode/|#: |' \
+            | sed 's|^#: \.upstream-luci/|#: |' \
             > "$RUNNER_TEMP/led-nightmode.pot"
           diff -u \
             po/templates/led-nightmode.pot \
