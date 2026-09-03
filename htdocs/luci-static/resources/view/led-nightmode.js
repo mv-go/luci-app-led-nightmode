@@ -378,6 +378,8 @@ return view.extend({
 		const latitudeOption = scheduleSection.option(form.Value, 'latitude', _('Exact latitude'),
 			_('Signed decimal degrees from −90 to 90.'));
 		latitudeOption.placeholder = '41.7151';
+		latitudeOption.depends('mode', 'sun');
+		latitudeOption.retain = true;
 		latitudeOption.rmempty = true;
 		latitudeOption.forcewrite = true;
 		latitudeOption.validate = coordinateValidator(-90, 90);
@@ -389,6 +391,8 @@ return view.extend({
 		const longitudeOption = scheduleSection.option(form.Value, 'longitude', _('Exact longitude'),
 			_('Signed decimal degrees from −180 to 180.'));
 		longitudeOption.placeholder = '44.8271';
+		longitudeOption.depends('mode', 'sun');
+		longitudeOption.retain = true;
 		longitudeOption.rmempty = true;
 		longitudeOption.forcewrite = true;
 		longitudeOption.validate = coordinateValidator(-180, 180);
