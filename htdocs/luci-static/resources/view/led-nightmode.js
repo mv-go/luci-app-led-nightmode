@@ -352,10 +352,7 @@ return view.extend({
 				? 'custom'
 				: 'off';
 		};
-		brightnessModeOption.write = function(sectionId, value) {
-			if (value === 'off')
-				return uci.set('led-nightmode', 'main', 'night_brightness', '0');
-		};
+		brightnessModeOption.write = function() {};
 		brightnessModeOption.remove = function() {};
 		brightnessModeOption.rmempty = false;
 
@@ -382,6 +379,7 @@ return view.extend({
 			_('Signed decimal degrees from −90 to 90.'));
 		latitudeOption.placeholder = '41.7151';
 		latitudeOption.rmempty = true;
+		latitudeOption.forcewrite = true;
 		latitudeOption.validate = coordinateValidator(-90, 90);
 		latitudeOption.cfgvalue = function() {
 			const saved = uci.get('led-nightmode', 'schedule', 'latitude');
@@ -392,6 +390,7 @@ return view.extend({
 			_('Signed decimal degrees from −180 to 180.'));
 		longitudeOption.placeholder = '44.8271';
 		longitudeOption.rmempty = true;
+		longitudeOption.forcewrite = true;
 		longitudeOption.validate = coordinateValidator(-180, 180);
 		longitudeOption.cfgvalue = function() {
 			const saved = uci.get('led-nightmode', 'schedule', 'longitude');

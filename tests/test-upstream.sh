@@ -40,12 +40,18 @@ grep -Fqx 'LUCI_DEPENDS:=+luci-base +led-nightmode' "$application/Makefile" || f
 if grep -Fq '/etc/init.d/rpcd reload' "$application/Makefile"; then
 	fail 'UI-only contribution retained the core rpcd lifecycle reload'
 fi
+if grep -Fq 'define Package/luci-app-led-nightmode/postinst' "$application/Makefile"; then
+	fail 'UI-only contribution overrides the standard luci.mk post-install hook'
+fi
 
-for field in PKG_NAME PKG_VERSION PKG_RELEASE PKG_LICENSE LUCI_TITLE LUCI_DESCRIPTION LUCI_DEPENDS LUCI_URL; do
+for field in PKG_NAME PKG_VERSION PKG_RELEASE PKG_LICENSE LUCI_TITLE LUCI_DESCRIPTION LUCI_DEPENDS; do
 	standalone=$(sed -n "s/^$field:=//p" "$PROJECT_ROOT/Makefile")
 	upstream=$(sed -n "s/^$field:=//p" "$application/Makefile")
 	[ "$standalone" = "$upstream" ] || fail "$field differs between standalone and upstream package definitions"
 done
+if grep -Fq 'LUCI_URL:=' "$application/Makefile"; then
+	fail 'upstream LuCI contribution overrides the canonical repository URL'
+fi
 
 if "$PROJECT_ROOT/scripts/stage-upstream-luci.sh" "$application" >/dev/null 2>&1; then
 	fail 'staging unexpectedly overwrote an existing application directory'

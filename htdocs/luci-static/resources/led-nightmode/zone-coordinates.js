@@ -323,7 +323,9 @@ const coordinates = {
 
 return baseclass.extend({
 	lookup: function(zoneName) {
-		const value = coordinates[zoneName];
+		const value = Object.prototype.hasOwnProperty.call(coordinates, zoneName)
+			? coordinates[zoneName]
+			: null;
 		return value ? value.slice() : null;
 	}
 });

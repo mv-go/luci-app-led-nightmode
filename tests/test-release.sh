@@ -44,6 +44,9 @@ grep -Fq 'define Package/led-nightmode' "$PACKAGE_MAKEFILE" || fail 'core packag
 grep -Fq 'define Package/led-nightmode/conffiles' "$PACKAGE_MAKEFILE" || fail 'core package must own the UCI conffile'
 grep -Fq 'define Package/led-nightmode/postinst' "$PACKAGE_MAKEFILE" || fail 'core package must own rpcd lifecycle reload'
 grep -Fq '/etc/init.d/rpcd reload' "$PACKAGE_MAKEFILE" || fail 'core package must reload rpcd after live installation'
+if grep -Fq 'define Package/luci-app-led-nightmode/postinst' "$PACKAGE_MAKEFILE"; then
+	fail 'LuCI package must inherit the standard luci.mk post-install hook'
+fi
 if grep -Fq 'define Package/luci-app-led-nightmode/conffiles' "$PACKAGE_MAKEFILE"; then
 	fail 'LuCI package must not retain ownership of the core UCI conffile'
 fi

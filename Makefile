@@ -74,15 +74,6 @@ define Package/led-nightmode-provider-quectel-qnwcfg-ledmode/install
 	$(INSTALL_BIN) ./providers/quectel-qnwcfg-ledmode/root/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode $(1)/usr/libexec/led-nightmode/providers/quectel-qnwcfg-ledmode
 endef
 
-define Package/luci-app-led-nightmode/postinst
-#!/bin/sh
-[ -n "$${IPKG_INSTROOT}" ] || {
-	rm -f /tmp/luci-indexcache.*
-	rm -rf /tmp/luci-modulecache/
-}
-exit 0
-endef
-
 include $(TOPDIR)/feeds/luci/luci.mk
 
 $(eval $(call BuildPackage,led-nightmode))

@@ -6,8 +6,7 @@
 				"luci.led-nightmode": [
 					"drivers",
 					"leds",
-					"status",
-					"resolve"
+					"status"
 				]
 			},
 			"uci": [
@@ -18,7 +17,6 @@
 			"ubus": {
 				"luci.led-nightmode": [
 					"probe",
-					"reload",
 					"set_manual",
 					"test"
 				]
