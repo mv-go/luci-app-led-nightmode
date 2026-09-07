@@ -87,6 +87,8 @@ Published `0.5.1-r1` SHA-256 values:
 
 The release assets were downloaded again from GitHub and passed the attached `SHA256SUMS` file.
 
+The client-side size and dependency impact is measured separately in [`client-footprint.md`](client-footprint.md). The published core APK is 10,110 bytes; on the standard headless OpenWrt baseline, only `rpcd` and `sunwait` are missing, for a complete incremental download of 51,062 bytes and a declared installed size of 165,108 bytes including the core.
+
 ## Validated `0.5.0-r8` candidate artifact
 
 Both `0.5.0-r8` package builds were produced by the pinned official SDK action image and checked with its `apk-tools 3.0.5`:
