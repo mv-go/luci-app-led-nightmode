@@ -7,6 +7,8 @@ SYSFS_ROOT=${LED_SYSFS_ROOT:-/sys/class/leds}
 STATE_DIR=${LED_STATE_DIR:-/var/run/led-nightmode}
 NIGHT_BRIGHTNESS=${LED_NIGHT_BRIGHTNESS:-0}
 SYSFS_EMULATE=${LED_SYSFS_EMULATE:-0}
+FORCE=0
+LOCK_DIR=${LED_LOCK_DIR:-${STATE_DIR}.lock}
 DRY_RUN=0
 COMMAND=
 
@@ -23,12 +25,14 @@ Commands:
   day        Restore state saved by the night command
 
 Options:
+  --force       With day, explicitly retry pending/conflicting restoration
   -n, --dry-run  Report night/day changes without writing them
   -h, --help     Show this help
 
 Environment:
   LED_SYSFS_ROOT        LED sysfs root (default: /sys/class/leds)
   LED_STATE_DIR         Saved state directory (default: /var/run/led-nightmode)
+  LED_LOCK_DIR          Mutation lock directory (default: LED_STATE_DIR.lock)
   LED_NIGHT_BRIGHTNESS  Explicit target for unverified multi-level LEDs (default: 0)
 EOF
 }
@@ -177,6 +181,11 @@ remove_state_path() {
 	attributes_path=$state_path/attributes
 
 	if [ -d "$attributes_path" ]; then
+		for saved_attribute in "$attributes_path"/ports/*; do
+			[ -f "$saved_attribute" ] || continue
+			rm -f "$saved_attribute" || return 1
+		done
+		[ ! -d "$attributes_path/ports" ] || rmdir "$attributes_path/ports" || return 1
 		for saved_attribute in "$attributes_path"/*; do
 			[ -f "$saved_attribute" ] || continue
 			rm -f "$saved_attribute" || return 1
@@ -184,29 +193,94 @@ remove_state_path() {
 		rmdir "$attributes_path" || return 1
 	fi
 
-	rm -f "$state_path/trigger" "$state_path/brightness" || return 1
+	rm -f "$state_path/trigger" "$state_path/brightness" "$state_path/identity" "$state_path/target" "$state_path/stage" "$state_path/format" || return 1
 	rmdir "$state_path"
+}
+
+# Only replay attributes whose trigger ABI is known. Never infer replay safety
+# from write permissions alone; unknown drivers/triggers remain untouched.
+validate_snapshot_schema() {
+	case $3 in
+		none|default-on|timer|heartbeat|netdev|usbport|phy*tpt) ;;
+		*) error "${1##*/}: unsupported snapshot trigger '$3'"; return 1 ;;
+	esac
+	for schema_file in "$1"/*; do
+		[ -f "$schema_file" ] && mode_allows_write "$schema_file" || continue
+		schema_name=${schema_file##*/}
+		case $schema_name in brightness|max_brightness|trigger|uevent|multi_intensity) continue ;; esac
+		case $3:$schema_name in
+			timer:delay_on|timer:delay_off|heartbeat:invert|netdev:device_name|netdev:interval|netdev:link|netdev:rx|netdev:tx|netdev:link_10|netdev:link_100|netdev:link_1000|netdev:link_2500|netdev:link_5000|netdev:link_10000|netdev:half_duplex|netdev:full_duplex) ;;
+			*) error "${1##*/}: unsupported writable attribute '$schema_name'"; return 1 ;;
+		esac
+	done
+	for schema_dir in "$1"/*; do
+		[ -d "$schema_dir" ] || continue
+		case ${schema_dir##*/} in
+			device|subsystem|power) ;;
+			ports) [ "$3" = usbport ] || return 1 ;;
+			*) error "${1##*/}: unsupported attribute directory '${schema_dir##*/}'"; return 1 ;;
+		esac
+	done
 }
 
 save_trigger_attributes() {
 	led_dir=$1
 	attributes_path=$2
 	saved_trigger=$3
-
-	if [ "$saved_trigger" = none ]; then
-		return 0
-	fi
+	validate_snapshot_schema "$led_dir" "$attributes_path" "$saved_trigger" || return 1
 	mkdir -p "$attributes_path" || return 1
-
-	for attribute_file in "$led_dir"/*; do
+	for attribute_file in "$led_dir"/* "$led_dir"/ports/*; do
 		[ -f "$attribute_file" ] || continue
 		attribute_name=${attribute_file##*/}
-		case $attribute_name in
-			brightness|max_brightness|trigger|uevent) continue ;;
-		esac
+		case $attribute_name in brightness|max_brightness|trigger|uevent) continue ;; esac
 		[ -r "$attribute_file" ] && mode_allows_write "$attribute_file" || continue
+		case $attribute_file in
+			"$led_dir"/ports/*)
+				mkdir -p "$attributes_path/ports" || return 1
+				attribute_name=ports/$attribute_name ;;
+		esac
 		cat "$attribute_file" > "$attributes_path/$attribute_name" || return 1
 	done
+}
+
+led_identity() {
+	# Canonical path plus sysfs inode catches path changes and most re-creations.
+	# This is not a kernel generation cookie; undetected inode reuse is possible.
+	identity_path=$(CDPATH= cd -- "$1" && pwd -P) || return 1
+	identity_listing=$(ls -di "$1/.") || return 1
+	set -- $identity_listing
+	printf '%s:%s\n' "$identity_path" "$1"
+}
+
+check_identity() {
+	[ "$(read_led_value "$state_path/format")" = 1 ] &&
+	[ -f "$state_path/identity" ] &&
+	[ "$(cat "$state_path/identity")" = "$(led_identity "$led_dir")" ] || {
+		error "$led_name: snapshot identity unavailable or changed; state retained"
+		return 1
+	}
+}
+
+check_ownership() {
+	[ "$(read_led_value "$state_path/stage")" = managed ] &&
+	[ "$(active_trigger "$led_dir/trigger")" = none ] &&
+	[ "$(read_led_value "$led_dir/brightness")" = "$(read_led_value "$state_path/target")" ] || {
+		error "$led_name: pending recovery or external change; state retained (review before day --force)"
+		return 1
+	}
+}
+
+acquire_lock() {
+	mkdir -p "$(dirname "$LOCK_DIR")" || return 1
+	mkdir "$LOCK_DIR" 2>/dev/null || {
+		error "mutation lock exists: $LOCK_DIR; another writer or interrupted operation requires review"
+		return 1
+	}
+	trap 'rm -f "$LOCK_DIR/pid"; rmdir "$LOCK_DIR"' 0
+	trap 'exit 129' HUP
+	trap 'exit 130' INT
+	trap 'exit 143' TERM
+	printf '%s\n' "$$" > "$LOCK_DIR/pid"
 }
 
 restore_trigger_attributes() {
@@ -215,9 +289,9 @@ restore_trigger_attributes() {
 	attributes_path=$state_path/attributes
 
 	[ -d "$attributes_path" ] || return 0
-	for saved_attribute in "$attributes_path"/*; do
+	for saved_attribute in "$attributes_path"/* "$attributes_path"/ports/*; do
 		[ -f "$saved_attribute" ] || continue
-		attribute_name=${saved_attribute##*/}
+		attribute_name=${saved_attribute#"$attributes_path"/}
 		attribute_file=$led_dir/$attribute_name
 		if [ ! -e "$attribute_file" ] || [ ! -r "$attribute_file" ]; then
 			error "${led_dir##*/}: trigger attribute '$attribute_name' is unavailable"
@@ -232,7 +306,8 @@ restore_trigger_attributes() {
 			error "${led_dir##*/}: trigger attribute '$attribute_name' is unavailable"
 			return 1
 		fi
-		if ! write_value "$attribute_file" "$attribute_value"; then
+		if ! write_value "$attribute_file" "$attribute_value" ||
+		   [ "$(cat "$attribute_file")" != "$attribute_value" ]; then
 			error "${led_dir##*/}: could not restore trigger attribute '$attribute_name'"
 			return 1
 		fi
@@ -261,6 +336,9 @@ save_state() {
 	fi
 	if ! printf '%s\n' "$saved_trigger" > "$temporary_state/trigger" ||
 	   ! printf '%s\n' "$saved_brightness" > "$temporary_state/brightness" ||
+	   ! led_identity "$led_dir" > "$temporary_state/identity" ||
+	   ! printf '%s\n' pending > "$temporary_state/stage" ||
+	   ! printf '%s\n' 1 > "$temporary_state/format" ||
 	   ! save_trigger_attributes "$led_dir" "$temporary_state/attributes" "$saved_trigger"; then
 		remove_state_path "$temporary_state" || true
 		return 1
@@ -351,6 +429,15 @@ command_status() {
 		printf '%s\t%s\t%s\t%s\n' "$led_name" "$brightness" "$trigger" "$managed"
 	done
 
+	for state_path in "$STATE_DIR"/*; do
+		[ -f "$state_path/trigger" ] || continue
+		led_name=${state_path##*/}
+		led_dir=$SYSFS_ROOT/$led_name
+		if [ ! -d "$led_dir" ] || ! check_identity 2>/dev/null || ! check_ownership 2>/dev/null; then
+			printf 'recovery_pending\t%s\n' "$led_name"
+		fi
+	done
+
 	if [ "$found_led" -eq 0 ]; then
 		return 0
 	fi
@@ -392,6 +479,14 @@ command_night() {
 		fi
 
 		target=$(night_target "$max_brightness")
+		state_path=$(state_path_for "$led_name")
+		if [ -d "$state_path" ]; then
+			if ! check_identity || ! check_ownership; then result=1; continue; fi
+			[ "$brightness" != "$target" ] || continue
+		elif ! validate_snapshot_schema "$led_dir" "" "$trigger"; then
+			result=1
+			continue
+		fi
 		if [ "$DRY_RUN" -eq 1 ]; then
 			printf '%s: trigger %s -> none, brightness %s -> %s\n' \
 				"$led_name" "$trigger" "$brightness" "$target"
@@ -404,6 +499,7 @@ command_night() {
 			continue
 		fi
 
+		printf '%s\n' pending > "$state_path/stage" || { result=1; continue; }
 		if ! write_trigger "$led_dir/trigger" none; then
 			error "$led_name: could not select the none trigger"
 			result=1
@@ -414,12 +510,32 @@ command_night() {
 			result=1
 			continue
 		fi
+		if [ "$(active_trigger "$led_dir/trigger")" != none ] ||
+		   [ "$(read_led_value "$led_dir/brightness")" != "$target" ]; then
+			error "$led_name: night profile verification failed; state retained"
+			result=1
+			continue
+		fi
+		if ! printf '%s\n' "$target" > "$state_path/target" ||
+		   ! printf '%s\n' managed > "$state_path/stage"; then
+			result=1
+			continue
+		fi
 		printf '%s: night profile applied (brightness %s)\n' "$led_name" "$target"
+	done
+
+	# A disappeared managed LED is also an incomplete reconciliation.
+	for state_path in "$STATE_DIR"/*; do
+		[ -f "$state_path/trigger" ] || continue
+		if [ ! -d "$SYSFS_ROOT/${state_path##*/}" ]; then
+			error "${state_path##*/}: LED is missing; saved state retained"
+			result=1
+		fi
 	done
 
 	if [ "$found_led" -eq 0 ]; then
 		printf '%s\n' 'No sysfs LEDs found; nothing to change.'
-		return 0
+		return "$result"
 	fi
 	return "$result"
 }
@@ -446,6 +562,8 @@ command_day() {
 			result=1
 			continue
 		fi
+		if ! check_identity; then result=1; continue; fi
+		if [ "$FORCE" -eq 0 ] && ! check_ownership; then result=1; continue; fi
 		if ! trigger_supported "$led_dir/trigger" "$SAVED_TRIGGER"; then
 			error "$led_name: saved trigger '$SAVED_TRIGGER' is unavailable"
 			result=1
@@ -458,6 +576,7 @@ command_day() {
 			continue
 		fi
 
+		printf '%s\n' pending > "$state_path/stage" || { result=1; continue; }
 		if ! write_trigger "$led_dir/trigger" none; then
 			error "$led_name: could not select the none trigger before restore"
 			result=1
@@ -478,6 +597,11 @@ command_day() {
 			continue
 		fi
 
+		if [ "$(active_trigger "$led_dir/trigger")" != "$SAVED_TRIGGER" ]; then
+			error "$led_name: restored trigger verification failed; state retained"
+			result=1
+			continue
+		fi
 		if ! remove_state_path "$state_path"; then
 			error "$led_name: restored state but could not remove saved state"
 			result=1
@@ -494,6 +618,7 @@ command_day() {
 
 while [ "$#" -gt 0 ]; do
 	case $1 in
+		--force) FORCE=1 ;;
 		-n|--dry-run)
 			DRY_RUN=1
 			;;
@@ -527,6 +652,12 @@ if [ "$DRY_RUN" -eq 1 ] && [ "$COMMAND" != night ] && [ "$COMMAND" != day ]; the
 	error "--dry-run is valid only with night or day"
 	exit 2
 fi
+
+if [ "$FORCE" -eq 1 ] && [ "$COMMAND" != day ]; then
+	error '--force is valid only with day'
+	exit 2
+fi
+case $COMMAND in night|day) [ "$DRY_RUN" -eq 1 ] || acquire_lock || exit 1 ;; esac
 
 case $COMMAND in
 	list) command_list ;;

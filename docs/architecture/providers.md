@@ -22,6 +22,8 @@ A driver implements five commands:
 
 Provider state defaults to `/etc/led-nightmode/state/providers/<instance>` because hardware outside sysfs may retain settings across a reboot or power loss. The driver must retain state after any failed write or failed restoration.
 
+In development main, `probe` and `status` leave a pending `test-ledmode` recovery record and hardware unchanged, reporting the pending recovery on stderr. Mutating `night`, `day`, and explicit `test` retain recovery responsibility.
+
 The read-only `probe` only proves that the configured endpoint exposes the expected control interface. The explicit `test` command proves a reversible command round trip and gives the user a chance to watch the physical indicator; software readback alone cannot prove that the endpoint is wired to the expected lamp. Driver commands for one instance must share a lock so a visual test cannot race a scheduled phase transition or service reload.
 
 The long-running provider runner recomputes the requested phase before every attempt. A transient endpoint or schedule failure keeps the process alive and is retried after a short interval; a successful application returns to the normal manual, fixed, or solar polling interval. This avoids waiting for procd's process-respawn delay after temporary serial-port contention.

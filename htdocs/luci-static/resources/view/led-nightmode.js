@@ -67,9 +67,11 @@ function modeLabel(mode) {
 }
 
 function statusSummaryLabel(status) {
+	if (status.recovery_pending)
+		return _('LED restoration needs attention');
 	if (!status.enabled)
 		return _('Night mode is off');
-	if (!status.running || !status.schedule_valid)
+	if (!status.running || !status.schedule_valid || !['day', 'night'].includes(status.effective_phase))
 		return _('Night mode needs attention');
 	return status.effective_phase === 'night'
 		? _('Night mode is active — indicators are off')
@@ -98,12 +100,16 @@ function updateStatus(root, status) {
 
 	const warning = root.querySelector('[data-status="warning"]');
 	if (warning) {
-		warning.hidden = Boolean(status.enabled && status.running && status.schedule_valid);
-		warning.textContent = !status.enabled
+		warning.hidden = Boolean(status.enabled && status.running && status.schedule_valid && !status.recovery_pending && ['day', 'night'].includes(status.effective_phase));
+		warning.textContent = status.recovery_pending
+			? _('Some LED states could not be restored or changed outside this service. Review the saved state before retrying.')
+			: !status.enabled
 			? _('Night mode is disabled. Saving a schedule will not change any LEDs until you enable the service.')
 			: (!status.schedule_valid
 				? _('The saved schedule is incomplete or invalid. Check the settings below.')
-				: _('The service is enabled but is not running.'));
+				: (!status.running
+					? _('The service is enabled but is not running.')
+					: _('The current LED profile has not been confirmed.')));
 	}
 }
 

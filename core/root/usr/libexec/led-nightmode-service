@@ -229,6 +229,11 @@ rpc_status() {
 	json_add_boolean enabled "$enabled"
 	json_add_boolean running "$running"
 	json_add_boolean schedule_valid "$schedule_valid"
+	if [ -e "$RPC_RUNTIME_DIR/recovery-pending" ]; then
+		json_add_boolean recovery_pending 1
+	else
+		json_add_boolean recovery_pending 0
+	fi
 	json_add_string mode "$RPC_MODE"
 	json_add_string manual_phase "$RPC_MANUAL_PHASE"
 	json_add_string effective_phase "$effective_phase"
@@ -550,18 +555,19 @@ resolve_phase() {
 
 apply_phase() {
 	target_phase=$1
-	[ "$target_phase" != "$CURRENT_PHASE" ] || return 0
+	[ "$target_phase" != day ] || [ "$CURRENT_PHASE" != day ] || return 0
 	case $target_phase in
 		night)
 			RESTORE_ON_EXIT=1
-			LED_NIGHT_BRIGHTNESS=$NIGHT_BRIGHTNESS "$CLI" night || return 1
+			LED_NIGHT_BRIGHTNESS=$NIGHT_BRIGHTNESS "$CLI" night || { CURRENT_PHASE=; write_runtime_phase unknown; : > "$RUNTIME_DIR/recovery-pending"; return 1; }
 			;;
 		day)
-			"$CLI" day || return 1
+			"$CLI" day || { CURRENT_PHASE=; write_runtime_phase unknown; : > "$RUNTIME_DIR/recovery-pending"; return 1; }
 			RESTORE_ON_EXIT=0
 			;;
 		*) return 1 ;;
 	esac
+	rm -f "$RUNTIME_DIR/recovery-pending"
 	CURRENT_PHASE=$target_phase
 	write_runtime_phase "$CURRENT_PHASE" || error 'could not publish the current runtime phase'
 }
@@ -578,6 +584,7 @@ cleanup() {
 	trap - EXIT HUP INT TERM
 	if [ "$RESTORE_ON_EXIT" -eq 1 ]; then
 		if ! "$CLI" day; then
+			mkdir -p "$RUNTIME_DIR" && : > "$RUNTIME_DIR/recovery-pending"
 			error 'could not restore the day profile while stopping'
 			exit_status=1
 		fi
@@ -615,11 +622,11 @@ trap cleanup EXIT
 trap 'exit 0' HUP INT TERM
 
 initial_phase=$(resolve_phase) || exit 1
-apply_phase "$initial_phase" || exit 1
+apply_phase "$initial_phase" || error 'initial profile incomplete; retaining state and retrying'
 
 while :; do
 	case $MODE in
-		manual) interval=${LED_SCHEDULE_INTERVAL:-3600} ;;
+		manual) interval=${LED_SCHEDULE_INTERVAL:-15} ;;
 		fixed) interval=${LED_SCHEDULE_INTERVAL:-15} ;;
 		sun) interval=${LED_SCHEDULE_INTERVAL:-60} ;;
 	esac

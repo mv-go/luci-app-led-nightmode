@@ -16,7 +16,7 @@ LUCI_URL:=https://github.com/mv-go/luci-app-led-nightmode
 define Package/led-nightmode
   SECTION:=utils
   CATEGORY:=Utilities
-  TITLE:=LED night mode runtime for OpenWrt
+  TITLE:=Scheduled temporary LED override for OpenWrt
   DEPENDS:=+jshn +procd +rpcd +sunwait +uci
   PKGARCH:=all
   MAINTAINER:=Mv Go <rapture-ribose6k@icloud.com>
@@ -24,8 +24,9 @@ define Package/led-nightmode
 endef
 
 define Package/led-nightmode/description
-  Discovers Linux LED class devices at runtime, preserves their original
-  triggers and brightness, and applies reversible day and night profiles.
+  Schedules a temporary override of Linux LED class devices and restores
+  supported pre-override runtime settings. Persistent LED configuration
+  remains with the stock OpenWrt LED service.
 endef
 
 define Package/led-nightmode/conffiles

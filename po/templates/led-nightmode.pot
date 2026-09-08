@@ -507,3 +507,15 @@ msgstr ""
 #: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:294
 msgid "When should indicators turn off?"
 msgstr ""
+
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js
+msgid "LED restoration needs attention"
+msgstr ""
+
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js
+msgid "Some LED states could not be restored or changed outside this service. Review the saved state before retrying."
+msgstr ""
+
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js
+msgid "The current LED profile has not been confirmed."
+msgstr ""

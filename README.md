@@ -11,14 +11,14 @@
 
 <p align="center">
   A simple LuCI app that quiets software-controlled router LEDs at night,<br>
-  then restores their original triggers and state in the morning.
+  then restores supported pre-night LED settings in the morning.
 </p>
 
 ## Why this exists
 
 It started because my girlfriend could not sleep while little red, blue, and green lights around the apartment kept glowing or blinking at unpredictable moments.
 
-Tape would hide one LED on one device. This project solves the repeatable part of the problem in software: OpenWrt remembers what its controllable indicators were doing, switches to a calm night profile, and puts everything back when night is over.
+Tape would hide one LED on one device. This project solves the repeatable part of the problem in software: OpenWrt remembers what its controllable indicators were doing, switches to a calm night profile, and restores supported settings when night is over.
 
 ## The everyday flow
 
@@ -31,6 +31,10 @@ Fresh installations are disabled and do not touch any LED until you explicitly e
 | Safe by default | Fits real nights | Restores normal behaviour | Extensible when needed |
 | :--- | :--- | :--- | :--- |
 | Night brightness starts at fully off. Nonzero dimming requires deliberate calibration. | Use a fixed local schedule or let `sunwait` follow sunrise and sunset. | Active triggers, brightness, and supported provider state are saved before any change. | Indicators outside Linux sysfs can use separately installed, opt-in providers. |
+
+Development `main` adds conservative snapshot validation and recovery diagnostics beyond the published release. It supports known trigger settings, preserves detected external changes, and reports incomplete recovery. See the [restoration contract](docs/architecture/restoration-contract.md) for supported triggers and the explicit recovery procedure. The published `v0.5.1` artifacts do not contain these changes.
+
+The package supplies temporary scheduling and recovery. Linux owns LED control, and OpenWrt's stock LED service owns persistent configuration; this package does not replace System → LED Configuration.
 
 ## Install
 
@@ -54,7 +58,7 @@ The core discovers standard Linux LED class devices at runtime, so names and boa
 ```text
 LuCI / UCI schedule
         │
-        ├── Linux LED class ── save state → night profile → exact restore
+        ├── Linux LED class ── save settings → night profile → supported restore
         │
         └── optional provider ─ probe → reversible change → exact restore
 ```
@@ -67,7 +71,7 @@ The [compatibility matrix](docs/compatibility.md) separates fixture tests, SDK b
 
 - Headless `led-nightmode` core plus an optional native LuCI package with a simple default view and deeper controls under **Advanced**.
 - Manual, fixed-time, and sunrise/sunset scheduling with restart-safe phase resolution.
-- Persistent and idempotent restoration, including LEDs that temporarily disappear.
+- Same-boot sysfs recovery with retained snapshots when restoration cannot finish.
 - rpcd/ACL boundary with no arbitrary command or provider-path execution.
 - BusyBox `ash` compatible runtime with fixture-backed core, service, schedule, LuCI, and provider tests.
 - Architecture-independent OpenWrt packages, built as `noarch` but only claimed where evidence exists.

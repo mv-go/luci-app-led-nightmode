@@ -353,7 +353,11 @@ trap 'exit 143' TERM
 
 case $COMMAND in
 	test) command_test ;;
-	probe|status|night|day)
+	probe|status)
+		[ ! -f "$TEST_STATE_FILE" ] || error 'visual-test recovery pending; probe/status leave hardware unchanged'
+		case $COMMAND in probe) command_probe ;; status) command_status ;; esac
+		;;
+	night|day)
 		if [ -f "$TEST_STATE_FILE" ]; then
 			TEST_ACTIVE=1
 			restore_test_ledmode || exit 1

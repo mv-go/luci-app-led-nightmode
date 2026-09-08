@@ -91,7 +91,7 @@ Do not add a mandatory dependency on luci-base just to deduplicate inventory. Ke
 
 Executed successfully: `make test` (including shell syntax and all CLI/init/LuCI-assets/provider/service/staging/UCI-migration suites) and `git diff --check`.
 
-The additional diagnostic is reproducible with `python3 scripts/audit-led-subsystem.py`. It **asserts the current limitations**, so it is not registered as a permanent regression suite; convert relevant cases to desired-behaviour tests when fixing them. It confirmed:
+At audit baseline `f2b250f`, the diagnostic `scripts/audit-led-subsystem.py` asserted the limitations below. The follow-up implementation converts it into desired-behavior regressions registered in `make test`. The original diagnostic confirmed:
 
 - omitted nested USB selection with successful snapshot deletion;
 - an external value overwritten by the original snapshot;
@@ -105,6 +105,14 @@ These use temporary regular-file fixtures. The USB case explicitly models the ke
 
 Required regression gates for a patch: trigger deactivate/recreate and nested settings; timer/netdev configuration rather than instantaneous blinking brightness; unsupported/read-only/unavailable attributes; failure retention and retries; concurrent CLI/service calls; hotplug add/remove/replacement after stock configuration; stop/reload/disable and interrupted recovery; external configuration conflict and coordinated baseline refresh; provider read purity. Then run `make check`, `make test`, BusyBox ash validation in the available OpenWrt/container environment and SDK/package checks for a new release. A controlled virtual-kernel LED test should supplement flat-file fixtures; new physical validation still requires an explicit owner request. Existing BPI-R3 Mini evidence remains limited to the recorded scenarios.
 
+## Follow-up correctness implementation
+
+Development main now validates known trigger schemas before mutation, saves nested USB port selections, serializes CLI writers, records snapshot format/identity/transaction stage, and checks the managed Night target before automatic restoration. Reconciliation discovers late LEDs during the same phase. Conflicts and partial restores retain snapshots and surface pending recovery through CLI/rpcd/LuCI; `day --force` is an explicit, identity-checked recovery path. Provider probe/status no longer replay pending visual-test state.
+
+The [restoration contract](restoration-contract.md) defines supported triggers, same-boot scope, upgrade and recovery procedures, and unresolved identity/hotplug/concurrent-writer limits. In particular, path/inode is not a generation cookie and polling is not an ordered stock hotplug hook. These limitations remain explicit; no universal exact restoration or new live-router claim is made. Package descriptions and README now describe temporary scheduling and supported recovery rather than general LED control.
+
 ## Proposed response to BKPepe (not posted)
 
-> Thanks, I agree that ordinary LED control and persistent configuration already belong to the kernel LED class, UCI and LuCI. The intended scope is a temporary scheduled override that restores the pre-override runtime configuration, including LEDs or runtime settings not represented in UCI. I checked the stock LED service and its led.state handling; reapplying it is not equivalent to that snapshot. The audit also found gaps in our trigger-restoration and lifecycle coverage, which I plan to address and document before resubmitting. I will make the narrower scope explicit in the package metadata and PR description. Would a revised package on that basis be appropriate for the feed?
+> Thanks, I agree that ordinary LED control and persistent configuration belong to the kernel LED class and OpenWrt's existing LED service. I have narrowed the package description to a scheduled temporary override with restoration of supported pre-override runtime settings. Reapplying stock UCI is not equivalent to that baseline, particularly for runtime settings or LEDs not represented in UCI.
+>
+> The follow-up also adds known trigger schemas (including nested USB port selections), serialized writes, same-phase discovery, and explicit handling of restoration failures and detected external changes. Unsupported settings are left untouched. The documented guarantee is same-boot configuration restoration for supported devices; it does not promise exact waveform recovery or atomic coordination with arbitrary external writers and hotplug. Regression fixtures cover those boundaries. Would a revised contribution with this narrower scope be appropriate for the feed?

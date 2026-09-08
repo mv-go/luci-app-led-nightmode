@@ -38,6 +38,7 @@ check-ash:
 
 test: check
 	./tests/test-cli.sh
+	python3 scripts/audit-led-subsystem.py
 	./tests/test-init.sh
 	./tests/test-luci-assets.sh
 	./tests/test-modem-provider.sh

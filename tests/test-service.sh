@@ -210,6 +210,12 @@ assert_contains "$rpc_status_output" 'effective_phase=night' 'rpcd status report
 assert_contains "$rpc_status_output" 'desired_phase=day' 'rpcd status resolves the desired phase independently'
 assert_contains "$rpc_status_output" 'router_zonename=Asia/Tbilisi' 'rpcd status exposes the router timezone name for local coordinate hints'
 
+mkdir -p "$TEST_ROOT/rpc-runtime"
+: > "$TEST_ROOT/rpc-runtime/recovery-pending"
+assert_contains "$(run_rpc call status)" 'recovery_pending=1' 'rpcd exposes retained recovery failure'
+rm "$TEST_ROOT/rpc-runtime/recovery-pending"
+assert_contains "$(run_rpc call status)" 'recovery_pending=0' 'rpcd reports cleared recovery state'
+
 rpc_leds_output=$(run_rpc call leds)
 assert_contains "$rpc_leds_output" 'name=green:status' 'rpcd LED inventory includes binary LEDs'
 assert_contains "$rpc_leds_output" 'max_brightness=255' 'rpcd LED inventory includes device-reported maxima'
@@ -263,7 +269,7 @@ LED_SYSFS_EMULATE=1 \
 "$SERVICE" night 7 >/dev/null &
 SERVICE_PID=$!
 
-wait_for_value "$SYSFS_ROOT/green:status/brightness" 0 || fail 'service did not apply the night profile'
+wait_for_value "$RUNTIME_DIR/phase" night || fail 'service did not finish applying the night profile'
 [ -d "$STATE_DIR/green:status" ] || fail 'service did not save the original LED state'
 assert_eq 0 "$(cat "$SYSFS_ROOT/green:status/brightness")" 'service switches off a binary LED'
 assert_eq 7 "$(cat "$SYSFS_ROOT/mt76-phy0/brightness")" 'service applies an explicitly configured multi-level target'
