@@ -51,7 +51,7 @@ assert_contains "$(cat "$VIEW")" 'brightnessModeOption.write = function() {}' 'L
 assert_contains "$(cat "$VIEW")" 'Detected LED brightness capabilities' 'LuCI renders device-reported brightness ranges'
 assert_contains "$(cat "$VIEW")" 'Test indicator' 'LuCI exposes the provider visual test'
 [ "$(grep -F '/dev/ttyUSB3' "$VIEW" || true)" = '' ] || fail 'LuCI must not suggest a device-specific provider endpoint'
-assert_contains "$(cat "$ACL")" '"leds"' 'read ACL grants LED inventory access'
+assert_contains "$(cat "$ACL")" '"getLEDs"' 'read ACL grants stock LuCI LED inventory access'
 assert_contains "$(cat "$ACL")" '"test"' 'write ACL grants provider visual-test access'
 [ "$(grep -F '"resolve"' "$ACL" || true)" = '' ] || fail 'read ACL must not grant unused schedule resolution access'
 [ "$(grep -F '"reload"' "$ACL" || true)" = '' ] || fail 'write ACL must not grant unused service reload access'

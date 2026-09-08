@@ -41,6 +41,7 @@ test: check
 	python3 scripts/audit-led-subsystem.py
 	./tests/test-init.sh
 	./tests/test-luci-assets.sh
+	node tests/test-luci-rpc.js
 	./tests/test-modem-provider.sh
 	./tests/test-service.sh
 	./tests/test-upstream.sh

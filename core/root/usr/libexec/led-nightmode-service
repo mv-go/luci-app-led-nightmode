@@ -243,50 +243,6 @@ rpc_status() {
 	json_cleanup
 }
 
-rpc_leds() {
-	if ! led_listing=$("$RPC_CLI" list 2>/dev/null); then
-		rpc_result 0 'could not read LED capabilities'
-		return 1
-	fi
-
-	json_init
-	json_add_boolean success 1
-	json_add_array leds
-	line_number=0
-	tab=$(printf '\t')
-	while IFS="$tab" read -r led_name max_brightness brightness active_trigger brightness_model timer_parameters; do
-		line_number=$((line_number + 1))
-		[ "$line_number" -gt 1 ] || continue
-		[ -n "$led_name" ] || continue
-		json_add_object ''
-		json_add_string name "$led_name"
-		json_add_string max_brightness "$max_brightness"
-		json_add_string brightness "$brightness"
-		json_add_string active_trigger "$active_trigger"
-		json_add_string brightness_model "$brightness_model"
-		json_close_object
-	done <<-EOF
-	$led_listing
-	EOF
-	json_close_array
-	json_dump
-	json_cleanup
-}
-
-rpc_resolve() {
-	rpc_read_config
-	if resolved_phase=$(rpc_resolve_phase 2>/dev/null) && valid_phase "$resolved_phase"; then
-		json_init
-		json_add_boolean success 1
-		json_add_string phase "$resolved_phase"
-		json_dump
-		json_cleanup
-	else
-		rpc_result 0 'schedule configuration is invalid or unavailable'
-		return 1
-	fi
-}
-
 rpc_reload() {
 	if "$RPC_INIT" reload >/dev/null 2>&1; then
 		rpc_result 1
@@ -411,10 +367,6 @@ rpc_list() {
 	json_init
 	json_add_object status
 	json_close_object
-	json_add_object leds
-	json_close_object
-	json_add_object resolve
-	json_close_object
 	json_add_object drivers
 	json_close_object
 	json_add_object probe
@@ -430,8 +382,6 @@ rpc_list() {
 	json_add_object set_manual
 	json_add_string phase phase
 	json_close_object
-	json_add_object reload
-	json_close_object
 	json_dump
 	json_cleanup
 }
@@ -446,10 +396,7 @@ rpc_call() {
 	method=${1:-}
 	case $method in
 		status) rpc_status ;;
-		leds) rpc_leds ;;
-		resolve) rpc_resolve ;;
 		drivers) rpc_drivers ;;
-		reload) rpc_reload ;;
 		set_manual)
 			requested_phase=
 			rpc_read_input || {
@@ -504,7 +451,6 @@ rpc_main() {
 	RPC_RUNTIME_DIR=${LED_RPCD_RUNTIME_DIR:-/var/run/led-nightmode}
 	RPC_PROVIDER_DIR=${LED_RPCD_PROVIDER_DIR:-/usr/libexec/led-nightmode/providers}
 	RPC_PROVIDER_STATE_ROOT=${LED_RPCD_PROVIDER_STATE_ROOT:-/etc/led-nightmode/state/providers}
-	RPC_CLI=${LED_RPCD_CLI_BIN:-/usr/sbin/led-nightmode}
 	rpc_load_json || return 1
 	case $1 in
 		list) rpc_list ;;

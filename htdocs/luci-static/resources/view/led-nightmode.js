@@ -20,8 +20,8 @@ const callDrivers = rpc.declare({
 });
 
 const callLeds = rpc.declare({
-	object: 'luci.led-nightmode',
-	method: 'leds'
+	object: 'luci',
+	method: 'getLEDs'
 });
 
 const callSetManual = rpc.declare({
@@ -201,12 +201,28 @@ function brightnessModelLabel(model) {
 			: _('Unknown'));
 }
 
+// Stock luci.getLEDs returns an object keyed by LED name, with numeric maxima.
+function ledCapabilities(inventory) {
+	if (!inventory || typeof inventory !== 'object' || Array.isArray(inventory))
+		return [];
+
+	return Object.keys(inventory).sort().map(function(name) {
+		const maximum = inventory[name] && inventory[name].max_brightness;
+		const valid = Number.isInteger(maximum) && maximum >= 0;
+		return {
+			name: name,
+			max_brightness: valid ? maximum : null,
+			brightness_model: valid ? (maximum > 1 ? 'unverified-multilevel' : 'binary') : null
+		};
+	});
+}
+
 function renderBrightnessCapabilities(leds) {
 	const rows = (leds || []).map(function(led) {
 		return E('tr', { 'class': 'tr' }, [
 			E('td', { 'class': 'td left', 'data-title': _('LED') }, led.name || _('Unknown')),
 			E('td', { 'class': 'td left', 'data-title': _('Reported range') },
-				'0–%s'.format(led.max_brightness || '?')),
+				'0–%s'.format(led.max_brightness != null ? led.max_brightness : '?')),
 			E('td', { 'class': 'td left', 'data-title': _('Brightness behaviour') },
 				brightnessModelLabel(led.brightness_model))
 		]);
@@ -231,7 +247,7 @@ return view.extend({
 		return Promise.all([
 			L.resolveDefault(callStatus(), {}),
 			L.resolveDefault(callDrivers(), { drivers: [] }),
-			L.resolveDefault(callLeds(), { leds: [] })
+			L.resolveDefault(callLeds(), {})
 		]);
 	},
 
@@ -240,14 +256,12 @@ return view.extend({
 		const installedDrivers = Array.isArray(data[1] && data[1].drivers)
 			? data[1].drivers
 			: [];
-		const discoveredLeds = Array.isArray(data[2] && data[2].leds)
-			? data[2].leds
-			: [];
+		const discoveredLeds = ledCapabilities(data[2]);
 		const timezoneCoordinates = zoneCoordinates.lookup(initialStatus.router_zonename);
 		let m, s, o;
 
 		m = new form.Map('led-nightmode', _('LED Night Mode'),
-			_('Turn router indicators off at night and restore their exact previous state during the day.'));
+			_('Turn router indicators off at night and restore their supported previous settings during the day.'));
 
 		const statusNode = E('div', { 'class': 'cbi-section' }, [
 			E('div', {

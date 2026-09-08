@@ -1,88 +1,88 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:341
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:361
 msgid ""
 "%s, estimated from the router timezone. This is usually accurate enough; "
 "exact coordinates are available under Advanced."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:291
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:311
 msgid "A fresh installation stays disabled until you turn this on."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:360
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:380
 msgid ""
 "A non-zero sysfs value is applied only to LEDs reporting a maximum above 1. "
 "It is clamped to each LED’s individual maximum and may still behave as fully "
 "on."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:144
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:150
 msgid "Advanced"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:337
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:357
 msgid "Approximate location"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:405
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:429
 msgid "Astronomical twilight"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:192
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:198
 msgid "Binary — off or on"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:204
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:216
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:226
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:238
 msgid "Brightness behaviour"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:425
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:449
 msgid ""
 "Browser location requires an HTTPS LuCI session and browser permission. You "
 "can keep the approximate timezone location or enter exact coordinates under "
 "Advanced."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:403
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:427
 msgid "Civil twilight"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:401
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:425
 msgid ""
 "Civil twilight usually gives a more natural indoor night-mode transition "
 "than the exact horizon crossing."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:507
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:531
 msgid "Connection succeeded. This driver supports the configured endpoint."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:488
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:512
 msgid "Connection test"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:606
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:609
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:630
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:633
 msgid "Could not change the LED state."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:80
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:82
 msgid "Current schedule: %s"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:349
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:369
 msgid "Custom raw brightness"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:359
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:379
 msgid "Custom raw brightness target"
 msgstr ""
 
 #: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:61
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:300
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:320
 msgid "Daily schedule"
 msgstr ""
 
@@ -90,80 +90,80 @@ msgstr ""
 msgid "Day"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:334
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:354
 msgid "Day and night start times must be different."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:323
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:343
 msgid "Day starts"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:308
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:328
 msgid "Day — restore normal indicators"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:210
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:232
 msgid "Detected LED brightness capabilities"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:481
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:505
 msgid "Device or endpoint"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:97
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:99
 msgid "Disabled"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:468
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:492
 msgid "Driver"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:478
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:502
 msgid ""
 "Driver names may contain only letters, numbers, underscores, and hyphens."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:290
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:310
 msgid "Enable automatic LED night mode"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:465
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:489
 msgid "Enable this indicator"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:97
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:99
 msgid "Enabled"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:181
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:187
 msgid "Enter a decimal coordinate, for example 41.7151."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:368
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:388
 msgid "Enter a value greater than 0, or choose “Off completely”."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:485
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:509
 msgid "Enter the explicit device or endpoint required by this driver."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:175
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:181
 msgid "Enter time as HH:MM, for example 23:00."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:378
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:398
 msgid "Exact latitude"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:389
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:411
 msgid "Exact longitude"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:462
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:486
 msgid "External indicator: %s"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:456
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:480
 msgid "External indicators"
 msgstr ""
 
@@ -171,68 +171,72 @@ msgstr ""
 msgid "Grant status and configuration access for LED Night Mode"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:513
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:537
 msgid "Indicator test"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:76
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:78
 msgid "Indicators are working normally"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:201
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:214
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:223
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:236
 msgid "LED"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:243
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:263
 #: applications/luci-app-led-nightmode/root/usr/share/luci/menu.d/luci-app-led-nightmode.json:3
 msgid "LED Night Mode"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:219
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:241
 msgid ""
 "LED capabilities could not be read. Keeping brightness at 0 is the safe "
 "choice."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:545
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:71
+msgid "LED restoration needs attention"
+msgstr ""
+
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:569
 msgid "LED state now"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:417
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:441
 msgid "Location"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:442
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:466
 msgid ""
 "Location permission was denied. You can keep the approximate timezone "
 "location or enter exact coordinates under Advanced."
 msgstr ""
 
 #: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:59
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:301
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:321
 msgid "Manual"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:305
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:325
 msgid "Manual LED state"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:620
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:644
 msgid ""
 "Manual mode and the requested LED state were saved and applied. Other "
 "unsaved form edits were not applied."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:260
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:280
 msgid "Manual override"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:194
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:200
 msgid "Multiple values reported — physical dimming unverified"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:404
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:428
 msgid "Nautical twilight"
 msgstr ""
 
@@ -240,282 +244,280 @@ msgstr ""
 msgid "Night"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:149
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:155
 msgid "Night appearance"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:285
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:305
 msgid "Night mode"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:75
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:77
 msgid "Night mode is active — indicators are off"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:103
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:107
 msgid ""
 "Night mode is disabled. Saving a schedule will not change any LEDs until you "
 "enable the service."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:71
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:73
 msgid "Night mode is off"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:73
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:75
 msgid "Night mode needs attention"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:347
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:367
 msgid "Night profile"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:316
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:336
 msgid "Night starts"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:309
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:329
 msgid "Night — apply night brightness"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:342
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:362
 msgid ""
 "No location hint is available for the router timezone. Use this device "
 "location or enter exact coordinates under Advanced."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:472
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:496
 msgid "No provider driver installed"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:348
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:368
 msgid "Off completely — recommended"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:457
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:481
 msgid ""
 "Optional drivers control indicators that do not appear in Linux LED sysfs, "
 "such as an LTE light managed by a modem. Nothing is auto-detected or scanned."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:438
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:462
 msgid ""
 "Precise coordinates were added to the form. Use Save & Apply to store them "
 "on the router."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:202
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:215
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:224
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:237
 msgid "Reported range"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:258
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:278
 msgid ""
 "Router LEDs are controlled automatically. Optional external indicators are "
 "configured under Advanced."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:96
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:98
 msgid "Running"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:489
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:513
 msgid ""
 "Runs the selected driver’s read-only capability check. It does not change "
 "the indicator."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:298
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:318
 msgid "Schedule"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:553
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:577
 msgid "Schedule mode"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:549
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:573
 msgid "Schedule wants"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:497
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:523
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:521
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:547
 msgid "Select a driver and enter its device before testing."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:475
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:499
 msgid "Select an installed provider driver."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:557
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:581
 msgid "Service"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:140
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:146
 msgid "Settings"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:390
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:412
 msgid "Signed decimal degrees from −180 to 180."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:379
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:399
 msgid "Signed decimal degrees from −90 to 90."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:96
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:105
+msgid ""
+"Some LED states could not be restored or changed outside this service. "
+"Review the saved state before retrying."
+msgstr ""
+
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:98
 msgid "Stopped"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:400
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:424
 msgid "Sun boundary"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:153
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:159
 msgid "Sun schedule details"
 msgstr ""
 
 #: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:63
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:402
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:426
 msgid "Sunrise and sunset"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:299
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:319
 msgid "Sunset to sunrise — recommended"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:414
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:438
 msgid ""
 "Sunset-to-sunrise scheduling needs a location. Use this device location or "
 "enter exact coordinates under Advanced."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:542
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:566
 msgid "Technical status"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:514
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:538
 msgid ""
 "Temporarily changes the external indicator for three seconds, then restores "
 "its exact starting state. Watch the physical indicator while the test runs."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:490
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:514
 msgid "Test connection"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:515
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:539
 msgid "Test indicator"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:528
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:552
 msgid "Testing… watch the indicator"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:443
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:467
 msgid ""
 "The browser could not determine this device’s location. You can keep the "
 "approximate timezone location or enter exact coordinates under Advanced."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:534
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:558
 msgid ""
 "The command round trip succeeded and the original state was restored. If you "
 "saw no change, this endpoint may not drive the expected physical indicator."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:504
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:508
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:528
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:532
 msgid "The connection test failed."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:535
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:112
+msgid "The current LED profile has not been confirmed."
+msgstr ""
+
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:559
 msgid "The indicator test failed."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:531
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:555
 msgid ""
 "The indicator test failed. Its driver may need manual recovery if "
 "restoration also failed."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:150
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:156
 msgid ""
 "The safe default turns supported indicators completely off. Custom "
 "brightness is intended for calibrated hardware."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:105
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:109
 msgid "The saved schedule is incomplete or invalid. Check the settings below."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:106
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:111
 msgid "The service is enabled but is not running."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:261
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:281
 msgid ""
 "These actions are saved and applied immediately. They switch the schedule to "
 "Manual without applying other unsaved form edits."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:211
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:233
 msgid ""
 "These are driver-reported ranges, not proof that intermediate values "
 "physically dim an LED. Custom values are clamped separately for every LED."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:154
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:160
 msgid ""
 "These values are used only when the sunset-to-sunrise schedule is selected."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:273
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:293
 msgid "Turn indicators off now"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:267
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:287
 msgid "Turn indicators on now"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:244
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:264
 msgid ""
-"Turn router indicators off at night and restore their exact previous state "
-"during the day."
+"Turn router indicators off at night and restore their supported previous "
+"settings during the day."
 msgstr ""
 
 #: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:52
 #: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:65
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:195
 #: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:201
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:223
 msgid "Unknown"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:418
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:442
 msgid ""
 "Use this browser for a more precise location. Coordinates stay in the form "
 "until you save them to this router."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:420
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:444
 msgid "Use this device location"
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:186
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:192
 msgid "Value must be between %d and %d."
 msgstr ""
 
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:294
+#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js:314
 msgid "When should indicators turn off?"
-msgstr ""
-
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js
-msgid "LED restoration needs attention"
-msgstr ""
-
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js
-msgid "Some LED states could not be restored or changed outside this service. Review the saved state before retrying."
-msgstr ""
-
-#: applications/luci-app-led-nightmode/htdocs/luci-static/resources/view/led-nightmode.js
-msgid "The current LED profile has not been confirmed."
 msgstr ""

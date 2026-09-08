@@ -5,8 +5,10 @@
 			"ubus": {
 				"luci.led-nightmode": [
 					"drivers",
-					"leds",
 					"status"
+				],
+				"luci": [
+					"getLEDs"
 				]
 			},
 			"uci": [

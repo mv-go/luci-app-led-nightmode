@@ -23,7 +23,6 @@ RPC_INIT_LOG=$TEST_ROOT/init-log
 RPC_PHASE_FILE=$TEST_ROOT/rpc-phase
 RPC_PROVIDER_DIR=$TEST_ROOT/providers
 RPC_PROVIDER_STATE_ROOT=$TEST_ROOT/provider-state
-RPC_CLI=$RPC_BIN/led-nightmode
 SERVICE_PID=
 
 cleanup() {
@@ -82,7 +81,6 @@ run_rpc() {
 	LED_RPCD_RUNTIME_DIR=$TEST_ROOT/rpc-runtime \
 	LED_RPCD_PROVIDER_DIR=$RPC_PROVIDER_DIR \
 	LED_RPCD_PROVIDER_STATE_ROOT=$RPC_PROVIDER_STATE_ROOT \
-	LED_RPCD_CLI_BIN=$RPC_CLI \
 	LED_TEST_UCI_LOG=$RPC_UCI_LOG \
 	LED_TEST_INIT_LOG=$RPC_INIT_LOG \
 		"$SERVICE" "$@"
@@ -176,13 +174,6 @@ printf '%s\n' '*) exit 1 ;;' >> "$RPC_BIN/init"
 printf '%s\n' 'esac' >> "$RPC_BIN/init"
 chmod +x "$RPC_BIN/init"
 
-printf '%s\n' '#!/bin/sh' > "$RPC_CLI"
-printf '%s\n' '[ "$1" = list ] || exit 1' >> "$RPC_CLI"
-printf '%s\n' 'printf "name\\tmax_brightness\\tbrightness\\tactive_trigger\\tbrightness_model\\ttimer_parameters\\n"' >> "$RPC_CLI"
-printf '%s\n' 'printf "green:status\\t1\\t0\\tnone\\tbinary\\tno\\n"' >> "$RPC_CLI"
-printf '%s\n' 'printf "mt76-phy0\\t255\\t0\\tnone\\tunverified-multilevel\\tno\\n"' >> "$RPC_CLI"
-chmod +x "$RPC_CLI"
-
 printf '%s\n' '#!/bin/sh' > "$RPC_PROVIDER_DIR/test-driver"
 printf '%s\n' 'case $1 in' >> "$RPC_PROVIDER_DIR/test-driver"
 printf '%s\n' 'probe) printf "test-driver\\tsupported\\t%s\\n" "$LED_PROVIDER_DEVICE" ;;' >> "$RPC_PROVIDER_DIR/test-driver"
@@ -194,13 +185,10 @@ printf '%s\n' night > "$RPC_PHASE_FILE"
 
 rpc_list_output=$(run_rpc list)
 assert_contains "$rpc_list_output" 'object:status' 'rpcd lists the status method'
-assert_contains "$rpc_list_output" 'object:leds' 'rpcd lists the LED inventory method'
-assert_contains "$rpc_list_output" 'object:resolve' 'rpcd lists the resolve method'
 assert_contains "$rpc_list_output" 'object:drivers' 'rpcd lists the installed-driver method'
 assert_contains "$rpc_list_output" 'object:probe' 'rpcd lists the provider probe method'
 assert_contains "$rpc_list_output" 'object:test' 'rpcd lists the provider visual-test method'
 assert_contains "$rpc_list_output" 'object:set_manual' 'rpcd lists the manual phase method'
-assert_contains "$rpc_list_output" 'object:reload' 'rpcd lists the reload method'
 
 rpc_status_output=$(run_rpc call status)
 assert_contains "$rpc_status_output" 'enabled=1' 'rpcd status reports enabled configuration'
@@ -216,14 +204,12 @@ assert_contains "$(run_rpc call status)" 'recovery_pending=1' 'rpcd exposes reta
 rm "$TEST_ROOT/rpc-runtime/recovery-pending"
 assert_contains "$(run_rpc call status)" 'recovery_pending=0' 'rpcd reports cleared recovery state'
 
-rpc_leds_output=$(run_rpc call leds)
-assert_contains "$rpc_leds_output" 'name=green:status' 'rpcd LED inventory includes binary LEDs'
-assert_contains "$rpc_leds_output" 'max_brightness=255' 'rpcd LED inventory includes device-reported maxima'
-assert_contains "$rpc_leds_output" 'brightness_model=unverified-multilevel' 'rpcd LED inventory preserves the unverified dimming classification'
-
-rpc_resolve_output=$(run_rpc call resolve)
-assert_contains "$rpc_resolve_output" 'success=1' 'rpcd resolve succeeds for valid configuration'
-assert_contains "$rpc_resolve_output" 'phase=day' 'rpcd resolve returns the calculated phase'
+assert_eq 'status drivers probe test set_manual' "$(printf '%s\n' "$rpc_list_output" | tr ' ' '\n' | sed -n 's/^object://p' | tr '\n' ' ' | sed 's/ $//')" 'rpcd advertises exactly the five domain methods'
+for removed_method in leds resolve reload; do
+	assert_fails "rpcd must reject removed $removed_method endpoint" run_rpc call "$removed_method"
+done
+[ ! -e "$RPC_INIT_LOG" ] || fail 'removed RPC calls must not reload the service'
+[ ! -e "$RPC_UCI_LOG" ] || fail 'removed RPC calls must not write UCI'
 
 rpc_drivers_output=$(run_rpc call drivers)
 assert_contains "$rpc_drivers_output" 'test-driver' 'rpcd lists installed provider drivers'

@@ -1,8 +1,8 @@
 # Service and UCI architecture
 
-The service layer wraps the hardware-validated CLI and keeps sysfs and optional provider indicators on one schedule. OpenWrt package metadata lives in `Makefile`, installed files live under `root/`, and local developer targets live in `GNUmakefile`.
+The service layer wraps the hardware-validated CLI and keeps sysfs and optional provider indicators on one schedule. The headless runtime is packaged from `core/`; the UI-only package uses the root `Makefile`, `htdocs/` and `root/`. Local developer targets live in `GNUmakefile`.
 
-The package uses OpenWrt `luci.mk` and depends on `luci-base` because it installs a native LuCI view and its rpcd/ACL boundary.
+Only the UI package uses OpenWrt `luci.mk` and depends on `luci-base`. The runtime owns the rpcd implementation and remains usable without LuCI; the UI owns its ACL.
 
 ## UCI schema
 
@@ -58,15 +58,16 @@ The base package registers `luci.led-nightmode` as an rpcd exec object. Its meth
 | Method | ACL | Behaviour |
 | --- | --- | --- |
 | `status` | read | Reports whether the service is enabled and running, the configured mode, the applied runtime phase, and the currently resolved desired phase. |
-| `leds` | read | Returns runtime-discovered sysfs LED names, current values, reported maxima, triggers, and the conservative binary/unverified-multilevel classification used by LuCI. |
-| `resolve` | read | Validates the stored schedule and returns the phase it selects now without changing hardware. |
 | `drivers` | read | Lists safe identifiers for installed executable provider drivers; it does not probe hardware or scan endpoints. |
 | `probe` | write | Runs one installed provider's read-only `probe` command with an explicit safe driver name and endpoint. It does not scan devices. |
 | `test` | write | Runs one installed provider's explicit visual round trip. The driver temporarily changes the indicator and must restore its exact initial state. |
 | `set_manual` | write | Atomically selects manual scheduling, stores a validated `day` or `night` phase, commits UCI, and reloads the service. |
-| `reload` | write | Reloads the validated service after ordinary UCI changes. |
 
-The ACL grants read sessions only status/inventory/phase-resolution methods and read access to the `led-nightmode` UCI package. Provider probes, visual tests, and every state-changing method require the write grant. Driver names remain fixed-directory identifiers, device strings are passed only as environment values, and no RPC input is evaluated as a command.
+The ACL grants read sessions `status` and `drivers`, stock `luci.getLEDs`, and read access to the `led-nightmode` UCI package. Provider probes, visual tests, and every state-changing method require the write grant. Driver names remain fixed-directory identifiers, device strings are passed only as environment values, and no RPC input is evaluated as a command.
+
+LuCI reads the LED inventory through stock `luci.getLEDs`, which returns an object keyed by LED name. The UI derives conservative binary/unverified-multilevel labels from numeric `max_brightness`; missing or malformed maxima remain unknown. An inventory read failure leaves the rest of the view available and shows the safe-zero warning. No additional LuCI dependency is introduced in the headless runtime.
+
+Development main removes the former `leds`, `resolve` and `reload` RPC endpoints. Callers of `leds` must migrate to the stock method and its native response shape, or use local CLI `list`/`status` without LuCI. The desired phase is available in `status`; normal configuration changes use UCI Save & Apply. Schedule resolution and validated service reload remain internal operations, and the installed CLI retains `list`, `status`, `night` and `day`. This API change is not yet part of a published release.
 
 `status` also returns the router's `system.@system[0].zonename`. LuCI uses a bundled compact map generated from IANA tzdb `zone1970.tab` to prefill representative coordinates when solar mode has no saved location. This is an explicitly approximate local hint and makes no runtime network request. An optional browser Geolocation action can replace it with user-approved coordinates in a secure LuCI session; the values stay in the unsaved form until the normal Save & Apply flow stores them.
 
