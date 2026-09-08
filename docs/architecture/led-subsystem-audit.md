@@ -117,25 +117,29 @@ Development main now exports only `status`, `drivers`, `probe`, `test` and `set_
 
 Regression tests cover the exact method set, rejection of removed endpoints without init/UCI calls, the native keyed inventory shape, numeric maxima including zero, unknown capabilities, read failure and the precise ACL grants.
 
-## Proposed response to BKPepe (not posted)
+## Response to BKPepe
 
-> Thanks for the review. The package's intended purpose is the scheduling and state-restoration functionality you identified: temporarily override existing LED behavior for a night period, then restore the supported pre-night settings. I have revised the description to make that scope explicit.
+[Published in packages PR #30426](https://github.com/openwrt/packages/pull/30426#issuecomment-5589615237). The response requests feedback on the revised scope before updating the upstream submission.
+
+> Thanks for the review, @BKPepe. The package’s intended purpose is temporary LED overrides on a schedule, followed by restoration of supported pre-night settings. I have revised the description and narrowed the API to make that scope explicit.
 >
-> For example, a network-activity LED should keep its normal daytime configuration, remain off during the configured night period, and resume its previous trigger settings afterwards. Reapplying stock UCI is not always equivalent to restoring the runtime configuration present before the override, including settings or LEDs not represented in UCI.
+> For example, a network-activity LED should retain its normal daytime configuration, remain off during the night period, and resume its previous trigger settings afterwards. Reapplying stock UCI is not always equivalent to restoring the runtime configuration present before the override, including settings or LEDs not represented in UCI.
 >
-> I agree that the exported API can be narrower. I have reduced it from eight methods to five in the development repository:
+> I have reduced the package’s RPC interface from eight methods to five in the [development repository](https://github.com/mv-go/luci-app-led-nightmode/commit/039fef64a1fca3869c15041ac9ce43820d042a20):
 >
-> - the UI now uses the existing `luci.getLEDs` method for LED inventory; our redundant `leds` RPC has been removed;
-> - the unused `resolve` and `reload` RPC endpoints have also been removed. Schedule resolution and service reload remain internal operations.
+> - The UI now uses the existing `luci.getLEDs` method for inventory; our redundant `leds` RPC has been removed.
+> - The unused `resolve` and `reload` RPC endpoints have also been removed. Schedule resolution and service reload remain internal operations.
 >
-> The remaining package-specific RPC methods have these responsibilities:
+> The remaining methods serve these purposes:
 >
-> - `status`: report the configured schedule, desired and applied phases, and pending recovery. Generic service status alone cannot tell whether the night profile was applied or restoration failed.
-> - `set_manual`: validate and save a day/night override in this package's UCI configuration, then apply it through the service lifecycle. This is a convenience operation over UCI and service reload, not a new LED-control primitive.
-> - `drivers`, `probe`, and `test`: discover optional provider plugins, query an explicitly selected endpoint, and perform a reversible visual test. These support indicators outside the LED class; the hardware-specific Quectel driver is excluded from this feed contribution. These hooks are an extension mechanism, not the main justification for the package.
+> - `status` reports the configured mode, desired and applied phases, and pending recovery. Generic service status alone cannot show whether the night profile was applied or restoration failed.
+> - `set_manual` validates and saves a day/night override in this package’s UCI configuration, then applies it through the service lifecycle.
+> - `drivers`, `probe`, and `test` discover optional provider plugins, query an explicitly selected endpoint, and perform a reversible visual test. These support indicators outside the LED class. The hardware-specific Quectel driver is excluded from this feed contribution.
 >
-> The headless CLI retains `night` and `day` for applying and restoring the temporary override, plus `list` and `status` for local diagnostics without LuCI. It does not expose arbitrary trigger or brightness setters.
+> The headless CLI retains `night` and `day` to apply and restore the temporary override, plus `list` and `status` for local diagnostics without LuCI. Reusing the stock inventory method in the frontend adds no LuCI dependency to the runtime.
 >
-> The correctness changes validate supported trigger settings and retain snapshots on detected conflicts or restoration failures. The documented scope is supported configuration recovery within the same boot; device identity and coordination with external writers or hotplug remain limited. Validation includes fixture regressions, LuCI RPC/ACL integration checks and a browser check of the inventory fragment. Current development validation is available in [CI](https://github.com/mv-go/luci-app-led-nightmode/actions/workflows/ci.yml) and the [SDK build/upgrade workflow](https://github.com/mv-go/luci-app-led-nightmode/actions/workflows/sdk.yml). These changes are not yet in the v0.5.1 source referenced by this PR, and no new live-router validation is claimed.
+> The [correctness changes](https://github.com/mv-go/luci-app-led-nightmode/commit/0731b53b435584831bff788040b7458de689f5c3) validate supported trigger settings and retain snapshots on detected conflicts or restoration failures. Recovery is limited to supported configuration within the same boot; device identity and coordination with external writers or hotplug still have [documented limitations](https://github.com/mv-go/luci-app-led-nightmode/blob/039fef64a1fca3869c15041ac9ce43820d042a20/docs/architecture/restoration-contract.md).
+>
+> [CI](https://github.com/mv-go/luci-app-led-nightmode/actions/runs/34218705950) and [SDK build/upgrade checks](https://github.com/mv-go/luci-app-led-nightmode/actions/runs/34218716617) pass for the updated development code. Validation includes fixture regressions and a browser check of the inventory fragment. These changes are not yet in the v0.5.1 source referenced by this PR, and no new live-router validation is claimed.
 >
 > Would this narrower package boundary and API address your concern about inclusion in the feed?
